@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Driver Files">
+      <UniqueIdentifier>{8E41214B-6785-4CFE-B992-037D68949A14}</UniqueIdentifier>
+      <Extensions>inf;inv;inx;mof;mc;</Extensions>
+    </Filter>
+    <Filter Include="Comm">
+      <UniqueIdentifier>{c600a8f9-6a3a-4a68-ac81-f01a14cb87db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{d206cb31-044c-4d3c-8d75-62bd9427cb1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SSDT">
+      <UniqueIdentifier>{ad4724dc-d845-4067-b893-dc3a09707bc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{b26efe74-8c50-4d0f-8d99-7c3075b6de2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Process">
+      <UniqueIdentifier>{15569720-e2e0-4082-bf0d-51a26580d6ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="infinity_hook_pro">
+      <UniqueIdentifier>{59d194db-c35a-4418-b136-36c69d0f5eb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="infinity_hook_pro\hde">
+      <UniqueIdentifier>{4a0f641a-36f5-4a52-9a85-500ca4602624}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="infinity_hook_pro\Header Files">
+      <UniqueIdentifier>{f3ff7ff3-249f-4475-8419-fac957547b93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="infinity_hook_pro\Source Files">
+      <UniqueIdentifier>{c10893c5-8c00-42c3-a4b7-c2c598693418}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ProtectWindow">
+      <UniqueIdentifier>{6a192220-42d0-4a49-93a6-a80761522012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thread">
+      <UniqueIdentifier>{774febff-1cc4-4ccf-9480-19ff89b7b0de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileUtil">
+      <UniqueIdentifier>{832d005a-8688-4655-91a1-f2896544afca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SS_Entry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\Comm.c">
+      <Filter>Comm</Filter>
+    </ClCompile>
+    <ClCompile Include="Memmory\Memory.c">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memmory\PMemory.c">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="SSDT\ssdt.c">
+      <Filter>SSDT</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\Utils.c">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="SSDT\NTDLL.c">
+      <Filter>SSDT</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\PE.c">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="SSDT\Functions.c">
+      <Filter>SSDT</Filter>
+    </ClCompile>
+    <ClCompile Include="Process\Process.c">
+      <Filter>Process</Filter>
+    </ClCompile>
+    <ClCompile Include="Process\FakeProcess.c">
+      <Filter>Process</Filter>
+    </ClCompile>
+    <ClCompile Include="infinity_hook_pro\hde\hde64.cpp">
+      <Filter>infinity_hook_pro\hde</Filter>
+    </ClCompile>
+    <ClCompile Include="infinity_hook_pro\hook.cpp">
+      <Filter>infinity_hook_pro\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProtectWindow\ProtectWindow.cpp">
+      <Filter>ProtectWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="SSDT\Win32uDLL.c">
+      <Filter>SSDT</Filter>
+    </ClCompile>
+    <ClCompile Include="ProtectWindow\Protect.cpp">
+      <Filter>ProtectWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread\SThread.c">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="SFile\FileUtil.c">
+      <Filter>FileUtil</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Comm\Comm.h">
+      <Filter>Comm</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\CommStructs.h">
+      <Filter>Comm</Filter>
+    </ClInclude>
+    <ClInclude Include="Memmory\Memory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memmory\PMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="SSDT\ssdt.h">
+      <Filter>SSDT</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\Utils.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\DefineCommon.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="SSDT\NTDLL.h">
+      <Filter>SSDT</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\Log.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\PE.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="SSDT\Functions.h">
+      <Filter>SSDT</Filter>
+    </ClInclude>
+    <ClInclude Include="Process\Process.h">
+      <Filter>Process</Filter>
+    </ClInclude>
+    <ClInclude Include="Process\FakeProcess.h">
+      <Filter>Process</Filter>
+    </ClInclude>
+    <ClInclude Include="infinity_hook_pro\hde\hde64.h">
+      <Filter>infinity_hook_pro\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="infinity_hook_pro\hde\pstdint.h">
+      <Filter>infinity_hook_pro\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="infinity_hook_pro\hde\table64.h">
+      <Filter>infinity_hook_pro\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="infinity_hook_pro\headers.hpp">
+      <Filter>infinity_hook_pro\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="infinity_hook_pro\imports.hpp">
+      <Filter>infinity_hook_pro\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="infinity_hook_pro\utils.hpp">
+      <Filter>infinity_hook_pro\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="infinity_hook_pro\hook.hpp">
+      <Filter>infinity_hook_pro\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProtectWindow\ProtectWindow.hpp">
+      <Filter>ProtectWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="SSDT\Win32uDLL.h">
+      <Filter>SSDT</Filter>
+    </ClInclude>
+    <ClInclude Include="Includes.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProtectWindow\Protect.hpp">
+      <Filter>ProtectWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread\SThread.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="SFile\FileUtil.h">
+      <Filter>FileUtil</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

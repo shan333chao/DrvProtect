@@ -1,0 +1,5 @@
+﻿  Building 'SS_Driver' with toolset 'WindowsKernelModeDriver10.0' and the 'Desktop' target platform.
+  SS_Entry.c
+C:\DriverCodes\HideDriver\驱动隐藏\SS_Driver\SS_Entry.c(3,38): error C2220: 以下警告被视为错误
+C:\DriverCodes\HideDriver\驱动隐藏\SS_Driver\SS_Entry.c(3,38): warning C4100: “pDriver”: 未引用的形参
+C:\DriverCodes\HideDriver\驱动隐藏\SS_Driver\SS_Entry.c(9,62): warning C4100: “pReg”: 未引用的形参
