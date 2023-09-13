@@ -88,31 +88,34 @@ namespace communicate {
 		DbgBreakPoint();
 		UCHAR sig1 = 0xffu;
 		UCHAR sig2 = 0x15u;
-		if (Utils::InitOsVersion().dwBuildNumber >= 22000)
+		if (Utils::InitOsVersion().dwBuildNumber >= 19041)
 		{
 			sig1 = 0xe8u;
-			sig2 = 0x02u;
 		}
 		for (size_t i = 0; i < 0x100; i++)
 		{
-			if (pFunc[i] == sig1 && pFunc[i + 1] == sig2)
+			if (sig1 == 0xe8u)
 			{
-
-				LONG64 lOffset = 0;
-				ULONG64 uNextLine = 0;
-				if (sig1 == 0xe8u)
+				if (pFunc[i] == sig1)
 				{
+					LONG64 lOffset = 0;
+					ULONG64 uNextLine = 0;
 					lOffset = *(PLONG32)(pFunc + i + 1);
 					uNextLine = (ULONG64)(pFunc + i + 5);
+					pImp = (PULONG64)(lOffset + uNextLine);
+					break;
 				}
-				else {
+			}
+			else {
+				if (pFunc[i] == sig1 && pFunc[i + 1] == sig2)
+				{ 
+					LONG64 lOffset = 0;
+					ULONG64 uNextLine = 0; 
 					lOffset = *(PLONG32)(pFunc + i + 2);
-					uNextLine = (ULONG64)(pFunc + i + 6);
+					uNextLine = (ULONG64)(pFunc + i + 6); 
+					pImp = (PULONG64)(lOffset + uNextLine);
+					break;
 				}
-
-			
-				pImp = (PULONG64)(lOffset + uNextLine);
-				break;
 			}
 		}
 		if (!pImp)
@@ -127,14 +130,14 @@ namespace communicate {
 			Log("[SSS]imports::mm_get_physical_address failed %p \r\n", pImp);
 			return STATUS_UNSUCCESSFUL;
 		}
-		if (Utils::InitOsVersion().dwBuildNumber >= 22000)
+		if (Utils::InitOsVersion().dwBuildNumber <= 19041)
 		{
 			pImpPhy = (PULONG64)imports::mm_map_io_space(pICRAddr, 0x8, MmCached);
 		}
 		else {
 			pImpPhy = (PULONG64)imports::mm_map_io_space_ex(pICRAddr, 0x8, PAGE_READWRITE);;
-		
-		} 
+
+		}
 		if (!pImpPhy)
 		{
 			Log("[SSS]MmMapIoSpace failed %p \r\n", pImp);

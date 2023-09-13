@@ -19,14 +19,14 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = STATUS_SUCCESS;
 		break;
 	}
-	//case INJECT_DLL: {
+				  //case INJECT_DLL: {
 
-	//	break;
-	//}
+				  //	break;
+				  //}
 	case PROTECT_PROCESS: {
 		Protect::Initialize();
 		ProtectRoute::InitProtectWindow();
-	
+
 		PFAKE_PROCESS_DATA  FUCK_PROCESS = (PFAKE_PROCESS_DATA)pCommData->InData;
 		status = fuck_process::FakeProcess(FUCK_PROCESS->PID, FUCK_PROCESS->FakePID);
 		if (NT_SUCCESS(status))
@@ -115,11 +115,30 @@ EXTERN_C VOID DriverUnload(PDRIVER_OBJECT pDriver) {
 
 }
 
-EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
-	UNREFERENCED_PARAMETER(pdriver);
-	Utils::InitApis();  
+EXTERN_C ULONG_PTR GetNtoskrlImageBase(PDRIVER_OBJECT pdriver) {
+	PLDR_DATA_TABLE_ENTRY current = (PLDR_DATA_TABLE_ENTRY)pdriver->DriverSection;
+	ULONG_PTR imageBase = 0;
+	while (1)
+	{
+		Log("%wZ   %p  %11x \r\n", current->BaseDllName, current->DllBase, current->SizeOfImage);
+		if (!current->SizeOfImage)
+		{
+			current = (PLDR_DATA_TABLE_ENTRY)current->InLoadOrderLinks.Flink;
+			Log("%wZ   %p  %11x \r\n", current->BaseDllName, current->DllBase, current->SizeOfImage);
+			imageBase = current->DllBase;
+			break;
+		}
+		current = (PLDR_DATA_TABLE_ENTRY)current->InLoadOrderLinks.Flink;
+	}
+	return imageBase; 
+}
+
+EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) { 
+	ULONG_PTR imageBase = GetNtoskrlImageBase(pdriver);
+	Utils::SetKernelBase(imageBase);
+	Utils::InitApis();
 	communicate::RegisterComm(Dispatch);
 	ProtectRoute::StartProtect();
-	
+
 	return  STATUS_SUCCESS;
 }

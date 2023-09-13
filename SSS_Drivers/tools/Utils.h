@@ -188,6 +188,8 @@ namespace Utils {
 	PVOID GetFuncExportName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName);
 	USHORT GetServiceNoByName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName);
 
+	VOID SetKernelBase(ULONG_PTR ntoskrnl_base);
+
 	PVOID GetKernelBase();
 	uintptr_t GetNtFuncExportName(_In_ PCHAR FuncName);
 	PVOID GetSystemInformation(const SYSTEM_INFORMATION_CLASS information_class);

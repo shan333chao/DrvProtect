@@ -35,7 +35,7 @@ PVOID Utils::GetFuncExportName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName) {
 			return (PVOID)((PUCHAR)ModuleBase + lpFuncs[lpOrdinals[nIdx]]);
 		}
 	}
-	Log("%s  not found \r\n", FuncName );
+	Log("%s  not found \r\n", FuncName);
 	return NULL;
 }
 
@@ -74,45 +74,13 @@ USHORT Utils::GetServiceNoByName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName) {
 	return NULL;
 }
 
+static PVOID  KernelBase = 0;
 
+VOID Utils::SetKernelBase(ULONG_PTR ntoskrnl_base) {
+	KernelBase = (PVOID)ntoskrnl_base;
+};
 PVOID Utils::GetKernelBase() {
-	static PVOID  KernelBase = 0;
-	if (KernelBase)
-	{
-		return KernelBase;
-	}
-	IDTR stIdtr = { 0 };
-	UCHAR IDT_DATA[12] = { 0 };
-	__sidt(IDT_DATA);
-
-	stIdtr.Size = *(PUSHORT)&IDT_DATA[0];
-	stIdtr.Address = *(PULONG64)&IDT_DATA[2];
-
-	PKIDTENTRY64 lpDivZero = (PKIDTENTRY64)stIdtr.Address;
-	IDT_ADDR_T stHndlrAddr;
-
-	stHndlrAddr.OffsetLow = lpDivZero->OffsetLow;
-	stHndlrAddr.OffsetMiddle = lpDivZero->OffsetMiddle;
-	stHndlrAddr.OffsetHigh = lpDivZero->OffsetHigh;
-
-	// loop backwards until we find the kernels base address...
-	ULONG64 nStartPage = (ULONG64)PAGE_ALIGN(stHndlrAddr.Addr);
-	for (ULONG64 nPage = nStartPage;; nPage -= PAGE_SIZE) {
-		if (*(USHORT*)nPage == DOS_HEADER_MAGIC) {
-			PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)nPage;
-			PIMAGE_NT_HEADERS64 lpNtHeaders =
-				(PIMAGE_NT_HEADERS64)(lpDosHeader->e_lfanew + nPage);
-
-			if (lpNtHeaders->Signature != PE_HEADER_MAGIC)
-				continue;
-
-			if (!GetFuncExportName((PVOID)nPage,
-				skCrypt("ExAllocatePoolWithTag")))
-				continue;
-			KernelBase = (PVOID)nPage;
-			return KernelBase;
-		}
-	}
+	return KernelBase;
 }
 
 
@@ -127,13 +95,13 @@ PVOID Utils::GetSystemInformation(const SYSTEM_INFORMATION_CLASS information_cla
 	ULONG ReturnLength;
 	NTSTATUS Status;
 retry:
-	Buffer =imports::ex_allocate_pool(NonPagedPool, BufferSize);
+	Buffer = imports::ex_allocate_pool(NonPagedPool, BufferSize);
 
 	if (!Buffer) {
 		return 0;
 	}
 
-	Status =imports::zw_query_system_information(information_class,
+	Status = imports::zw_query_system_information(information_class,
 		Buffer,
 		BufferSize,
 		&ReturnLength
@@ -166,7 +134,7 @@ ULONG_PTR Utils::GetKernelModule(PCHAR szModuleName, PULONG imageSize)
 		if (Utils::kstrstr(to_lower_c((PCHAR)ModuleInfo->FullPathName), lowerModuleName) != 0)
 		{
 			*imageSize = ModuleInfo->ImageSize;
-			imageBase=(ULONG_PTR)ModuleInfo->ImageBase;
+			imageBase = (ULONG_PTR)ModuleInfo->ImageBase;
 			break;
 		}
 	}
@@ -174,13 +142,13 @@ ULONG_PTR Utils::GetKernelModule(PCHAR szModuleName, PULONG imageSize)
 	return imageBase;
 }
 
- 
+
 
 HANDLE Utils::GetPidByName(PWCH imageName)
 {
 
 	PSYSTEM_PROCESS_INFORMATION ProcessInfo = 0;
-	HANDLE pid=0;
+	HANDLE pid = 0;
 	PUCHAR buffer = (PUCHAR)GetSystemInformation(system_process_information);
 	if (!buffer)
 	{
@@ -196,14 +164,14 @@ HANDLE Utils::GetPidByName(PWCH imageName)
 		// 迭代到下一个节点
 		ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)(((PUCHAR)ProcessInfo) + ProcessInfo->NextEntryOffset);
 	}
-	imports::ex_free_pool_with_tag(buffer,0);
+	imports::ex_free_pool_with_tag(buffer, 0);
 	return pid;
 }
 
 VOID Utils::InitApis() {
- 
-	imports::imported.rtl_find_exported_routine_by_name= GetNtFuncExportName(skCrypt("RtlFindExportedRoutineByName"));
- 
+
+	imports::imported.rtl_find_exported_routine_by_name = GetNtFuncExportName(skCrypt("RtlFindExportedRoutineByName"));
+
 	imports::imported.mm_get_system_routine_address = GetNtFuncExportName(skCrypt("MmGetSystemRoutineAddress"));
 	imports::imported.mm_map_io_space = GetNtFuncExportName(skCrypt("MmMapIoSpace"));
 	imports::imported.io_get_device_object_pointer = GetNtFuncExportName(skCrypt("IoGetDeviceObjectPointer"));
@@ -278,7 +246,7 @@ VOID Utils::InitApis() {
 	imports::imported.io_query_file_dos_device_name = GetNtFuncExportName(skCrypt("IoQueryFileDosDeviceName"));
 	imports::imported.ps_get_thread_process = GetNtFuncExportName(skCrypt("PsGetThreadProcess"));
 	imports::imported.ke_get_current_thread = GetNtFuncExportName(skCrypt("KeGetCurrentThread"));
-	imports::imported.mm_user_probe_address= *(PULONGLONG)GetNtFuncExportName(skCrypt("MmUserProbeAddress"));
+	imports::imported.mm_user_probe_address = *(PULONGLONG)GetNtFuncExportName(skCrypt("MmUserProbeAddress"));
 }
 
 RTL_OSVERSIONINFOW Utils::InitOsVersion() {
