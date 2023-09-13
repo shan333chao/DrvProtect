@@ -1,5 +1,5 @@
 #pragma once
-#include "../../SS_Driver/Comm/CommStructs.h"
+#include "../../SSS_Drivers/Comm/CommStructs.h"
 
 
 BOOLEAN DriverInit();

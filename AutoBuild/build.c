@@ -31,7 +31,7 @@ void encryptData() {
 
 	char currentPath[MAX_PATH] = { 0 };
 	GetCurrentDirectoryA(MAX_PATH, currentPath);
-	char fileName[15] = "SS_Driver.sys";
+	char fileName[15] = "SSS_Driver.sys";
 	char gang[5] = "\\";
 	char currentPath2[MAX_PATH] = { 0 };
 	memcpy(currentPath2, currentPath, sizeof(currentPath));
@@ -210,20 +210,8 @@ void NoEncryptData() {
 
 
 int main(int args, char* argv[], char** env) {
-	UCHAR key[16] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
-	UCHAR planText[] = { 0x00,0x01,0x02,0x03,0x4,0x05,0x06,0x07,0x08,0x09,0x10 };
-	printf("planText:\t");
-	for (size_t i = 0; i < sizeof(planText) / sizeof(UCHAR); i++)
-	{
-		printf("%.2x ", planText[i]);
-	}
-	printf("\n");
-	struct AES_ctx ctx;
-	AES_init_ctx(&ctx, key);
-
-	AES_CBC_encrypt_buffer(&ctx, planText, sizeof(planText));
-	AES_CBC_decrypt_buffer(&ctx, planText, sizeof(planText));
-
-	system("pause");
+ 
+	NoEncryptData();
+ 
 	return 0;
 }

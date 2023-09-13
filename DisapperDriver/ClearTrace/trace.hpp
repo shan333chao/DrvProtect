@@ -145,7 +145,7 @@ namespace trace
 
 		punloader_information unloaders = *(punloader_information*)MmUnloadedDrivers;
 		unsigned long* unloaders_count = (unsigned long*)MmLastUnloadedDriver;
-		if (MmIsAddressValid(unloaders) == FALSE || MmIsAddressValid(unloaders_count) == FALSE) return status;
+		if (imports::mm_is_address_valid(unloaders) == FALSE || imports::mm_is_address_valid(unloaders_count) == FALSE) return status;
 
 		static ERESOURCE PsLoadedModuleResource;
 		if (ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE))
