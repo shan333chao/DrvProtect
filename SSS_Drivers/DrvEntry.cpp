@@ -130,14 +130,23 @@ EXTERN_C ULONG_PTR GetNtoskrlImageBase(PDRIVER_OBJECT pdriver) {
 		}
 		current = (PLDR_DATA_TABLE_ENTRY)current->InLoadOrderLinks.Flink;
 	}
-	return imageBase; 
+	return imageBase;
 }
 
-EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) { 
+EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
 	ULONG_PTR imageBase = GetNtoskrlImageBase(pdriver);
 	Utils::SetKernelBase(imageBase);
 	Utils::InitApis();
-	communicate::RegisterComm(Dispatch);
+	if (Utils::InitOsVersion().dwBuildNumber > 7601)
+	{
+		ProtectRoute::SetCommHook(Dispatch);
+	}
+	else {
+		communicate::RegisterComm(Dispatch);
+	}
+
+
+
 	ProtectRoute::StartProtect();
 
 	return  STATUS_SUCCESS;

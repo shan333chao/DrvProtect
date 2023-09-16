@@ -7,7 +7,7 @@
 #include "../infinity_hook_pro/hook.hpp"
 #include "Protect.h"
 #include "../SSDT/ssdt.h"
- 
+
 
 
 
@@ -15,8 +15,8 @@ namespace ProtectWindow7 {
 	EXTERN_C_START
 		typedef NTSTATUS(*FNtCreateFile7)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, PLARGE_INTEGER, ULONG, ULONG, ULONG, ULONG, PVOID, ULONG);
 	typedef HANDLE(*FNtUserFindWindowEx7)(PVOID, PVOID, PUNICODE_STRING, PUNICODE_STRING, ULONG);
- 	typedef NTSTATUS(NTAPI *FNtUserBuildHwndList7)(HANDLE hDesktop, HANDLE hwndParent, BOOLEAN bChildren, ULONG dwThreadId, ULONG lParam, PHANDLE pWnd, PULONG pBufSize);
-	typedef	HANDLE(NTAPI *FNtUserQueryWindow7)(HANDLE, WINDOWINFOCLASS);
+	typedef NTSTATUS(NTAPI* FNtUserBuildHwndList7)(HANDLE hDesktop, HANDLE hwndParent, BOOLEAN bChildren, ULONG dwThreadId, ULONG lParam, PHANDLE pWnd, PULONG pBufSize);
+	typedef	HANDLE(NTAPI* FNtUserQueryWindow7)(HANDLE, WINDOWINFOCLASS);
 	typedef HANDLE(*FNtUserGetForegroundWindow7)();
 	typedef NTSTATUS(*FNtQueryInformationProcess7)(HANDLE ProcessHandle, PROCESSINFOCLASS ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength, PULONG ReturnLength);
 
@@ -36,15 +36,18 @@ namespace ProtectWindow7 {
 	typedef BOOLEAN(*FNtUserValidateHandleSecure7)(HANDLE hHdl);
 	typedef ULONG_PTR(*FNtUserCallHwndParam7)(HANDLE hwnd, DWORD_PTR param, DWORD code);
 	typedef ULONG_PTR(*FNtUserCallHwnd7) (HANDLE hwnd, DWORD code);
-
-	typedef __int64(*FNtUserGetWindowDC7)(HANDLE a1);
+	typedef BOOLEAN (NTAPI*FNtUserGetWindowPlacement)(HANDLE 	hWnd, PVOID lpwndpl);
+	typedef BOOLEAN (NTAPI*FNtUserGetTitleBarInfo)(HANDLE 	hwnd, PVOID 	pti);
+	typedef BOOLEAN (NTAPI*FNtUserGetScrollBarInfo)(HANDLE 	hWnd, LONG 	idObject, PVOID 	psbi);
+ 
 
 	ULONG_PTR MyNtUserCallHwnd7(HANDLE hwnd, DWORD code);
 	ULONG_PTR MyNtUserCallHwndParam7(HANDLE hwnd, DWORD_PTR param, DWORD code);
 	BOOLEAN MyNtUserValidateHandleSecure7(HANDLE hHdl);
 
+
  
-	__int64 __fastcall MyNtUserGetWindowDC(HANDLE a1);
+ 
 	INT MyNtUserGetClassName7(HANDLE hWnd, BOOLEAN Ansi, PUNICODE_STRING ClassName);
 	BOOLEAN MyNtUserPostMessage7(HANDLE hWnd, UINT Msg, ULONG wParam, __int64 lParam);
 	BOOLEAN MyNtUserMessageCall7(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam, ULONG_PTR ResultInfo, DWORD dwType, BOOLEAN Ansi);
@@ -54,7 +57,7 @@ namespace ProtectWindow7 {
 	NTSTATUS   MyNtOpenProcess7(PHANDLE ProcessHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PCLIENT_ID ClientId);
 	NTSTATUS   MyNtCreateFile7(PHANDLE FileHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock, PLARGE_INTEGER AllocationSize, ULONG FileAttributes, ULONG ShareAccess, ULONG CreateDisposition, ULONG CreateOptions, PVOID EaBuffer, ULONG EaLength);
 	HANDLE     MyNtUserFindWindowEx7(IN HANDLE hwndParent, IN HANDLE hwndChild, IN PUNICODE_STRING pstrClassName OPTIONAL, IN PUNICODE_STRING pstrWindowName OPTIONAL, IN DWORD dwType);
- 	HANDLE  NTAPI    MyNtUserQueryWindow7(HANDLE hWnd, WINDOWINFOCLASS WindowInfo);
+	HANDLE  NTAPI    MyNtUserQueryWindow7(HANDLE hWnd, WINDOWINFOCLASS WindowInfo);
 	HANDLE	   MyNtUserGetForegroundWindow7();
 	DWORD_PTR  MyNtUserCallOneParam7(DWORD_PTR Param, DWORD Routine);
 	HANDLE	   MyNtUserWindowFromPoint7(LONG x, LONG y);
@@ -62,7 +65,11 @@ namespace ProtectWindow7 {
 	BOOLEAN MyNtUserSetWindowDisplayAffinity7(HANDLE hWnd, LONG dwAffinity);
 	BOOLEAN MyNtUserGetWindowDisplayAffinity7(HANDLE hWnd, PLONG dwAffinity);
 	void __fastcall ssdt_call_back7(unsigned long ssdt_index, void** ssdt_address);
- 
+
+	BOOLEAN NTAPI MyNtUserGetWindowPlacement7(HANDLE 	hWnd, PVOID lpwndpl); 
+	BOOLEAN NTAPI MyNtUserGetTitleBarInfo7(HANDLE 	hwnd, PVOID 	pti); 
+	BOOLEAN NTAPI MyNtUserGetScrollBarInfo7(HANDLE 	hWnd,		LONG 	idObject, PVOID 	psbi	);
+
 	EXTERN_C_END
 
 		//extern	BOOLEAN IsHookStarted;
@@ -75,7 +82,7 @@ namespace ProtectWindow7 {
 		//extern	FNtUserWindowFromPoint	g_NtUserWindowFromPoint;
 
 
-	NTSTATUS StartProtect();
+		NTSTATUS StartProtect();
 
 	NTSTATUS SetProtectWindow();
 	NTSTATUS AntiSnapWindow(ULONG32 hwnd);

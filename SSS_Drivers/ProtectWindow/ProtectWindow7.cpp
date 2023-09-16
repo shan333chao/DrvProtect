@@ -29,7 +29,10 @@ namespace ProtectWindow7 {
 	FNtUserCallHwndParam7 g_NtUserCallHwndParam7 = (FNtUserCallHwndParam7)0x12345678;
 	FNtUserValidateHandleSecure7 g_NtUserValidateHandleSecure7 = (FNtUserValidateHandleSecure7)0x12345678;
 	FNtUserCallHwnd7 g_NtUserCallHwnd7 = (FNtUserCallHwnd7)0x12345678;
-	FNtUserGetWindowDC7 g_FNtUserGetWindowDC7 = (FNtUserGetWindowDC7)0x12345678;
+ 
+
+
+
 	void __fastcall ssdt_call_back7(unsigned long ssdt_index, void** ssdt_address)
 	{
 		// https://hfiref0x.github.io/
@@ -49,7 +52,7 @@ namespace ProtectWindow7 {
 			if (*ssdt_address == g_NtUserCallHwndParam7) { *ssdt_address = MyNtUserCallHwndParam7; return; }//win7需要重新实现
 			if (*ssdt_address == g_NtUserValidateHandleSecure7) { *ssdt_address = MyNtUserValidateHandleSecure7; return; }//win7需要重新实现
 			if (*ssdt_address == g_NtUserCallHwnd7) { *ssdt_address = MyNtUserCallHwnd7; return; }//win7需要重新实现
-			if (*ssdt_address == g_FNtUserGetWindowDC7) { *ssdt_address = MyNtUserGetWindowDC; return; }
+ 
 			if (*ssdt_address == g_NtUserCallOneParam7) { *ssdt_address = MyNtUserCallOneParam7; return; }//win7需要重新实现
 			if (*ssdt_address == g_NtUserInternalGetWindowText7) { *ssdt_address = MyNtUserInternalGetWindowText7; return; }
 			if (*ssdt_address == g_NtUserPostMessage7) { *ssdt_address = MyNtUserPostMessage7; return; }//win7需要重新实现
@@ -66,6 +69,21 @@ namespace ProtectWindow7 {
 		}
 
 
+	}
+
+	BOOLEAN MyNtUserGetWindowPlacement7(HANDLE hWnd, PVOID lpwndpl)
+	{
+		return BOOLEAN();
+	}
+
+	BOOLEAN MyNtUserGetTitleBarInfo7(HANDLE hwnd, PVOID pti)
+	{
+		return BOOLEAN();
+	}
+
+	BOOLEAN MyNtUserGetScrollBarInfo7(HANDLE hWnd, LONG idObject, PVOID psbi)
+	{
+		return BOOLEAN();
 	}
 
 	ULONG_PTR MyNtUserCallHwnd7(HANDLE hwnd, DWORD code)
@@ -152,38 +170,7 @@ namespace ProtectWindow7 {
 
 
 
-	__int64 __fastcall MyNtUserGetWindowDC(HANDLE hWnd)
-	{
-
-
-		if (Protect::IsProtectProcess(imports::io_get_current_process()))
-		{
-			return g_FNtUserGetWindowDC7(hWnd);
-		}
-
-		HANDLE handle = g_NtUserQueryWindow7(hWnd, WindowActiveWindow);
-		if (handle)
-		{
-			Log("MyNtUserGetForegroundWindow7  %04x \r\n", handle);
-			int ret = Protect::IsProtectWND(hWnd, 0, handle, imports::ps_get_current_thread_id());
-			if (ret == 1)
-			{
-				return  g_FNtUserGetWindowDC7(hWnd);
-			}
-			else if (ret > 1) {
-				return 0;
-			}
-			HANDLE pid = g_NtUserQueryWindow7(hWnd, WindowProcess);
-			if (Protect::IsProtectPID(pid))
-			{
-				return NULL;
-			}
-		}
-
-
-		return g_FNtUserGetWindowDC7(hWnd);
-	}
-
+ 
 	INT MyNtUserGetClassName7(HANDLE hWnd, BOOLEAN Ansi, PUNICODE_STRING ClassName)
 	{
 
@@ -276,7 +263,7 @@ namespace ProtectWindow7 {
 				Log("filter pid %d \n");
 				return NULL;
 			}
-			Log("MyNtUserMessageCall7 currentPid  %d  target pid %d   threadid %d  hwnd %d \r\n", PsGetCurrentProcessId(), pid, handle, hWnd);
+			Log("MyNtUserMessageCall7 currentPid  %d  target pid %d   threadid %d  hwnd %d \r\n", imports::ps_get_current_process_id(), pid, handle, hWnd);
 		}
 		return  g_NtUserMessageCall7(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
 	}

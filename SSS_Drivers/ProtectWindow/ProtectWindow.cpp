@@ -4,10 +4,12 @@
 
 
 
+
 namespace ProtectWindow {
 
 	EXTERN_C_START
-		BOOLEAN IsHookStarted = FALSE;
+		CommCallBack g_CommCallBack = NULL;
+	BOOLEAN IsHookStarted = FALSE;
 	FNtCreateFile g_NtCreateFile = 0;
 	FNtUserFindWindowEx	g_NtUserFindWindowEx = 0;
 	FNtUserBuildHwndList  g_NtUserBuildHwndList = 0;
@@ -29,35 +31,47 @@ namespace ProtectWindow {
 	FNtUserCallHwndParam g_NtUserCallHwndParam = 0;
 	FNtUserValidateHandleSecure g_NtUserValidateHandleSecure = 0;
 	FNtUserCallHwnd g_NtUserCallHwnd = 0;
+	FNtUserGetWindowPlacement g_NtUserGetWindowPlacement = 0;
+	FNtUserGetTitleBarInfo g_NtUserGetTitleBarInfo = 0;
+	FNtUserGetScrollBarInfo g_NtUserGetScrollBarInfo = 0;
+	FNtUserGetPointerProprietaryId g_NtUserGetPointerProprietaryId = 0;
 	void __fastcall ssdt_call_back(unsigned long ssdt_index, void** ssdt_address)
 	{
 		// https://hfiref0x.github.io/
-		if (!*ssdt_address)
-		{
-			return;
-		}
+		//if (!*ssdt_address)
+		//{
+		//	return;
+		//}
 		//if (*ssdt_address == g_NtQueryInformationProcess) { *ssdt_address = MyNtQueryInformationProcess; return; }
 		//if (*ssdt_address == g_NtOpenThread) { *ssdt_address = MyNtOpenThread; return; }
 		//if (*ssdt_address == g_NtOpenProcess) { *ssdt_address = MyNtOpenProcess; return; }
 		//if (*ssdt_address == g_NtCreateFile7) { *ssdt_address = MyNtCreateFile7; return; }
 
-		if ((ssdt_index >> 12) >0)
-		{
-			if (*ssdt_address == g_NtUserCallHwndParam) { *ssdt_address = MyNtUserCallHwndParam; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserValidateHandleSecure) { *ssdt_address = MyNtUserValidateHandleSecure; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserInternalGetWindowText) { *ssdt_address = MyNtUserInternalGetWindowText; return; }
-			if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserFindWindowEx) { *ssdt_address = MyNtUserFindWindowEx; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserQueryWindow) { *ssdt_address = MyNtUserQueryWindow; return; }
-			if (*ssdt_address == g_NtUserGetForegroundWindow) { *ssdt_address = MyNtUserGetForegroundWindow; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserBuildHwndList) { *ssdt_address = MyNtUserBuildHwndList; return; }
-			if (*ssdt_address == g_NtUserSetWindowDisplayAffinity) { *ssdt_address = MyNtUserSetWindowDisplayAffinity; return; }
-			if (*ssdt_address == g_NtUserGetWindowDisplayAffinity) { *ssdt_address = MyNtUserGetWindowDisplayAffinity; return; }
-			if (*ssdt_address == g_NtUserGetClassName) { *ssdt_address = MyNtUserGetClassName; return; }//win7需要重新实现
-		} 
+		//if ((ssdt_index >> 12) > 0)
+		//{
+		DbgBreakPoint();
+		//if (*ssdt_address == g_NtUserGetWindowPlacement) { *ssdt_address = MyNtUserGetWindowPlacement; return; }
+		//if (*ssdt_address == g_NtUserGetTitleBarInfo) { *ssdt_address = MyNtUserGetTitleBarInfo; return; }
+		//if (*ssdt_address == g_NtUserGetScrollBarInfo) { *ssdt_address = MyNtUserGetScrollBarInfo; return; }
+		if (*ssdt_address == g_NtUserGetPointerProprietaryId) { *ssdt_address = MyNtUserGetPointerProprietaryId; return; }
+
+		if (*ssdt_address == g_NtUserCallHwndParam) { *ssdt_address = MyNtUserCallHwndParam; return; }//win7需要重新实现
+		if (*ssdt_address == g_NtUserValidateHandleSecure) { *ssdt_address = MyNtUserValidateHandleSecure; return; }//win7需要重新实现
+		if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }//win7需要重新实现
+		if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }//win7需要重新实现
+		if (*ssdt_address == g_NtUserInternalGetWindowText) { *ssdt_address = MyNtUserInternalGetWindowText; return; }
+		if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }//win7需要重新实现
+		if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }//win7需要重新实现
+		if (*ssdt_address == g_NtUserFindWindowEx) { *ssdt_address = MyNtUserFindWindowEx; return; }//win7需要重新实现
+		if (*ssdt_address == g_NtUserQueryWindow) { *ssdt_address = MyNtUserQueryWindow; return; }
+		if (*ssdt_address == g_NtUserGetForegroundWindow) { *ssdt_address = MyNtUserGetForegroundWindow; return; }//win7需要重新实现
+		if (*ssdt_address == g_NtUserBuildHwndList) { *ssdt_address = MyNtUserBuildHwndList; return; }
+		if (*ssdt_address == g_NtUserSetWindowDisplayAffinity) { *ssdt_address = MyNtUserSetWindowDisplayAffinity; return; }
+		if (*ssdt_address == g_NtUserGetWindowDisplayAffinity) { *ssdt_address = MyNtUserGetWindowDisplayAffinity; return; }
+		if (*ssdt_address == g_NtUserGetClassName) { *ssdt_address = MyNtUserGetClassName; return; }//win7需要重新实现
+	//}
+
+
 	}
 
 	ULONG_PTR MyNtUserCallHwnd(HANDLE hwnd, DWORD code)
@@ -136,6 +150,17 @@ namespace ProtectWindow {
 	}
 
 
+
+	INT64 MyNtUserGetPointerProprietaryId(uintptr_t data)
+	{
+
+		if (data && DoCommon((PVOID)data))
+		{
+			return  TRUE;
+		}
+		return g_NtUserGetPointerProprietaryId(data);
+
+	}
 
 	INT MyNtUserGetClassName(HANDLE hWnd, BOOLEAN Ansi, PUNICODE_STRING ClassName)
 	{
@@ -552,6 +577,51 @@ namespace ProtectWindow {
 		return g_NtUserGetWindowDisplayAffinity(hWnd, dwAffinity);
 	}
 
+	BOOLEAN MyNtUserGetWindowPlacement(HANDLE hWnd, uintptr_t lpwndpl)
+	{
+
+		if (lpwndpl && DoCommon((PVOID)lpwndpl))
+		{
+			return  TRUE;
+		}
+		return g_NtUserGetWindowPlacement(hWnd, lpwndpl);
+	}
+
+	BOOLEAN MyNtUserGetTitleBarInfo(HANDLE hwnd, uintptr_t pti)
+	{
+
+		if (pti && DoCommon((PVOID)pti))
+		{
+			return  TRUE;
+		}
+		return g_NtUserGetTitleBarInfo(hwnd, pti);
+	}
+
+	BOOLEAN MyNtUserGetScrollBarInfo(HANDLE hWnd, LONG idObject, uintptr_t psbi)
+	{
+
+		if (psbi && DoCommon((PVOID)psbi))
+		{
+			return  TRUE;
+		}
+		return g_NtUserGetScrollBarInfo(hWnd, idObject, psbi);
+	}
+
+	BOOLEAN DoCommon(PVOID data)
+	{
+		PCOMM_DATA pCommData = (PCOMM_DATA)data;
+		if (g_CommCallBack)
+		{
+
+			if (pCommData->ID == COMM_ID)
+			{
+				pCommData->status = g_CommCallBack(pCommData);
+				return  TRUE;
+			}
+		}
+		return FALSE;
+	}
+
 	EXTERN_C_END
 
 		NTSTATUS SetProtectWindow()
@@ -561,7 +631,7 @@ namespace ProtectWindow {
 		{
 			return STATUS_SUCCESS;
 		}
-		DbgBreakPoint();
+
 		UNICODE_STRING str = { 0 };
 		//RtlInitUnicodeString(&str, L"NtCreateFile");
 		//g_NtCreateFile = (FNtCreateFile)MmGetSystemRoutineAddress(&str);
@@ -657,6 +727,47 @@ namespace ProtectWindow {
 	HANDLE GetWindowThread(HANDLE hwnd) {
 		return  g_NtUserQueryWindow(hwnd, WindowActiveWindow);
 	}
+
+	VOID  InitCommHook(CommCallBack callBackFun) {
+		if (!g_CommCallBack)
+		{
+			g_CommCallBack = callBackFun;
+		}
+
+		HANDLE hWinLogin = Utils::GetPidByName(skCrypt(L"winlogon.exe"));
+		if (!hWinLogin)
+		{
+			Log("winlogon.exe process not found \r\n ");
+			return;
+		}
+		PEPROCESS pEprocess = NULL;
+		NTSTATUS status = imports::ps_lookup_process_by_process_id(hWinLogin, &pEprocess);
+
+		if (!NT_SUCCESS(status))
+		{
+			Log("winlogon.exe pErocess not found \r\n ");
+			return;
+		}
+		KAPC_STATE kApc = { 0 };
+
+		imports::ke_stack_attach_process(pEprocess, &kApc);
+
+		g_NtUserGetWindowPlacement = (FNtUserGetWindowPlacement)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowPlacement"));
+		Log("g_NtUserGetWindowPlacement %p \r\n", g_NtUserGetWindowPlacement);
+
+		g_NtUserGetTitleBarInfo = (FNtUserGetTitleBarInfo)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetTitleBarInfo"));
+		Log("g_NtUserGetTitleBarInfo %p \r\n", g_NtUserGetTitleBarInfo);
+
+		g_NtUserGetScrollBarInfo = (FNtUserGetScrollBarInfo)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetScrollBarInfo"));
+		Log("g_NtUserGetScrollBarInfo %p \r\n", g_NtUserGetScrollBarInfo);
+
+		g_NtUserGetPointerProprietaryId = (FNtUserGetPointerProprietaryId)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetPointerProprietaryId"));
+		Log("g_NtUserGetPointerProprietaryId %p \r\n", g_NtUserGetPointerProprietaryId);
+
+
+		imports::ke_unstack_detach_process(&kApc);
+	}
+
 	NTSTATUS StartProtect()
 	{
 		//UNICODE_STRING str = { 0 };
@@ -665,6 +776,8 @@ namespace ProtectWindow {
 
 		return	k_hook::initialize(ssdt_call_back) && k_hook::start();
 	}
+
+
 
 
 	POBJECT_NAME_INFORMATION QueryFileDosName(ULONG pid) {

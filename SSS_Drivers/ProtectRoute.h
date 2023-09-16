@@ -1,6 +1,7 @@
 #pragma once
-#include "ProtectWindow/ProtectWindow.h"
+ 
 #include "ProtectWindow/ProtectWindow7.h"
+#include "ProtectWindow/ProtectWindow.h"
 
 namespace ProtectRoute {
 
@@ -10,6 +11,6 @@ namespace ProtectRoute {
 	NTSTATUS AntiSnapWindow(ULONG32 hwnd);
 	BOOLEAN RemoveProtectWindow();
 	HANDLE  GetWindowThread(HANDLE hwnd);
-
+	VOID SetCommHook(CommCallBack callBackFun);
 
 }

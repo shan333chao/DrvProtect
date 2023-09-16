@@ -28,24 +28,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, PVOID lParam) {
 
 
 
-BOOLEAN clear_trace(const wchar_t* name, unsigned long stamp)
-{
-	HANDLE h = CreateFileA("\\\\.\\driver_trace", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
-	if (h == INVALID_HANDLE_VALUE) return FALSE;
-
-	handle_information info = { 0 };
-	info.stamp = stamp;
-	if (wcslen(name) < 100) wcscpy_s(info.name, wcslen(name) * sizeof(wchar_t), name);
-
-	DWORD r = 0;
-	BOOL ret = DeviceIoControl(h, CLEAR_TRACE, &info, sizeof(info), 0, 0, &r, 0);
-	if (ret)
-	{
-		printf("r3 驱动加载痕迹清除\n");
-	}
-	CloseHandle(h);
-	return ret == TRUE;
-}
+ 
 
 ULONG getPeTimeStamp(PUCHAR currentPath) {
 	FILE* pfile = NULL;
@@ -181,7 +164,7 @@ void TestComm()
 {
 	TEST_DATA testData = { 0 };
 	testData.uTest = 0;
-	DWORD status_code = DriverComm(TEST_COMM, &testData, sizeof(TEST_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(TEST_COMM, &testData, sizeof(TEST_DATA));
 	if (testData.uTest > 0)
 	{
 		printf("测试通讯成功！\n");
@@ -202,7 +185,7 @@ void FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, ULONG uDataSize)
 	TestMEM.PID = PID;
 	TestMEM.FakePID = fakePid;
 	TestMEM.Address = Address;
-	DWORD status_code = DriverComm(FAKE_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(FAKE_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	PUCHAR data = TestMEM.pValBuffer;
 	printf("读到的数据:\n");
 	for (size_t i = 0; i < uDataSize; i++)
@@ -227,7 +210,7 @@ void FakeWriteMemory(ULONG PID, ULONG fakePid, PVOID Address, PUCHAR pValBuffer,
 	TestMEM.FakePID = fakePid;
 	TestMEM.Address = Address;
 
-	DWORD status_code = DriverComm(FAKE_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(FAKE_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	if (!status_code)
 	{
 		printf("写入成功:\n");
@@ -248,7 +231,7 @@ void PhyReadMemory(ULONG PID, PVOID Address, ULONG uDataSize)
 	TestMEM.uDataSize = uDataSize;
 	TestMEM.PID = PID;
 	TestMEM.Address = Address;
-	DWORD status_code = DriverComm(PHY_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(PHY_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	if (status_code)
 	{
 		VirtualFree(TestMEM.pValBuffer, 0, MEM_RELEASE);
@@ -275,7 +258,7 @@ BOOL PhyWriteMemory(ULONG PID, PVOID Address, PUCHAR pValBuffer, ULONG length)
 	TestMEM.uDataSize = length;
 	TestMEM.PID = PID;
 	TestMEM.Address = Address;
-	DWORD status_code = DriverComm(PHY_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(PHY_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	if (!status_code)
 	{
 		printf("写入成功:\n");
@@ -320,7 +303,7 @@ void ProtectProcess(ULONG protectPid, ULONG fakePid) {
 	}
 
 	system("pause");
-	DWORD status_code = DriverComm(PROTECT_PROCESS, &protectProcess, sizeof(FAKE_PROCESS_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(PROTECT_PROCESS, &protectProcess, sizeof(FAKE_PROCESS_DATA));
 	if (status_code > 0)
 	{
 		printf("%d \r\n", status_code);
@@ -337,7 +320,7 @@ void ProtectWindow(ULONG32 hwnd)
 	hwnds[0] = hwnd;
 	WND_DATA.hwnds = hwnds;
 	WND_DATA.Length = 1;
-	DWORD status_code = DriverComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	if (status_code > 0)
 	{
 		printf("保护失败 错误码 %08x\n", status_code);
@@ -354,7 +337,7 @@ void QueryModule(ULONG pid, PCHAR szModuleName)
 	moduleData.pcModuleName = szModuleName;
 	ULONG uModuleSize = 0;
 	moduleData.pModuleSize = &uModuleSize;
-	DWORD status_code = DriverComm(QUERY_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(QUERY_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA));
 	if (status_code)
 	{
 		printf("查询模块失败 错误码 %08x\n", status_code);
@@ -374,7 +357,7 @@ PUCHAR AllocateMem(ULONG PID, ULONG uDataSize)
 	CreateMemData.pVAddress = &Addr;
 	CreateMemData.uSize = uDataSize;
 
-	DWORD status_code = DriverComm(CREATE_MEMORY, &CreateMemData, sizeof(CREATE_MEM_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(CREATE_MEMORY, &CreateMemData, sizeof(CREATE_MEM_DATA));
 	if (status_code > 0)
 	{
 		printf("申请内存失败 错误码 %08x\n", status_code);
@@ -402,7 +385,7 @@ void CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len)
 	THREAD_DATA.PID = PID;
 	THREAD_DATA.Argument = NULL;
 	THREAD_DATA.ShellCode = address;
-	DWORD status_code = DriverComm(CREATE_THREAD, &THREAD_DATA, sizeof(CREATE_THREAD_DATA), NULL, NULL);
+	DWORD status_code = DriverComm(CREATE_THREAD, &THREAD_DATA, sizeof(CREATE_THREAD_DATA));
 	if (status_code > 0)
 	{
 		printf("创建线程 错误码 %08x\n", status_code);

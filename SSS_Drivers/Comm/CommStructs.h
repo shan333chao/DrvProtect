@@ -46,8 +46,6 @@ typedef struct  _COMM_DATA {
 	ULONG64			Type;
 	ULONG64			InData;
 	ULONG64			InDataLen;
-	ULONG64			OutData;
-	ULONG64			OutDataLen;
 	NTSTATUS status;
 }COMM_DATA, * PCOMM_DATA;
 

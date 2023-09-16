@@ -96,7 +96,7 @@ namespace functions {
 			break;
 		}
 
-		return 0;
+ 
 	}
 
 
