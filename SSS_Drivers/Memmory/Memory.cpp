@@ -52,7 +52,7 @@ namespace memory {
 			return STATUS_INVALID_PARAMETER_4;
 
 		}
-
+ 
 		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
 		if (!NT_SUCCESS(status)) return status;
 		//判断进程状态
@@ -62,36 +62,40 @@ namespace memory {
 			imports::obf_dereference_object(pTargetEprocess);
 			return status;
 		}
-		if (!pFakeObject)
-		{
-			//获取傀儡进程
-			status = imports::ps_lookup_process_by_process_id((HANDLE)uFakePid, &pFakeEprocess);
-			if (!NT_SUCCESS(status)) {
-				imports::obf_dereference_object(pTargetEprocess);
-				return status;
-			}
-			pFakeObject = imports::ex_allocate_pool(NonPagedPool, PAGE_SIZE);
-			if (!pFakeObject)
-			{
-				imports::obf_dereference_object(pTargetEprocess);
-				imports::obf_dereference_object(pFakeEprocess);
-				return status;
-			}
+		//if (!pFakeObject)
+		//{
+		//	//获取傀儡进程
+		//	status = imports::ps_lookup_process_by_process_id((HANDLE)uFakePid, &pFakeEprocess);
+		//	if (!NT_SUCCESS(status)) {
+		//		imports::obf_dereference_object(pTargetEprocess);
+		//		return status;
+		//	}
+		//	pFakeObject = imports::ex_allocate_pool(NonPagedPool, PAGE_SIZE);
+		//	if (!pFakeObject)
+		//	{
+		//		imports::obf_dereference_object(pTargetEprocess);
+		//		imports::obf_dereference_object(pFakeEprocess);
+		//		return status;
+		//	}
 
-			//复制傀儡进程
-			Utils::kmemset(pFakeObject, 0, PAGE_SIZE);
+		//	//复制傀儡进程
+		//	Utils::kmemset(pFakeObject, 0, PAGE_SIZE);
 
-			Utils::kmemcpy(pFakeObject, (PUCHAR)pFakeEprocess - 0x30, PAGE_SIZE);
-		}
-		pCopyFakeEprocess = (PEPROCESS)((PUCHAR)pFakeObject + 0x30);
-		//替换页表地址 
-		uProtectCr3 = *(PULONG_PTR)((PUCHAR)pTargetEprocess + 0x28);
-		*(PULONG_PTR)((PUCHAR)pCopyFakeEprocess + 0x28) = uProtectCr3;
+		//	Utils::kmemcpy(pFakeObject, (PUCHAR)pFakeEprocess - 0x30, PAGE_SIZE);
+		//}
+		//pCopyFakeEprocess = (PEPROCESS)((PUCHAR)pFakeObject + 0x30);
+		////替换页表地址 
+		//uProtectCr3 = *(PULONG_PTR)((PUCHAR)pTargetEprocess + 0x28);
+		//*(PULONG_PTR)((PUCHAR)pCopyFakeEprocess + 0x28) = uProtectCr3;
 		ULONG64 GotSize = 0;
+
+		////读取内存
+		//status = imports::mm_copy_virtual_memory(pCopyFakeEprocess, Address, imports::io_get_current_process(), ReadBuffer, uReadSize, KernelMode, &GotSize);
+
 		//读取内存
-		status = imports::mm_copy_virtual_memory(pCopyFakeEprocess, Address, imports::io_get_current_process(), ReadBuffer, uReadSize, KernelMode, &GotSize);
+		status = imports::mm_copy_virtual_memory(pTargetEprocess, Address, imports::io_get_current_process(), ReadBuffer, uReadSize, KernelMode, &GotSize);
 		imports::obf_dereference_object(pTargetEprocess);
-		imports::obf_dereference_object(pFakeEprocess);
+		//imports::obf_dereference_object(pFakeEprocess);
 		return status;
 	}
 	NTSTATUS SS_WriteMemory(ULONG_PTR uPid, ULONG_PTR uFakePid, PVOID Address, ULONG_PTR uWriteSize, PVOID WriteBuffer)
@@ -113,6 +117,7 @@ namespace memory {
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
+ 
 		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
 		if (!NT_SUCCESS(status)) return status;
 		//判断进程状态
@@ -223,12 +228,11 @@ namespace memory {
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
-		DbgBreakPoint();
 		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
 		if (!NT_SUCCESS(status)) return status;
 		SIZE_T NumberOfReadSize = 0;
 
-
+		 
 		status = p_memory::ReadProcessMemory(pTargetEprocess, Address, ReadBuffer, uReadSize, &NumberOfReadSize);
 
 
@@ -252,7 +256,7 @@ namespace memory {
 		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
 		if (!NT_SUCCESS(status)) return status;
 		SIZE_T NumberOfWriteSize = 0;
-
+ 
 		status = p_memory::WriteProcessMemory(pTargetEprocess, Address, WriteBuffer, uWriteSize, &NumberOfWriteSize);
 		imports::obf_dereference_object(pTargetEprocess);
 		return status;

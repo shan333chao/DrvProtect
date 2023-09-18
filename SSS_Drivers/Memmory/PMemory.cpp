@@ -332,28 +332,28 @@ namespace p_memory {
 		switch (Utils::InitOsVersion().dwBuildNumber)
 		{
 		case WINDOWS_1803:
-			return 0x0278;
+			return 0x0028;
 			break;
 		case WINDOWS_1809:
-			return 0x0278;
+			return 0x0028;
 			break;
 		case WINDOWS_1903:
-			return 0x0280;
+			return 0x0028;
 			break;
 		case WINDOWS_1909:
-			return 0x0280;
+			return 0x0028;
 			break;
 		case WINDOWS_2004:
-			return 0x0388;
+			return 0x0028;
 			break;
 		case WINDOWS_20H2:
-			return 0x0388;
+			return 0x0028;
 			break;
 		case WINDOWS_21H1:
-			return 0x0388;
+			return 0x0028;
 			break;
 		default:
-			return 0x0388;
+			return 0x0028;
 		}
 	}
 

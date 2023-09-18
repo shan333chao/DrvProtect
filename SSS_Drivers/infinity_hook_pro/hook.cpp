@@ -112,20 +112,20 @@ namespace k_hook
 		if (!provider_name)
 		{
 			Log("[%s] allocate provider name fail \n", __FUNCTION__);
-			
+
 			imports::ex_free_pool_with_tag(property, tag);
 			return STATUS_MEMORY_NOT_ALLOCATED;
 		}
 
-		
+
 		// 清空内存
-		Utils::kmemset(property,0, PAGE_SIZE);
-		Utils::kmemset(provider_name,0, 256 * sizeof(wchar_t));
- 
-		 
+		Utils::kmemset(property, 0, PAGE_SIZE);
+		Utils::kmemset(provider_name, 0, 256 * sizeof(wchar_t));
+
+
 		// 名称赋值
 		Utils::kmemcpy(provider_name, skCrypt(L"Circular Kernel Context Logger"), 62);
-		
+
 		imports::rtl_init_unicode_string(&property->ProviderName, (const wchar_t*)provider_name);
 
 		// 唯一标识符
@@ -144,7 +144,7 @@ namespace k_hook
 		// 执行操作
 		unsigned long length = 0;
 		if (type == trace_type::syscall_trace) property->EnableFlags = 0x00000080;
-		NTSTATUS status =  imports::nt_trace_control(type, property, PAGE_SIZE, property, PAGE_SIZE, &length);
+		NTSTATUS status = imports::nt_trace_control(type, property, PAGE_SIZE, property, PAGE_SIZE, &length);
 
 		// 释放内存空间
 		imports::ex_free_pool_with_tag(provider_name, tag);
@@ -239,8 +239,8 @@ namespace k_hook
 			// GetCpuClock还是一个函数指针
 			if (m_build_number <= 18363)
 			{
-				
-				Log("[%s] fix 0x%p 0x%p \n", __FUNCTION__, m_GetCpuClock,  imports::mm_is_address_valid(m_GetCpuClock) ? *m_GetCpuClock : 0);
+
+				Log("[%s] fix 0x%p 0x%p \n", __FUNCTION__, m_GetCpuClock, imports::mm_is_address_valid(m_GetCpuClock) ? *m_GetCpuClock : 0);
 
 				if (imports::mm_is_address_valid(m_GetCpuClock) && imports::mm_is_address_valid(*m_GetCpuClock))
 				{
@@ -332,7 +332,7 @@ namespace k_hook
 			*/
 			unsigned long long address = k_utils::find_pattern_image(ntoskrnl,
 				"\x48\x8b\x05\x00\x00\x00\x00\x48\x8b\x40\x00\x48\x8b\x0d\x00\x00\x00\x00\x48\xf7\xe2",
-				 "xxx????xxx?xxx????xxx");
+				"xxx????xxx?xxx????xxx");
 			if (!address) return false;
 			m_HvlpReferenceTscPage = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 3));
 			Log("[%s] hvlp reference tsc page is 0x%llX \n", __FUNCTION__, m_HvlpReferenceTscPage);
@@ -344,6 +344,15 @@ namespace k_hook
 			address = k_utils::find_pattern_image(ntoskrnl,
 				"\x48\x8b\x05\x00\x00\x00\x00\x48\x85\xc0\x74\x00\x48\x83\x3d\x00\x00\x00\x00\x00\x74",
 				"xxx????xxxx?xxx?????x");
+			/*
+			 * For Win10 21h2.2130, after install the KB5018410 patch, you need to use a new pattern code
+			 * For more details, please refer to https://github.com/FiYHer/InfinityHookPro/issues/17
+			 * Thanks @LYingSiMon
+			 */
+			if (!address)
+				address = k_utils::find_pattern_image(ntoskrnl,
+					"\x48\x8b\x05\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x48\x03\xd8\x48\x89\x1f",
+					"xxx????x????xxxxxx");
 			if (!address) return false;
 			m_HvlGetQpcBias = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 3));
 			Log("[%s] hvl get qpc bias is 0x%llX \n", __FUNCTION__, m_HvlGetQpcBias);
@@ -410,7 +419,7 @@ namespace k_hook
 			CLIENT_ID client{ 0 };
 			OBJECT_ATTRIBUTES att{ 0 };
 			InitializeObjectAttributes(&att, 0, OBJ_KERNEL_HANDLE, 0, 0);
-			NTSTATUS status =imports::ps_create_system_thread(&h_thread, THREAD_ALL_ACCESS, &att, 0, &client, detect_routine, 0);
+			NTSTATUS status = imports::ps_create_system_thread(&h_thread, THREAD_ALL_ACCESS, &att, 0, &client, detect_routine, 0);
 			if (NT_SUCCESS(status)) imports::zw_close(h_thread);
 			Log("[%s] detect routine thread id is %d \n", __FUNCTION__, (int)client.UniqueThread);
 		}

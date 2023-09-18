@@ -38,38 +38,38 @@ namespace ProtectWindow {
 	void __fastcall ssdt_call_back(unsigned long ssdt_index, void** ssdt_address)
 	{
 		// https://hfiref0x.github.io/
-		//if (!*ssdt_address)
-		//{
-		//	return;
-		//}
+		if (!*ssdt_address)
+		{
+			return;
+		}
 		//if (*ssdt_address == g_NtQueryInformationProcess) { *ssdt_address = MyNtQueryInformationProcess; return; }
 		//if (*ssdt_address == g_NtOpenThread) { *ssdt_address = MyNtOpenThread; return; }
 		//if (*ssdt_address == g_NtOpenProcess) { *ssdt_address = MyNtOpenProcess; return; }
 		//if (*ssdt_address == g_NtCreateFile7) { *ssdt_address = MyNtCreateFile7; return; }
 
-		//if ((ssdt_index >> 12) > 0)
-		//{
-		DbgBreakPoint();
-		//if (*ssdt_address == g_NtUserGetWindowPlacement) { *ssdt_address = MyNtUserGetWindowPlacement; return; }
-		//if (*ssdt_address == g_NtUserGetTitleBarInfo) { *ssdt_address = MyNtUserGetTitleBarInfo; return; }
-		//if (*ssdt_address == g_NtUserGetScrollBarInfo) { *ssdt_address = MyNtUserGetScrollBarInfo; return; }
-		if (*ssdt_address == g_NtUserGetPointerProprietaryId) { *ssdt_address = MyNtUserGetPointerProprietaryId; return; }
+		if ((ssdt_index >> 12) > 0)
+		{
 
-		if (*ssdt_address == g_NtUserCallHwndParam) { *ssdt_address = MyNtUserCallHwndParam; return; }//win7需要重新实现
-		if (*ssdt_address == g_NtUserValidateHandleSecure) { *ssdt_address = MyNtUserValidateHandleSecure; return; }//win7需要重新实现
-		if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }//win7需要重新实现
-		if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }//win7需要重新实现
-		if (*ssdt_address == g_NtUserInternalGetWindowText) { *ssdt_address = MyNtUserInternalGetWindowText; return; }
-		if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }//win7需要重新实现
-		if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }//win7需要重新实现
-		if (*ssdt_address == g_NtUserFindWindowEx) { *ssdt_address = MyNtUserFindWindowEx; return; }//win7需要重新实现
-		if (*ssdt_address == g_NtUserQueryWindow) { *ssdt_address = MyNtUserQueryWindow; return; }
-		if (*ssdt_address == g_NtUserGetForegroundWindow) { *ssdt_address = MyNtUserGetForegroundWindow; return; }//win7需要重新实现
-		if (*ssdt_address == g_NtUserBuildHwndList) { *ssdt_address = MyNtUserBuildHwndList; return; }
-		if (*ssdt_address == g_NtUserSetWindowDisplayAffinity) { *ssdt_address = MyNtUserSetWindowDisplayAffinity; return; }
-		if (*ssdt_address == g_NtUserGetWindowDisplayAffinity) { *ssdt_address = MyNtUserGetWindowDisplayAffinity; return; }
-		if (*ssdt_address == g_NtUserGetClassName) { *ssdt_address = MyNtUserGetClassName; return; }//win7需要重新实现
-	//}
+			if (*ssdt_address == g_NtUserGetWindowPlacement) { *ssdt_address = MyNtUserGetWindowPlacement; return; }
+			if (*ssdt_address == g_NtUserGetTitleBarInfo) { *ssdt_address = MyNtUserGetTitleBarInfo; return; }
+			if (*ssdt_address == g_NtUserGetScrollBarInfo) { *ssdt_address = MyNtUserGetScrollBarInfo; return; }
+			if (*ssdt_address == g_NtUserGetPointerProprietaryId) { *ssdt_address = MyNtUserGetPointerProprietaryId; return; }
+
+			if (*ssdt_address == g_NtUserCallHwndParam) { *ssdt_address = MyNtUserCallHwndParam; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserValidateHandleSecure) { *ssdt_address = MyNtUserValidateHandleSecure; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserInternalGetWindowText) { *ssdt_address = MyNtUserInternalGetWindowText; return; }
+			if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserFindWindowEx) { *ssdt_address = MyNtUserFindWindowEx; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserQueryWindow) { *ssdt_address = MyNtUserQueryWindow; return; }
+			if (*ssdt_address == g_NtUserGetForegroundWindow) { *ssdt_address = MyNtUserGetForegroundWindow; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserBuildHwndList) { *ssdt_address = MyNtUserBuildHwndList; return; }
+			if (*ssdt_address == g_NtUserSetWindowDisplayAffinity) { *ssdt_address = MyNtUserSetWindowDisplayAffinity; return; }
+			if (*ssdt_address == g_NtUserGetWindowDisplayAffinity) { *ssdt_address = MyNtUserGetWindowDisplayAffinity; return; }
+			if (*ssdt_address == g_NtUserGetClassName) { *ssdt_address = MyNtUserGetClassName; return; }//win7需要重新实现
+		}
 
 
 	}
