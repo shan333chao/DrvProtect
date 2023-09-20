@@ -5,10 +5,9 @@
 #include <time.h>
 #include <Windows.h>
 #include "aes.h"
-//#include "../DisapperDriver/MyDriver.h"
-//#include "../DisapperDriver/MyDriver2.h"
-#define COUNT1 0x6C
-#define COUNT2 0x7D
+//#include  "../ProxyDrv/MyDriver.h"
+//#include "../ProxyDrv/MyDriver2.h"
+
 void GetCurrentTimeStr(char* timestrBuffer) {
 	time_t currentTime;
 	struct tm localTime;
@@ -21,108 +20,15 @@ void GetCurrentTimeStr(char* timestrBuffer) {
 }
 
 void encryptData() {
-
-	FILE* pfile = NULL;
-	long lFileSize = 0;
-	unsigned char* pFileData = NULL;
-	unsigned char pSzOutData[0x100] = { 0 };
-	//文件生成时间
-	char formattedTime[22] = { 0 };
-
-	char currentPath[MAX_PATH] = { 0 };
-	GetCurrentDirectoryA(MAX_PATH, currentPath);
-	char fileName[15] = "SSS_Driver.sys";
-	char gang[5] = "\\";
-	char currentPath2[MAX_PATH] = { 0 };
-	memcpy(currentPath2, currentPath, sizeof(currentPath));
-	memcpy(currentPath2 + strlen(currentPath) * sizeof(char), gang, sizeof(gang));
-	memcpy(currentPath2 + strlen(currentPath2) * sizeof(char), fileName, sizeof(fileName));
-	printf("%s \r\n", currentPath2);
-
-	fopen_s(&pfile, currentPath2, "rb");
-
-	if (!pfile)
+	struct AES_ctx ctx;
+	unsigned char key[] = "\xde\xad\xbe\xef\xca\xfe\xba\xbe\xde\xad\xbe\xef\xca\xfe\xba\xbe";
+	unsigned char iv[] = "\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff";
+	srand(time(NULL));
+	for (size_t i = 0; i < sizeof(key); i++)
 	{
-		printf("fopen_s file failed 1");
-		return 0;
+		key[i] = rand() % 0x100; 
+		iv[i] = rand() % 0x100;
 	}
-
-	//获取文件长度
-	fseek(pfile, 0, SEEK_END);
-	lFileSize = ftell(pfile);
-	fseek(pfile, 0, SEEK_SET);
-	//获取文件数据
-	pFileData = malloc(lFileSize);
-	if (!pFileData)
-	{
-		fclose(pfile);
-		printf("malloc failed \r\n");
-		return 0;
-	}
-	memset(pFileData, 0, lFileSize);
-	fread_s(pFileData, lFileSize, lFileSize, 1, pfile);
-	//关闭文件
-	fclose(pfile);
-	pfile = NULL;
-
-	//写出文件
-	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\驱动隐藏\\ProxyDrv\\MyDriver.h", "w");
-	if (!pfile)
-	{
-		printf("写出文件失败");
-		return 0;
-	}
-	//填写文件数据 
-	GetCurrentTimeStr(formattedTime);
-	sprintf_s(pSzOutData, 0x100, "//%s\r\n#pragma once\r\n", formattedTime);
-	fputs(pSzOutData, pfile);
-	sprintf_s(pSzOutData, 0x100, "//%s\r\n", currentPath2);
-	fputs(pSzOutData, pfile);
-	fputs("#define COUNT1 0x6C\r\n", pfile);
-	fputs("#define COUNT2 0x7D\r\n", pfile);
-	sprintf_s(pSzOutData, 0x100, "#define FILE_LEN %d \r\n", lFileSize);
-	fputs(pSzOutData, pfile);
-	sprintf_s(pSzOutData, 0x100, "unsigned char fileData[FILE_LEN]={", lFileSize);
-	fputs(pSzOutData, pfile);
-	//抹除mz标记
-	*(unsigned short*)(pFileData) = 0;
-	//抹除PE标记
-	*(unsigned int*)(pFileData + *(unsigned short*)(pFileData + 0x3c)) = 0;
-	int count = COUNT1;
-	for (size_t i = 0; i < lFileSize; i++)
-	{
-		//换行输出
-		if (i % 16 == 0)
-		{
-			fputs("\r\n", pfile);
-		}
-		if (pFileData[i] != 0)
-		{
-			if (i % 2 == 0)
-			{
-				count = COUNT2;
-			}
-			for (size_t t = 11; t < count; t++)
-			{
-				if (pFileData[i] != t)
-				{
-					pFileData[i] ^= t;
-				}
-			}
-		}
-		count = COUNT1;
-		sprintf_s(pSzOutData, 0x100, "0x%02x, ", pFileData[i]);
-		fputs(pSzOutData, pfile);
-	}
-	fputs("\r\n};\r\n", pfile);
-
-	free(pFileData);
-	fclose(pfile);
-	pfile = NULL;
-
-
-}
-void NoEncryptData() {
 
 	FILE* pfile = NULL;
 	long lFileSize = 0;
@@ -178,17 +84,124 @@ void NoEncryptData() {
 	fputs(pSzOutData, pfile);
 	sprintf_s(pSzOutData, 0x100, "//%s\r\n", currentPath2);
 	fputs(pSzOutData, pfile);
-	fputs("#define COUNT1 0x6C\r\n", pfile);
-	fputs("#define COUNT2 0x7D\r\n", pfile);
+
+
+	//生成key
+	sprintf_s(pSzOutData, 0x100, "unsigned char key[] ={");
+	fputs(pSzOutData, pfile);
+	for (size_t i = 0; i < sizeof(key); i++)
+	{
+		sprintf_s(pSzOutData, 0x100, "0x%02x, ", key[i]);
+		fputs(pSzOutData, pfile);
+	}
+	fputs("};\r\n", pfile);
+
+	//生成IV
+	sprintf_s(pSzOutData, 0x100, "unsigned char iv[] ={");
+	fputs(pSzOutData, pfile);
+	for (size_t i = 0; i < sizeof(iv); i++)
+	{
+		sprintf_s(pSzOutData, 0x100, "0x%02x, ", iv[i]);
+		fputs(pSzOutData, pfile);
+	}
+	fputs("};\r\n", pfile);
+
+
 	sprintf_s(pSzOutData, 0x100, "#define FILE_LEN %d \r\n", lFileSize);
 	fputs(pSzOutData, pfile);
 	sprintf_s(pSzOutData, 0x100, "unsigned char fileData[FILE_LEN]={", lFileSize);
+	fputs(pSzOutData, pfile);
+
+
+	AES_init_ctx_iv(&ctx, key, iv);
+	AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)pFileData, lFileSize);
+
+ 
+	for (size_t i = 0; i < lFileSize; i++)
+	{
+		//换行输出
+		if (i % 16 == 0)
+		{
+			fputs("\r\n", pfile);
+		}
+		sprintf_s(pSzOutData, 0x100, "0x%02x, ", pFileData[i]);
+		fputs(pSzOutData, pfile);
+	}
+	fputs("\r\n};\r\n", pfile);
+
+	free(pFileData);
+	fclose(pfile);
+	pfile = NULL;
+
+
+}
+void NoEncryptData() {
+
+	FILE* pfile = NULL;
+	long lFileSize = 0;
+	unsigned char* pFileData = NULL;
+	unsigned char pSzOutData[0x100] = { 0 };
+	//文件生成时间
+	char formattedTime[22] = { 0 };
+
+	char currentPath[MAX_PATH] = { 0 };
+	GetCurrentDirectoryA(MAX_PATH, currentPath);
+	char fileName[15] = "SSS_Drivers.sys";
+	char gang[5] = "\\";
+	char currentPath2[MAX_PATH] = { 0 };
+	memcpy(currentPath2, currentPath, sizeof(currentPath));
+	memcpy(currentPath2 + strlen(currentPath) * sizeof(char), gang, sizeof(gang));
+	memcpy(currentPath2 + strlen(currentPath2) * sizeof(char), fileName, sizeof(fileName));
+	printf("%s \r\n", currentPath2);
+	fopen_s(&pfile, currentPath2, "rb");
+	if (!pfile)
+	{
+		printf("fopen_s file failed 1");
+		return 0;
+	}
+
+	//获取文件长度
+	fseek(pfile, 0, SEEK_END);
+	lFileSize = ftell(pfile);
+	fseek(pfile, 0, SEEK_SET);
+	//获取文件数据
+	pFileData = malloc(lFileSize);
+	if (!pFileData)
+	{
+		fclose(pfile);
+		printf("malloc failed \r\n");
+		return 0;
+	}
+	memset(pFileData, 0, lFileSize);
+	fread_s(pFileData, lFileSize, lFileSize, 1, pfile);
+	//关闭文件
+	fclose(pfile);
+	pfile = NULL;
+
+	//写出文件
+	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\驱动隐藏\\ProxyDrv\\MyDriver2.h", "w");
+	if (!pfile)
+	{
+		printf("写出文件失败");
+		return 0;
+	}
+	//填写文件数据 
+	GetCurrentTimeStr(formattedTime);
+	sprintf_s(pSzOutData, 0x100, "//%s\r\n#pragma once\r\n", formattedTime);
+	fputs(pSzOutData, pfile);
+	sprintf_s(pSzOutData, 0x100, "//%s\r\n", currentPath2);
+	fputs(pSzOutData, pfile);
+	fputs("#define COUNT1 0x6C\r\n", pfile);
+	fputs("#define COUNT2 0x7D\r\n", pfile);
+	sprintf_s(pSzOutData, 0x100, "#define FILE_LEN2 %d \r\n", lFileSize);
+	fputs(pSzOutData, pfile);
+	sprintf_s(pSzOutData, 0x100, "unsigned char fileData2[FILE_LEN2]={", lFileSize);
 	fputs(pSzOutData, pfile);
 	////抹除mz标记
 	//*(unsigned short*)(pFileData) = 0;
 	////抹除PE标记
 	//*(unsigned int*)(pFileData + *(unsigned short*)(pFileData + 0x3c)) = 0;
-	int count = COUNT1;
+
 	for (size_t i = 0; i < lFileSize; i++)
 	{
 		//换行输出
@@ -207,11 +220,22 @@ void NoEncryptData() {
 
 
 }
-
+//
+//void validate_data() {
+//
+//	for (size_t i = 0; i < FILE_LEN; i++)
+//	{
+//		//换行输出
+//		if (fileData[i] == fileData2[i])
+//		{
+//			printf("0x%02X, 0x%02X \r\n", fileData[i],fileData2[i]);
+//		}
+//	}
+//
+//}
 
 int main(int args, char* argv[], char** env) {
- 
-	NoEncryptData();
-	system("pause");
+	encryptData();
+
 	return 0;
 }

@@ -1,6 +1,7 @@
 #include "LoadDriver/LoadDriver.h"
 #include "ClearTrace/trace.hpp"
 
+
 EXTERN_C VOID ClearDriverTrace(PDRIVER_OBJECT pDriver) {
 	ULONG64 uDriverImageBase = (ULONG64)pDriver->DriverStart;
 	PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)pDriver->DriverStart;

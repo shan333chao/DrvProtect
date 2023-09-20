@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="Entry.cpp" />
     <ClCompile Include="LoadDriver\LoadDriver.cpp" />
+    <ClCompile Include="tools\aes.c" />
     <ClCompile Include="tools\crt.cpp" />
     <ClCompile Include="tools\imports.cpp" />
     <ClCompile Include="tools\Utils.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="headers.h" />
     <ClInclude Include="LoadDriver\LoadDriver.h" />
     <ClInclude Include="MyDriver.h" />
+    <ClInclude Include="tools\aes.h" />
     <ClInclude Include="tools\crt.h" />
     <ClInclude Include="tools\imports.h" />
     <ClInclude Include="tools\Log.h" />

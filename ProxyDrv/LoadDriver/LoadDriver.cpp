@@ -273,22 +273,9 @@ namespace LoadDrv {
 
 	}
 	VOID DecryptDriverData() {
-		int count = COUNT1;
-		for (size_t i = 0; i < FILE_LEN; i++)
-		{
-			if (fileData[i] != 0)
-			{
-				if (i % 2 == 0)
-				{
-					count = COUNT2;
-				}
-				for (size_t t = 11; t < count; t++)
-				{
-					fileData[i] ^= t;
-				}
-			}
-			count = COUNT1;
-		}
+		struct AES_ctx ctx;
+		AES_init_ctx_iv(&ctx, key, iv);
+		AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)fileData, FILE_LEN);
 	}
 	PUCHAR FileBufferToImageBuffer()
 	{
@@ -482,7 +469,7 @@ namespace LoadDrv {
 		PUCHAR pImageBuffer = NULL;
 
 		//////数据解密
-		 //DecryptDriverData(); 
+		DecryptDriverData();
 		//拉伸内存
 		pImageBuffer = FileBufferToImageBuffer();
 		if (!pImageBuffer) {

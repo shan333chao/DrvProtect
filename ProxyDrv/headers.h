@@ -8,5 +8,6 @@
 #include "tools/Utils.h"
 #include "tools/Log.h"
 #include "tools/crt.h"
+#include "tools/aes.h"
 
 #endif // !_HEADERS_H
