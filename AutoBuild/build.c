@@ -66,7 +66,7 @@ void encryptData() {
 	pfile = NULL;
 
 	//写出文件
-	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\驱动隐藏\\DisapperDriver\\MyDriver.h", "w");
+	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\驱动隐藏\\ProxyDrv\\MyDriver.h", "w");
 	if (!pfile)
 	{
 		printf("写出文件失败");
@@ -133,7 +133,7 @@ void NoEncryptData() {
 
 	char currentPath[MAX_PATH] = { 0 };
 	GetCurrentDirectoryA(MAX_PATH, currentPath);
-	char fileName[15] = "SS_Driver.sys";
+	char fileName[15] = "SSS_Drivers.sys";
 	char gang[5] = "\\";
 	char currentPath2[MAX_PATH] = { 0 };
 	memcpy(currentPath2, currentPath, sizeof(currentPath));
@@ -166,7 +166,7 @@ void NoEncryptData() {
 	pfile = NULL;
 
 	//写出文件
-	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\驱动隐藏\\DisapperDriver\\MyDriver.h", "w");
+	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\驱动隐藏\\ProxyDrv\\MyDriver.h", "w");
 	if (!pfile)
 	{
 		printf("写出文件失败");
@@ -212,6 +212,6 @@ void NoEncryptData() {
 int main(int args, char* argv[], char** env) {
  
 	NoEncryptData();
- 
+	system("pause");
 	return 0;
 }

@@ -1,4 +1,7 @@
 #pragma once
+#ifndef  _PROCESS
+#define  _PROCESS
+
 
 #include "../includes.h"
 
@@ -288,3 +291,4 @@ namespace process_info {
 
 
 
+#endif // ! _PROCESS

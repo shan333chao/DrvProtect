@@ -110,11 +110,16 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	return status;
 }
 
+
+
+
+
+#if 0
 EXTERN_C VOID DriverUnload(PDRIVER_OBJECT pDriver) {
 	UNREFERENCED_PARAMETER(pDriver);
+	ProtectRoute::RemoveProtectWindow();
 
 }
-
 EXTERN_C ULONG_PTR GetNtoskrlImageBase(PDRIVER_OBJECT pdriver) {
 	PLDR_DATA_TABLE_ENTRY current = (PLDR_DATA_TABLE_ENTRY)pdriver->DriverSection;
 	ULONG_PTR imageBase = 0;
@@ -132,8 +137,8 @@ EXTERN_C ULONG_PTR GetNtoskrlImageBase(PDRIVER_OBJECT pdriver) {
 	}
 	return imageBase;
 }
-
 EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
+	pdriver->DriverUnload = DriverUnload;
 	ULONG_PTR imageBase = GetNtoskrlImageBase(pdriver);
 	Utils::SetKernelBase(imageBase);
 	Utils::InitApis();
@@ -144,10 +149,24 @@ EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
 	else {
 		communicate::RegisterComm(Dispatch);
 	}
-
-
-
 	ProtectRoute::StartProtect();
-
 	return  STATUS_SUCCESS;
 }
+#else
+
+EXTERN_C NTSTATUS DriverEntry(ULONG_PTR NtoskrlImageBase, PUNICODE_STRING reg) { 
+	Utils::SetKernelBase(NtoskrlImageBase);
+	Utils::InitApis();
+	if (Utils::InitOsVersion().dwBuildNumber > 7601)
+	{
+		ProtectRoute::SetCommHook(Dispatch);
+	}
+	else {
+		communicate::RegisterComm(Dispatch);
+	}
+	ProtectRoute::StartProtect();
+	Log("start success %p \r\n", NtoskrlImageBase);
+	return  STATUS_SUCCESS;
+}
+#endif // 0
+

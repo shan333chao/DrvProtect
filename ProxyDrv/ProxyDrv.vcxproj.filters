@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Driver Files">
+      <UniqueIdentifier>{8E41214B-6785-4CFE-B992-037D68949A14}</UniqueIdentifier>
+      <Extensions>inf;inv;inx;mof;mc;</Extensions>
+    </Filter>
+    <Filter Include="LoadDriver">
+      <UniqueIdentifier>{6f2508e3-0bad-491b-8826-3e98e7684f5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools">
+      <UniqueIdentifier>{83a3854c-ee75-46ee-8e4a-7c6e9df19764}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ClearTrace">
+      <UniqueIdentifier>{f1d51d76-f474-46ab-adae-9361c71d7598}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Entry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadDriver\LoadDriver.cpp">
+      <Filter>LoadDriver</Filter>
+    </ClCompile>
+    <ClCompile Include="tools\crt.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="tools\imports.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="tools\Utils.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="LoadDriver\LoadDriver.h">
+      <Filter>LoadDriver</Filter>
+    </ClInclude>
+    <ClInclude Include="tools\crt.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="tools\imports.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="tools\Log.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="tools\Utils.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="tools\xor.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="headers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MyDriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClearTrace\trace.hpp">
+      <Filter>ClearTrace</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
