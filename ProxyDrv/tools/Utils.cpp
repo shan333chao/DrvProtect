@@ -169,8 +169,32 @@ HANDLE Utils::GetPidByName(PWCH imageName)
 }
 
 VOID Utils::InitApis() {
+ 
+	
+	imports::imported.io_get_device_attachment_base_ref = GetNtFuncExportName(skCrypt("IoGetDeviceAttachmentBaseRef"));
+	imports::imported.io_get_related_device_object = GetNtFuncExportName(skCrypt("IoGetRelatedDeviceObject"));
+	imports::imported.ex_release_resource_lite = GetNtFuncExportName(skCrypt("ExReleaseResourceLite"));
+	imports::imported.ex_acquire_resource_exclusive_lite = GetNtFuncExportName(skCrypt("ExAcquireResourceExclusiveLite"));
 
+
+	imports::imported.ob_reference_object_by_handle_with_tag = GetNtFuncExportName(skCrypt("ObReferenceObjectByHandleWithTag"));
+	imports::imported.rtl_random_ex = GetNtFuncExportName(skCrypt("RtlRandomEx"));
+	imports::imported.ob_close_handle = GetNtFuncExportName(skCrypt("ObCloseHandle"));
+	imports::imported.io_create_file_ex = GetNtFuncExportName(skCrypt("IoCreateFileEx"));
+
+	imports::imported.rtl_lookup_element_generic_table_avl = GetNtFuncExportName(skCrypt("RtlLookupElementGenericTableAvl"));
+	imports::imported.rtl_delete_element_generic_table_avl = GetNtFuncExportName(skCrypt("RtlDeleteElementGenericTableAvl"));
+
+	imports::imported.ex_delete_lookaside_list_ex = GetNtFuncExportName(skCrypt("ExDeleteLookasideListEx"));
+	imports::imported.ex_initialize_lookaside_list_ex = GetNtFuncExportName(skCrypt("ExInitializeLookasideListEx"));
+	imports::imported.mm_flush_image_section = GetNtFuncExportName(skCrypt("MmFlushImageSection"));
+	imports::imported.zw_delete_file = GetNtFuncExportName(skCrypt("ZwDeleteFile"));
 	imports::imported.rtl_find_exported_routine_by_name = GetNtFuncExportName(skCrypt("RtlFindExportedRoutineByName"));
+
+	imports::imported.rtl_delete_registry_value = GetNtFuncExportName(skCrypt("RtlDeleteRegistryValue"));
+	imports::imported.zw_open_key = GetNtFuncExportName(skCrypt("ZwOpenKey"));
+	imports::imported.zw_delete_key = GetNtFuncExportName(skCrypt("ZwDeleteKey"));
+
 
 	imports::imported.mm_get_system_routine_address = GetNtFuncExportName(skCrypt("MmGetSystemRoutineAddress"));
 	imports::imported.mm_map_io_space = GetNtFuncExportName(skCrypt("MmMapIoSpace"));

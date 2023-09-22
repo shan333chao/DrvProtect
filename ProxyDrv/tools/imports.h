@@ -2,13 +2,23 @@
 #ifndef IMPORTS_H
 #define IMPORTS_H 
 #include <ntifs.h>
-#define VentroAPI  
+#define VentroAPI    
 
- 
+
 
 struct _m_imported
 {
- 
+	uintptr_t ob_close_handle;
+	uintptr_t io_create_file_ex;
+	uintptr_t rtl_lookup_element_generic_table_avl;
+	uintptr_t rtl_delete_element_generic_table_avl;
+	uintptr_t ex_delete_lookaside_list_ex;
+	uintptr_t ex_initialize_lookaside_list_ex;
+	uintptr_t mm_flush_image_section;
+	uintptr_t zw_delete_file;
+	uintptr_t rtl_delete_registry_value;
+	uintptr_t zw_open_key;
+	uintptr_t zw_delete_key;
 	uintptr_t mm_get_system_routine_address;
 	uintptr_t mm_map_io_space;
 	uintptr_t io_get_device_object_pointer;
@@ -84,11 +94,61 @@ struct _m_imported
 	uintptr_t ke_get_current_thread;
 	uintptr_t mm_user_probe_address;
 	uintptr_t rtl_find_exported_routine_by_name;
+	uintptr_t rtl_random_ex;
+	uintptr_t ob_reference_object_by_handle_with_tag;
+	uintptr_t ex_release_resource_lite;
+	uintptr_t ex_acquire_resource_exclusive_lite;
+	uintptr_t io_get_related_device_object;
+	uintptr_t io_get_device_attachment_base_ref;
 };
 namespace imports {
 
 	extern struct _m_imported imported;
+	VentroAPI PDEVICE_OBJECT io_get_device_attachment_base_ref(PDEVICE_OBJECT DeviceObject);
 
+	VOID FASTCALL ex_release_resource_lite(			  PERESOURCE Resource		);
+	BOOLEAN		ex_acquire_resource_exclusive_lite(
+			_Inout_ _Requires_lock_not_held_(*_Curr_)
+			_When_(return != 0, _Acquires_exclusive_lock_(*_Curr_))
+			PERESOURCE Resource,
+			_In_ _Literal_ BOOLEAN Wait
+		);
+	PDEVICE_OBJECT io_get_related_device_object( PFILE_OBJECT FileObject		);
+	
+
+	VentroAPI NTSTATUS ob_reference_object_by_handle_with_tag(
+			  HANDLE Handle,
+			  ACCESS_MASK DesiredAccess,
+			  POBJECT_TYPE ObjectType,
+			  KPROCESSOR_MODE AccessMode,
+			  ULONG Tag,
+			  PVOID* Object,
+			  POBJECT_HANDLE_INFORMATION HandleInformation
+		);
+
+
+	VentroAPI ULONG rtl_random_ex(PULONG Seed);
+
+
+	VentroAPI NTSTATUS ob_close_handle(HANDLE Handle, KPROCESSOR_MODE PreviousMode);
+
+
+	VentroAPI NTSTATUS 	 io_create_file_ex(_Out_ PHANDLE FileHandle, _In_  ACCESS_MASK DesiredAccess, _In_  POBJECT_ATTRIBUTES ObjectAttributes, _Out_ PIO_STATUS_BLOCK IoStatusBlock, _In_opt_ PLARGE_INTEGER AllocationSize, _In_  ULONG FileAttributes, _In_  ULONG ShareAccess, _In_  ULONG Disposition, _In_  ULONG CreateOptions, _In_opt_ PVOID EaBuffer, _In_  ULONG EaLength, _In_  CREATE_FILE_TYPE CreateFileType, _In_opt_ PVOID InternalParameters, _In_  ULONG Options, _In_opt_ PIO_DRIVER_CREATE_CONTEXT DriverContext);
+
+	VentroAPI PVOID	rtl_lookup_element_generic_table_avl(_In_ PRTL_AVL_TABLE Table, _In_ PVOID Buffer);
+	VentroAPI BOOLEAN rtl_delete_element_generic_table_avl(_In_ PRTL_AVL_TABLE Table, _In_ PVOID Buffer);
+
+	VentroAPI VOID ex_delete_lookaside_list_ex(PLOOKASIDE_LIST_EX Lookaside);
+	VentroAPI	NTSTATUS ex_initialize_lookaside_list_ex(_Out_ PLOOKASIDE_LIST_EX Lookaside, _In_opt_ PALLOCATE_FUNCTION_EX Allocate, _In_opt_ PFREE_FUNCTION_EX Free, _In_ POOL_TYPE PoolType, _In_ ULONG Flags, _In_ SIZE_T Size, _In_ ULONG Tag, _In_ USHORT Depth);
+
+	VentroAPI BOOLEAN mm_flush_image_section(_In_ PSECTION_OBJECT_POINTERS SectionObjectPointer, _In_ MMFLUSH_TYPE FlushType);
+	VentroAPI NTSTATUS zw_delete_file(_In_ POBJECT_ATTRIBUTES ObjectAttributes);
+
+	VentroAPI NTSTATUS rtl_delete_registry_value(ULONG RelativeTo, PCWSTR Path, PCWSTR ValueName);
+
+	VentroAPI NTSTATUS zw_open_key(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes);
+
+	VentroAPI NTSTATUS zw_delete_key(HANDLE KeyHandle);
 
 	VentroAPI PVOID rtl_find_exported_routine_by_name(_In_ PVOID ImageBase, _In_ PCCH RoutineName);
 

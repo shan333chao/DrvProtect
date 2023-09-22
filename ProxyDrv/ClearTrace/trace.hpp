@@ -70,7 +70,7 @@ namespace trace
 		{
 			PIMAGE_SECTION_HEADER p = &section[i];
 
-			if (strstr((const char*)p->Name, skCrypt(".text")) || 'EGAP' == *reinterpret_cast<int*>(p->Name))
+			if (Utils::kstrstr((const char*)p->Name, skCrypt(".text")) || 'EGAP' == *reinterpret_cast<int*>(p->Name))
 			{
 				DWORD64 res = find_pattern(addr + p->VirtualAddress, p->Misc.VirtualSize, pattern, mask);
 				if (res) return res;
@@ -90,7 +90,7 @@ namespace trace
 			static const wchar_t maps[62] = L"123456789ZXCVBNMASDFGHJKLQWERTYUIOPzxcvbnmasdfghjklqwertyuiop";
 
 			if (size == 0) size = wcslen(str);
-			for (size_t i = 0; i < size; i++) str[i] = maps[RtlRandomEx(&seed) % 60];
+			for (size_t i = 0; i < size; i++) str[i] = maps[imports::rtl_random_ex(&seed) % 60];
 		}
 
 		return str;
@@ -140,11 +140,11 @@ namespace trace
 
 		piddb_cache_entry in_entry{ };
 		in_entry.stamp = stamp;
-		RtlInitUnicodeString(&in_entry.name, name);
+		imports::rtl_init_unicode_string(&in_entry.name, name);
 
-		if (ExAcquireResourceExclusiveLite((PERESOURCE)PiDDBLock, TRUE))
+		if (imports::ex_acquire_resource_exclusive_lite((PERESOURCE)PiDDBLock, TRUE))
 		{
-			ppiddb_cache_entry ret_entry = (ppiddb_cache_entry)RtlLookupElementGenericTableAvl((PRTL_AVL_TABLE)PiDDBCacheTable, &in_entry);
+			ppiddb_cache_entry ret_entry = (ppiddb_cache_entry)imports::rtl_lookup_element_generic_table_avl((PRTL_AVL_TABLE)PiDDBCacheTable, &in_entry);
 			if (ret_entry)
 			{
 				Log("[%s] found %ws driver cache 0x%p \n", __FUNCTION__, ret_entry->name.Buffer, ret_entry->status);
@@ -158,7 +158,7 @@ namespace trace
 					next->Blink = prev;
 				}
 
-				if (RtlDeleteElementGenericTableAvl((PRTL_AVL_TABLE)PiDDBCacheTable, ret_entry))
+				if (imports::rtl_delete_element_generic_table_avl((PRTL_AVL_TABLE)PiDDBCacheTable, ret_entry))
 				{
 					PRTL_AVL_TABLE avl = ((PRTL_AVL_TABLE)PiDDBCacheTable);
 					if (avl->DeleteCount > 0) avl->DeleteCount--;
@@ -167,7 +167,7 @@ namespace trace
 				}
 			}
 
-			ExReleaseResourceLite((PERESOURCE)PiDDBLock);
+			imports::ex_release_resource_lite((PERESOURCE)PiDDBLock);
 		}
 
 		return status;
@@ -216,7 +216,7 @@ namespace trace
 		if (imports::mm_is_address_valid(unloaders) == FALSE || imports::mm_is_address_valid(unloaders_count) == FALSE) return status;
 
 		static ERESOURCE PsLoadedModuleResource;
-		if (ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE))
+		if (imports::ex_acquire_resource_exclusive_lite(&PsLoadedModuleResource, TRUE))
 		{
 			for (unsigned long i = 0; i < *unloaders_count && i < max_unloader_driver; i++)
 			{
@@ -238,7 +238,7 @@ namespace trace
 				}
 			}
 
-			ExReleaseResourceLite(&PsLoadedModuleResource);
+			imports::ex_release_resource_lite(&PsLoadedModuleResource);
 		}
 
 		return status;
@@ -253,7 +253,7 @@ namespace trace
 		ci_address = (ULONGLONG)Utils::GetKernelModule(skCrypt("CI.dll"), &ci_size);
 
 		Log("[%s] ci address 0x%llx \n", __FUNCTION__, ci_address);
-		if (ci_address == 0  ) return status;
+		if (ci_address == 0) return status;
 
 		unsigned long long HashCacheLock = 0;
 
@@ -283,13 +283,13 @@ namespace trace
 		HashCacheLock = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(HashCacheLock) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(HashCacheLock) + 3));
 		Log("[%s] g_HashCacheLock address 0x%llx\n", __FUNCTION__, HashCacheLock);
 
-		if (ExAcquireResourceExclusiveLite((PERESOURCE)HashCacheLock, TRUE))
+		if (imports::ex_acquire_resource_exclusive_lite((PERESOURCE)HashCacheLock, TRUE))
 		{
 			phash_bucket_entry current_entry = ((phash_bucket_entry)KernelHashBucketList)->next;
 			phash_bucket_entry prev_entry = (phash_bucket_entry)KernelHashBucketList;
 
 			UNICODE_STRING drv_name;
-			RtlInitUnicodeString(&drv_name, name);
+			imports::rtl_init_unicode_string(&drv_name, name);
 
 			while (current_entry)
 			{
@@ -307,7 +307,7 @@ namespace trace
 					current_entry->hash[2] = current_entry->hash[3] = 1;
 					random_wstring(current_entry->name.Buffer, current_entry->name.Length / 2 - 4);
 
-					ExFreePoolWithTag(current_entry, 0);
+					imports::ex_free_pool_with_tag(current_entry, 0);
 					status = true;
 					break;
 				}
@@ -318,7 +318,7 @@ namespace trace
 				}
 			}
 
-			ExReleaseResourceLite((PERESOURCE)HashCacheLock);
+			imports::ex_release_resource_lite((PERESOURCE)HashCacheLock);
 		}
 
 		return status;
@@ -350,7 +350,7 @@ namespace trace
 		 * mov     ecx, cs:g_CiEaCacheLookasideList.L.Type
 		 * inc     dword ptr cs:g_CiEaCacheLookasideList.L.anonymous_0
 		 */
-		unsigned long long CiEaCacheLookasideList =  find_pattern_image(ci_address,
+		unsigned long long CiEaCacheLookasideList = find_pattern_image(ci_address,
 			"\x8B\x15\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x44\x8B\x05\x00\x00\x00\x00\x8B\x0D\x00\x00\x00\x00\xFF\x05\x00\x00\x00\x00\xFF\x15",
 			skCrypt("xx????xxx????xxx????xx????xx????xx"));
 		if (CiEaCacheLookasideList == 0) return status;
@@ -360,8 +360,8 @@ namespace trace
 
 		PLOOKASIDE_LIST_EX g_CiEaCacheLookasideList = (PLOOKASIDE_LIST_EX)CiEaCacheLookasideList;
 		ULONG size = g_CiEaCacheLookasideList->L.Size;
-		ExDeleteLookasideListEx(g_CiEaCacheLookasideList);
-		if (NT_SUCCESS(ExInitializeLookasideListEx(g_CiEaCacheLookasideList, NULL, NULL, PagedPool, 0, size, 'csIC', 0)))
+		imports::ex_delete_lookaside_list_ex(g_CiEaCacheLookasideList);
+		if (NT_SUCCESS(imports::ex_initialize_lookaside_list_ex(g_CiEaCacheLookasideList, NULL, NULL, PagedPool, 0, size, 'csIC', 0)))
 		{
 			Log("[%s] clear g_CiEaCacheLookasideList \n", __FUNCTION__);
 			status = true;

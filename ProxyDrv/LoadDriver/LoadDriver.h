@@ -4,12 +4,7 @@
 
 #include "../headers.h"
  
-#define COUNT1 0x6C
-
-#define COUNT2 0x7D
-
-#define FILE_LEN 35096 
-
+ 
 
 
 //0x120 bytes (sizeof)

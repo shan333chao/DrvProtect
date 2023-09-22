@@ -5,9 +5,105 @@
 
 
 
-namespace imports { 
+namespace imports {
 
-	struct _m_imported imported = { 0 }; 
+	struct _m_imported imported = { 0 };
+
+
+	VentroAPI PDEVICE_OBJECT io_get_device_attachment_base_ref(PDEVICE_OBJECT DeviceObject) {
+	
+		return reinterpret_cast<PDEVICE_OBJECT(*)(PDEVICE_OBJECT)> (imported.io_get_device_attachment_base_ref)(DeviceObject);
+	}
+
+	PDEVICE_OBJECT io_get_related_device_object(PFILE_OBJECT FileObject) {
+		return reinterpret_cast<PDEVICE_OBJECT(*)(PFILE_OBJECT)> (imported.io_get_related_device_object)(FileObject);
+
+	}
+
+
+	VOID FASTCALL ex_release_resource_lite(PERESOURCE Resource) {
+		return reinterpret_cast<VOID(*)(PERESOURCE)> (imported.ex_release_resource_lite)(Resource);
+	}
+
+	BOOLEAN		ex_acquire_resource_exclusive_lite(
+		_Inout_ _Requires_lock_not_held_(*_Curr_)
+		_When_(return != 0, _Acquires_exclusive_lock_(*_Curr_))
+		PERESOURCE Resource,
+		_In_ _Literal_ BOOLEAN Wait
+	) {
+		return reinterpret_cast<BOOLEAN(*)(PERESOURCE, BOOLEAN)> (imported.ex_acquire_resource_exclusive_lite)(Resource, Wait);
+
+	}
+
+
+	VentroAPI NTSTATUS ob_reference_object_by_handle_with_tag(
+		HANDLE Handle,
+		ACCESS_MASK DesiredAccess,
+		POBJECT_TYPE ObjectType,
+		KPROCESSOR_MODE AccessMode,
+		ULONG Tag,
+		PVOID* Object,
+		POBJECT_HANDLE_INFORMATION HandleInformation
+	) {
+
+		return reinterpret_cast<NTSTATUS(*)(HANDLE, ACCESS_MASK, POBJECT_TYPE, KPROCESSOR_MODE, ULONG, PVOID*, POBJECT_HANDLE_INFORMATION)> (imported.ob_reference_object_by_handle_with_tag)(Handle, DesiredAccess, ObjectType, AccessMode, Tag, Object, HandleInformation);
+	}
+
+	VentroAPI ULONG rtl_random_ex(PULONG Seed) {
+		return reinterpret_cast<ULONG(*)(PULONG)> (imported.rtl_random_ex)(Seed);
+	}
+	VentroAPI NTSTATUS ob_close_handle(HANDLE Handle, KPROCESSOR_MODE PreviousMode) {
+		return reinterpret_cast<NTSTATUS(*)(HANDLE, KPROCESSOR_MODE)> (imported.ob_close_handle)(Handle, PreviousMode);
+	}
+	VentroAPI NTSTATUS 	 io_create_file_ex(PHANDLE FileHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock, PLARGE_INTEGER AllocationSize, ULONG FileAttributes, ULONG ShareAccess, ULONG Disposition, ULONG CreateOptions, PVOID EaBuffer, ULONG EaLength, CREATE_FILE_TYPE CreateFileType, PVOID InternalParameters, ULONG Options, PIO_DRIVER_CREATE_CONTEXT DriverContext) {
+
+		return reinterpret_cast<NTSTATUS(*)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, PLARGE_INTEGER, ULONG, ULONG, ULONG, ULONG, PVOID, ULONG, CREATE_FILE_TYPE, PVOID, ULONG, PIO_DRIVER_CREATE_CONTEXT)> (imported.io_create_file_ex)(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, EaBuffer, EaLength, CreateFileType, InternalParameters, Options, DriverContext);
+	}
+
+	VentroAPI PVOID	rtl_lookup_element_generic_table_avl(_In_ PRTL_AVL_TABLE Table, _In_ PVOID Buffer) {
+		return reinterpret_cast<PVOID(*)(PRTL_AVL_TABLE, PVOID)> (imported.rtl_lookup_element_generic_table_avl)(Table, Buffer);
+	}
+
+	VentroAPI BOOLEAN rtl_delete_element_generic_table_avl(_In_ PRTL_AVL_TABLE Table, _In_ PVOID Buffer) {
+		return reinterpret_cast<BOOLEAN(*)(PRTL_AVL_TABLE, PVOID)> (imported.rtl_delete_element_generic_table_avl)(Table, Buffer);
+
+	}
+	VentroAPI VOID ex_delete_lookaside_list_ex(PLOOKASIDE_LIST_EX Lookaside) {
+
+		return reinterpret_cast<VOID(*)(PLOOKASIDE_LIST_EX)> (imported.ex_delete_lookaside_list_ex)(Lookaside);
+	}
+
+	VentroAPI	NTSTATUS ex_initialize_lookaside_list_ex(_Out_ PLOOKASIDE_LIST_EX Lookaside, _In_opt_ PALLOCATE_FUNCTION_EX Allocate, _In_opt_ PFREE_FUNCTION_EX Free, _In_ POOL_TYPE PoolType, _In_ ULONG Flags, _In_ SIZE_T Size, _In_ ULONG Tag, _In_ USHORT Depth) {
+
+		return reinterpret_cast<NTSTATUS(*)(PLOOKASIDE_LIST_EX, PALLOCATE_FUNCTION_EX, PFREE_FUNCTION_EX, POOL_TYPE, ULONG, SIZE_T, ULONG, USHORT)> (imported.ex_initialize_lookaside_list_ex)(Lookaside, Allocate, Free, PoolType, Flags, Size, Tag, Depth);
+	}
+
+
+	VentroAPI BOOLEAN mm_flush_image_section(_In_ PSECTION_OBJECT_POINTERS SectionObjectPointer, _In_ MMFLUSH_TYPE FlushType) {
+
+		return reinterpret_cast<BOOLEAN(*)(PSECTION_OBJECT_POINTERS, MMFLUSH_TYPE)> (imported.mm_flush_image_section)(SectionObjectPointer, FlushType);
+	}
+
+	VentroAPI NTSTATUS zw_delete_file(_In_ POBJECT_ATTRIBUTES ObjectAttributes) {
+
+		return reinterpret_cast<NTSTATUS(*)(POBJECT_ATTRIBUTES)> (imported.zw_delete_file)(ObjectAttributes);
+	}
+
+
+	VentroAPI  NTSTATUS rtl_delete_registry_value(ULONG RelativeTo, PCWSTR Path, PCWSTR ValueName) {
+
+		return reinterpret_cast<NTSTATUS(*)(ULONG, PCWSTR, PCWSTR)> (imported.rtl_delete_registry_value)(RelativeTo, Path, ValueName);
+	}
+	VentroAPI NTSTATUS zw_open_key(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes)
+	{
+		return reinterpret_cast<NTSTATUS(*)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES)> (imported.zw_open_key)(KeyHandle, DesiredAccess, ObjectAttributes);
+
+	}
+
+	VentroAPI NTSTATUS zw_delete_key(HANDLE KeyHandle)
+	{
+		return reinterpret_cast<NTSTATUS(*)(HANDLE)> (imported.zw_delete_key)(KeyHandle);
+	}
 
 	VentroAPI PVOID rtl_find_exported_routine_by_name(_In_ PVOID ImageBase, _In_ PCCH RoutineName)
 	{
@@ -28,7 +124,7 @@ namespace imports {
 	{
 		return reinterpret_cast<NTSTATUS(*)(PFILE_OBJECT, POBJECT_NAME_INFORMATION*)> (imported.io_query_file_dos_device_name)(FileObject, ObjectNameInformation);
 	}
- 
+
 	VentroAPI PVOID ke_stack_attach_process(PRKPROCESS PROCESS, PRKAPC_STATE ApcState)
 	{
 		return reinterpret_cast<PVOID(*)(PRKPROCESS, PRKAPC_STATE)> (imported.ke_stack_attach_process)(PROCESS, ApcState);

@@ -18,7 +18,28 @@ void GetCurrentTimeStr(char* timestrBuffer) {
 	// 格式化时间为字符串
 	strftime(timestrBuffer, 20, "%Y-%m-%d %H:%M:%S", &localTime);
 }
-
+DWORD rav2Fov(char* pFileBuffer, DWORD dwRav) {
+	PIMAGE_DOS_HEADER pDosHeader = pFileBuffer;
+	PIMAGE_NT_HEADERS pNTHeader = pFileBuffer + pDosHeader->e_lfanew;
+	PIMAGE_FILE_HEADER pFileHeader = (PIMAGE_FILE_HEADER)((PCHAR)pNTHeader + 4);
+	PIMAGE_OPTIONAL_HEADER pOptionalHeader = (PIMAGE_OPTIONAL_HEADER)((PCHAR)pFileHeader + IMAGE_SIZEOF_FILE_HEADER);
+	PIMAGE_SECTION_HEADER pSectionHeader = (PIMAGE_SECTION_HEADER)((PCHAR)pOptionalHeader + pFileHeader->SizeOfOptionalHeader);
+	if (dwRav == 0x0)
+	{
+		return 0;
+	}
+	if (dwRav > pOptionalHeader->ImageBase)
+	{
+		dwRav = dwRav - pOptionalHeader->ImageBase;
+	}
+	for (size_t i = 0; i < pFileHeader->NumberOfSections; i++)
+	{
+		if (dwRav >= pSectionHeader[i].VirtualAddress && (dwRav < pSectionHeader[i].VirtualAddress + pSectionHeader[i].Misc.VirtualSize))
+		{
+			return dwRav - pSectionHeader[i].VirtualAddress + pSectionHeader[i].PointerToRawData;
+		}
+	}
+}
 void encryptData() {
 	struct AES_ctx ctx;
 	unsigned char key[] = "\xde\xad\xbe\xef\xca\xfe\xba\xbe\xde\xad\xbe\xef\xca\xfe\xba\xbe";
@@ -78,6 +99,26 @@ void encryptData() {
 		printf("写出文件失败");
 		return 0;
 	}
+
+	//remove debug
+	PIMAGE_DOS_HEADER pDosImage = (PIMAGE_DOS_HEADER)pFileData;
+	PIMAGE_NT_HEADERS pNtsImage = (PIMAGE_NT_HEADERS)(pFileData + pDosImage->e_lfanew);
+
+	//删除调试信息
+	DWORD _PE_DEBUG = pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress;
+	DWORD addr = rav2Fov(pFileData, _PE_DEBUG);
+	ULONG dbgDirCount = pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size / sizeof(IMAGE_DEBUG_DIRECTORY);
+	PIMAGE_DEBUG_DIRECTORY pDEBUG = (PIMAGE_DEBUG_DIRECTORY)(addr + pFileData);
+	for (size_t i = 0; i < dbgDirCount; i++)
+	{
+		memset(pDEBUG[i].PointerToRawData + pFileData, 0x00, pDEBUG[i].SizeOfData);
+	}
+	memset(addr + pFileData, 0xcc, pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size);
+	pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress = 0;
+	pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size = 0;
+
+
+
 	//填写文件数据 
 	GetCurrentTimeStr(formattedTime);
 	sprintf_s(pSzOutData, 0x100, "//%s\r\n#pragma once\r\n", formattedTime);

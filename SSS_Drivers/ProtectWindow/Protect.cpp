@@ -88,7 +88,7 @@ namespace Protect {
 		if (!protect)
 		{
 			Log("imports::ex_allocate_pool_with_tag failed");
-			return FALSE;
+			return  NT_SUCCESS(STATUS_UNSUCCESSFUL);
 		}
 
 		Utils::kmemset(protect, 0, sizeof(PROTECT_PROCESS));
@@ -98,7 +98,7 @@ namespace Protect {
 		imports::ke_acquire_guarded_mutex(&ProtectMutex);
 		InsertTailList(&ProtectProcesses, &protect->ProtectProcesses);
 		imports::ke_release_guarded_mutex(&ProtectMutex);
-		return TRUE;
+		return STATUS_SUCCESS;
 	}
 
 

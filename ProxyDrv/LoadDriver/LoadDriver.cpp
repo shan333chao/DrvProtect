@@ -42,7 +42,7 @@ namespace LoadDrv {
 		OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&Directory, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE);
 		IO_STATUS_BLOCK IoStatusBlock;
 		HANDLE FileHandle;
-		Status = IoCreateFileEx(&FileHandle,
+		Status = imports::io_create_file_ex(&FileHandle,
 			FILE_GENERIC_READ,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -61,7 +61,7 @@ namespace LoadDrv {
 			return NULL;
 
 		PFILE_OBJECT FileObject = NULL;
-		Status = ObReferenceObjectByHandleWithTag(FileHandle,
+		Status = imports::ob_reference_object_by_handle_with_tag(FileHandle,
 			FILE_GENERIC_READ,
 			*IoFileObjectType,
 			KernelMode,
@@ -70,20 +70,21 @@ namespace LoadDrv {
 			NULL);
 		if (!NT_SUCCESS(Status))
 		{
-			ObCloseHandle(FileHandle, KernelMode);
+			imports::ob_close_handle(FileHandle, KernelMode);
 			return NULL;
 		}
 
 
-		const PDEVICE_OBJECT DeviceObject = IoGetRelatedDeviceObject(FileObject);
+		const PDEVICE_OBJECT DeviceObject = imports::io_get_related_device_object(FileObject);
 		PDEVICE_OBJECT BaseFsDeviceObject = DeviceObject;
 		if (DeviceObject != NULL)
 		{
-			BaseFsDeviceObject = IoGetDeviceAttachmentBaseRef(DeviceObject);
+			BaseFsDeviceObject = imports::io_get_device_attachment_base_ref(DeviceObject);
 		}
 
-		ObfDereferenceObject(FileObject);
-		ObCloseHandle(FileHandle, KernelMode);
+		imports::obf_dereference_object(FileObject);
+
+		imports::ob_close_handle(FileHandle, KernelMode);
 
 		return BaseFsDeviceObject;
 	}
@@ -101,7 +102,7 @@ namespace LoadDrv {
 		const PDEVICE_OBJECT BaseFsDeviceObject = IopGetBaseFsDeviceObject(filePath);
 		DriverCreateContext.DeviceObjectHint = BaseFsDeviceObject;
 		//打开文件获取文件句柄
-		status = IoCreateFileEx(&hFile,
+		status = imports::io_create_file_ex(&hFile,
 			SYNCHRONIZE | DELETE,
 			&obj,
 			&ioStatusBlock,
@@ -120,7 +121,7 @@ namespace LoadDrv {
 			: NULL
 		);
 		if (BaseFsDeviceObject != NULL)
-			ObfDereferenceObject(BaseFsDeviceObject);
+			imports::obf_dereference_object(BaseFsDeviceObject);
 		if (!NT_SUCCESS(status))
 		{
 			Log("[SSS]NtCreateFile failed %x \r\n", status);
@@ -132,7 +133,8 @@ namespace LoadDrv {
 			Log("[SSS]ObReferenceObjectByHandle failed %x \r\n", status);
 			return FALSE;
 		}
-		ZwClose(hFile);
+
+		imports::zw_close(hFile);
 		//强制删除文件
 		pFileObject->DeleteAccess = 1;
 		pFileObject->DeletePending = 0;
@@ -141,10 +143,10 @@ namespace LoadDrv {
 		pFileObject->SectionObjectPointer->ImageSectionObject = NULL;
 
 		//刷新文件属性
-		MmFlushImageSection(pFileObject->SectionObjectPointer, MmFlushForDelete);
-		ObDereferenceObject(pFileObject);
-		ObCloseHandle(pFileObject, KernelMode);
-		status = ZwDeleteFile(&obj);
+		imports::mm_flush_image_section(pFileObject->SectionObjectPointer, MmFlushForDelete);
+		imports::obf_dereference_object(pFileObject);
+		imports::ob_close_handle(pFileObject, KernelMode);
+		status = imports::zw_delete_file(&obj);
 		if (!NT_SUCCESS(status))
 		{
 			Log("[SSS]ZwDeleteFile failed %x \r\n", status);
@@ -169,7 +171,7 @@ namespace LoadDrv {
 
 		IO_STATUS_BLOCK IoStatusBlock;
 		HANDLE FileHandle;
-		Status = IoCreateFileEx(&FileHandle,
+		Status = imports::io_create_file_ex(&FileHandle,
 			SYNCHRONIZE | DELETE,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -188,13 +190,13 @@ namespace LoadDrv {
 			: NULL);
 
 		if (BaseFsDeviceObject != NULL)
-			ObfDereferenceObject(BaseFsDeviceObject);
+			imports::obf_dereference_object(BaseFsDeviceObject);
 
 		if (!NT_SUCCESS(Status))
 			return FALSE;
 
 		PFILE_OBJECT FileObject;
-		Status = ObReferenceObjectByHandleWithTag(FileHandle,
+		Status = imports::ob_reference_object_by_handle_with_tag(FileHandle,
 			SYNCHRONIZE | DELETE,
 			*IoFileObjectType,
 			KernelMode,
@@ -203,7 +205,7 @@ namespace LoadDrv {
 			NULL);
 		if (!NT_SUCCESS(Status))
 		{
-			ObCloseHandle(FileHandle, KernelMode);
+			imports::ob_close_handle(FileHandle, KernelMode);
 			return FALSE;
 		}
 
@@ -212,12 +214,12 @@ namespace LoadDrv {
 		FileObject->DeletePending = 0;
 		FileObject->SectionObjectPointer->DataSectionObject = NULL;
 		FileObject->SectionObjectPointer->ImageSectionObject = NULL;
-		const BOOLEAN ImageSectionFlushed = MmFlushImageSection(FileObject->SectionObjectPointer, MmFlushForDelete);
-		ObfDereferenceObject(FileObject);
-		ObCloseHandle(FileHandle, KernelMode);
+		const BOOLEAN ImageSectionFlushed = imports::mm_flush_image_section(FileObject->SectionObjectPointer, MmFlushForDelete);
+		imports::obf_dereference_object(FileObject);
+		imports::ob_close_handle(FileHandle, KernelMode);
 		if (ImageSectionFlushed)
 		{
-			Status = ZwDeleteFile(&ObjectAttributes);
+			Status = imports::zw_delete_file(&ObjectAttributes);
 			if (NT_SUCCESS(Status))
 			{
 				Log("[SSS]Driver file \"%wZ\" has been deleted.\n", DriverPath);
@@ -231,43 +233,43 @@ namespace LoadDrv {
 		wchar_t szPath[0x256] = { 0 };
 		UNICODE_STRING uPathEnum = { 0 };
 		//RTL_REGISTRY_ABSOLUTE代表绝对路径
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, L"DispalyName");
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, L"ErrorControl");
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, L"ImagePath");
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, L"Start");
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, L"Type");
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, L"WOW64");
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, skCrypt(L"DispalyName"));
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, skCrypt(L"ErrorControl"));
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, skCrypt(L"ImagePath"));
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, skCrypt(L"Start"));
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, skCrypt(L"Type"));
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, regpath->Buffer, skCrypt(L"WOW64"));
 		//寻找内层目录
 		RtlStringCbPrintfW(szPath, 0x256, L"%ws\\Enum", regpath->Buffer);
 		Log("[SSS] szPath  %ws \r\n", szPath);
-		RtlInitUnicodeString(&uPathEnum, szPath);
+		imports::rtl_init_unicode_string(&uPathEnum, szPath);
 		Log("[SSS] suPath  %wZ \r\n", uPathEnum);
 
 
 
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, szPath, L"Count");
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, szPath, L"INISTARTFAILED");
-		RtlDeleteRegistryValue(RTL_REGISTRY_ABSOLUTE, szPath, L"NextInstance");
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, szPath, skCrypt(L"Count"));
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, szPath, skCrypt(L"INISTARTFAILED"));
+		imports::rtl_delete_registry_value(RTL_REGISTRY_ABSOLUTE, szPath, skCrypt(L"NextInstance"));
 		HANDLE hKey = NULL, hKey2 = NULL;
 		OBJECT_ATTRIBUTES objAttr = { 0 };
 		InitializeObjectAttributes(&objAttr, &uPathEnum, OBJ_CASE_INSENSITIVE, NULL, NULL);
-		NTSTATUS st = ZwOpenKey(&hKey, KEY_ALL_ACCESS, &objAttr);
+		NTSTATUS st = imports::zw_open_key(&hKey, KEY_ALL_ACCESS, &objAttr);
 		if (!NT_SUCCESS(st))
 		{
 			Log("[SSS]ZwOpenKey  failed %x \r\n", st);
 			return FALSE;
 		}
-		st = ZwDeleteKey(hKey);
-		st = ZwClose(hKey);
+		st = imports::zw_delete_key(hKey);
+		st = imports::zw_close(hKey);
 		InitializeObjectAttributes(&objAttr, regpath, OBJ_CASE_INSENSITIVE, NULL, NULL);
-		st = ZwOpenKey(&hKey2, KEY_ALL_ACCESS, &objAttr);
+		st = imports::zw_open_key(&hKey2, KEY_ALL_ACCESS, &objAttr);
 		if (!NT_SUCCESS(st))
 		{
 			Log("[SSS]ZwOpenKey2 failed %x \r\n", st);
 			return FALSE;
 		}
-		st = ZwDeleteKey(hKey2);
-		st = ZwClose(hKey2);
+		st = imports::zw_delete_key(hKey2);
+		st = imports::zw_close(hKey2);
 		Log("[SSS]Delete reg Success  %wZ \r\n", regpath);
 		return TRUE;
 
@@ -291,7 +293,7 @@ namespace LoadDrv {
 		PIMAGE_SECTION_HEADER	pSec = IMAGE_FIRST_SECTION(pNth);
 
 		//申请内存
-		pImageBuffer = (PUCHAR)ExAllocatePool(NonPagedPool, pNth->OptionalHeader.SizeOfImage);
+		pImageBuffer = (PUCHAR)imports::ex_allocate_pool(NonPagedPool, pNth->OptionalHeader.SizeOfImage);
 		if (!pImageBuffer)
 		{
 
@@ -435,22 +437,29 @@ namespace LoadDrv {
 		PIMAGE_NT_HEADERS pNtsImage = (PIMAGE_NT_HEADERS)(imageBuffer + pDosImage->e_lfanew);
 
 
-		//删除调试信息
-		PIMAGE_DEBUG_DIRECTORY pDEBUG = (PIMAGE_DEBUG_DIRECTORY)(pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress + imageBuffer);
-		ULONG dbgDirCount = pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size / sizeof(IMAGE_DEBUG_DIRECTORY);
-		for (size_t i = 0; i < dbgDirCount; i++)
-		{
-			memset(pDEBUG[i].AddressOfRawData + imageBuffer, 0xcc, pDEBUG[i].SizeOfData);
-			Log("[SSS]clear dbg %p  %d  \r\n", pDEBUG[i].AddressOfRawData + imageBuffer, pDEBUG[i].SizeOfData);
-		}
-		memset(pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress + imageBuffer, 0xcc, pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size);
+		////删除调试信息
+		//PIMAGE_DEBUG_DIRECTORY pDEBUG = (PIMAGE_DEBUG_DIRECTORY)(pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress + imageBuffer);
+		//ULONG dbgDirCount = pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size / sizeof(IMAGE_DEBUG_DIRECTORY);
+		//for (size_t i = 0; i < dbgDirCount; i++)
+		//{
+		//	memset(pDEBUG[i].AddressOfRawData + imageBuffer, 0xcc, pDEBUG[i].SizeOfData);
+		//	Log("[SSS]clear dbg %p  %d  \r\n", pDEBUG[i].AddressOfRawData + imageBuffer, pDEBUG[i].SizeOfData);
+		//}
+		//memset(pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress + imageBuffer, 0x00, pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size);
+		//
 		//清空配置表
 		PIMAGE_DATA_DIRECTORY pCONFIG = &pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG];
-		memset(pCONFIG->VirtualAddress + imageBuffer, 0xcc, pCONFIG->Size);
+		memset(pCONFIG->VirtualAddress + imageBuffer, 0x00, pCONFIG->Size);
 
 		//清空附加信息 和 签名信息
 		PIMAGE_DATA_DIRECTORY pSECURITY = &pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY];
-		memset(pSECURITY->VirtualAddress + imageBuffer, 0xcc, pSECURITY->Size);
+		memset(pSECURITY->VirtualAddress + imageBuffer, 0x00, pSECURITY->Size);
+		//pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress = 0;
+		//pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size = 0;
+		pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG].VirtualAddress = 0;
+		pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG].Size = 0;
+		pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY].VirtualAddress = 0;
+		pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY].Size = 0;
 
 
 

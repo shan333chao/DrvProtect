@@ -40,9 +40,9 @@ namespace fuck_process {
 
 			UNICODE_STRING uFuncName = { 0 };
 			//要伪装的进程
-			status =imports::ps_lookup_process_by_process_id((HANDLE)pid, &MaskEprocess);
+			status = imports::ps_lookup_process_by_process_id((HANDLE)pid, &MaskEprocess);
 			if (!NT_SUCCESS(status)) return status;
-			status =imports::ps_get_process_exit_status(MaskEprocess);
+			status = imports::ps_get_process_exit_status(MaskEprocess);
 			if (status != STATUS_PENDING) {
 				imports::obf_dereference_object(MaskEprocess);
 				return status;
@@ -62,11 +62,11 @@ namespace fuck_process {
 			//	status = STATUS_UNSUCCESSFUL;
 			//	break;
 			//}
-
-
-			PUCHAR nameBuffer = (PUCHAR)imports::ex_allocate_pool(NonPagedPool, 0x256);
+			
+			
+			PUCHAR nameBuffer = (PUCHAR)imports::ex_allocate_pool(NonPagedPool, USN_PAGE_SIZE);
 			PUCHAR szNameTemp = nameBuffer;
-			Utils::kmemset(nameBuffer, 0, 0x256);
+			Utils::kmemset(nameBuffer, 0, USN_PAGE_SIZE);
 			//修改名字ImageFileName
 			{
 
@@ -94,14 +94,8 @@ namespace fuck_process {
 				*(PULONG)((PUCHAR)SourceEprocess + SectionBaseAddressOffset) = SourceBaseAddress;
 
 			}
-			//todo 修改会话id
-			{
-				//PsGetProcessSessionIdEx
-				// EPROCESS 中的+0x400 Session          : 0xffff9981`deec6000 _MM_SESSION_SPACE
-				//PEB 中的 sessionid
-				//PEB 中的 pImageHeaderHash
-			}
-			// +0x468 SeAuditProcessCreationInfo : _SE_AUDIT_PROCESS_CREATION_INFO
+ 
+			 //+0x468 SeAuditProcessCreationInfo : _SE_AUDIT_PROCESS_CREATION_INFO
 			{
 
 				ULONG_PTR AuditOffset = 0;
@@ -178,35 +172,34 @@ namespace fuck_process {
 			}
 
 
-			{
 
 				//只有win10 有   ImageFilePointer 
-				if (Utils::InitOsVersion().dwMajorVersion > 9) {
-					//获取成员偏移
-					ULONG uFileOBJECTOffset = *(PULONG_PTR)(imports::imported.ps_get_process_image_file_name + 3) - 8;
-					//获取文件对象
-					//PFILE_OBJECT MaskFile = (PFILE_OBJECT) * (PULONG_PTR)((PUCHAR)MaskEprocess + uFileOBJECTOffset);
-					PFILE_OBJECT SourceFile = (PFILE_OBJECT) * (PULONG_PTR)((PUCHAR)SourceEprocess + uFileOBJECTOffset);
-					*(PULONG_PTR)((PUCHAR)MaskEprocess + uFileOBJECTOffset) = (ULONGLONG)SourceFile;
-				}
+			if (Utils::InitOsVersion().dwMajorVersion > 9) {
+				//获取成员偏移
+				ULONG uFileOBJECTOffset = *(PULONG_PTR)(imports::imported.ps_get_process_image_file_name + 3) - 8;
+				//获取文件对象
+				//PFILE_OBJECT MaskFile = (PFILE_OBJECT) * (PULONG_PTR)((PUCHAR)MaskEprocess + uFileOBJECTOffset);
+				PFILE_OBJECT SourceFile = (PFILE_OBJECT) * (PULONG_PTR)((PUCHAR)SourceEprocess + uFileOBJECTOffset);
+				*(PULONG_PTR)((PUCHAR)MaskEprocess + uFileOBJECTOffset) = (ULONGLONG)SourceFile;
 			}
+
 
 			//EPROCESS PsGetProcessInheritedFromUniqueProcessId
 			{
 				//获取父进程pid 偏移
-				ULONG ParentIdOffset = functions::GetFunctionVariableOffset(L"PsGetProcessInheritedFromUniqueProcessId", 3);
+				ULONG ParentIdOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsGetProcessInheritedFromUniqueProcessId") , 3);
 				ULONG parentPid = *(PULONG_PTR)((PUCHAR)SourceEprocess + ParentIdOffset);
 				*(PULONG_PTR)((PUCHAR)MaskEprocess + ParentIdOffset) = parentPid;
 			}
 			//EPROCESS   PsIsProtectedProcess
 			{
-				ULONG isProtectOffset = functions::GetFunctionVariableOffset(L"PsIsProtectedProcess", 2);
+				ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess") , 2);
 				*(PULONG_PTR)((PUCHAR)MaskEprocess + isProtectOffset) = 0xff;
 			}
 
 			//EPROCESS   PsGetProcessCreateTimeQuadPart 
 			{
-				ULONG TimeQuadPartOffset = functions::GetFunctionVariableOffset(L"PsGetProcessCreateTimeQuadPart", 3);
+				ULONG TimeQuadPartOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsGetProcessCreateTimeQuadPart") , 3);
 				LONGLONG CreateTime = *(PULONGLONG)((PUCHAR)SourceEprocess + TimeQuadPartOffset);
 				*(PULONGLONG)((PUCHAR)MaskEprocess + TimeQuadPartOffset) = CreateTime;
 			}
