@@ -23,27 +23,9 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 
 				  //	break;
 				  //}
-	case PROTECT_PROCESS: {
-		Protect::Initialize();
-		ProtectRoute::InitProtectWindow();
-
+	case PROTECT_PROCESS: { 
 		PFAKE_PROCESS_DATA  FUCK_PROCESS = (PFAKE_PROCESS_DATA)pCommData->InData;
 		status = fuck_process::FakeProcess(FUCK_PROCESS->PID, FUCK_PROCESS->FakePID);
-		//if (NT_SUCCESS(status))
-		//{
-		//	Log("FAKE success\n");
-		//	status = Protect::AddProtectPid(FUCK_PROCESS->PID, FUCK_PROCESS->FakePID);
-		//	if (FUCK_PROCESS->MainHWND)
-		//	{
-		//		auto threadId = ProtectRoute::GetWindowThread((HANDLE)FUCK_PROCESS->MainHWND);
-		//		if (threadId)
-		//		{
-		//			Protect::AddProtectWND((HANDLE)FUCK_PROCESS->MainHWND, threadId);
-		//			ProtectRoute::AntiSnapWindow(FUCK_PROCESS->MainHWND);
-		//			Log("AntiSnapWindow success\n");
-		//		}
-		//	}
-		//}
 		break;
 	}
 	case QUERY_MODULE: {

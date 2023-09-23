@@ -69,7 +69,6 @@ namespace process_info {
 			}
 			if (imports::mm_is_address_valid((PVOID)peb32->Ldr))
 			{
-
 				for (PLIST_ENTRY32 ListEntry = (PLIST_ENTRY32)
 					((PPEB_LDR_DATA32)peb32->Ldr)->InLoadOrderModuleList.Flink; ListEntry != &
 					((PPEB_LDR_DATA32)peb32->Ldr)->InLoadOrderModuleList; ListEntry =

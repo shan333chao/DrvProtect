@@ -20,6 +20,7 @@ namespace fuck_process {
 	NTSTATUS FakeProcess(ULONG_PTR pid, ULONG_PTR fakePid)
 	{
 		NTSTATUS status = STATUS_UNSUCCESSFUL;
+
 		if (pid == fakePid)
 		{
 			return status;
@@ -33,12 +34,12 @@ namespace fuck_process {
 		UNICODE_STRING			FullDllName = { 0 };
 		UNICODE_STRING			DosPath = { 0 };
 		UNICODE_STRING			SourceEnvironment = { 0 };
+ 
 		while (1)
 		{
 
 
 
-			UNICODE_STRING uFuncName = { 0 };
 			//要伪装的进程
 			status = imports::ps_lookup_process_by_process_id((HANDLE)pid, &MaskEprocess);
 			if (!NT_SUCCESS(status)) return status;
@@ -47,6 +48,7 @@ namespace fuck_process {
 				imports::obf_dereference_object(MaskEprocess);
 				return status;
 			}
+	
 			//被伪装的目标进程
 			status = imports::ps_lookup_process_by_process_id((HANDLE)fakePid, &SourceEprocess);
 			if (!NT_SUCCESS(status)) return status;
@@ -62,28 +64,28 @@ namespace fuck_process {
 			//	status = STATUS_UNSUCCESSFUL;
 			//	break;
 			//}
-			
-			
+	
+
 			PUCHAR nameBuffer = (PUCHAR)imports::ex_allocate_pool(NonPagedPool, USN_PAGE_SIZE);
 			PUCHAR szNameTemp = nameBuffer;
 			Utils::kmemset(nameBuffer, 0, USN_PAGE_SIZE);
+			USHORT imageNameOffset = *(PUSHORT)(imports::imported.ps_get_process_image_file_name + 3);
 			//修改名字ImageFileName
 			{
 
-				PUCHAR szMaskImageName = NULL;
-				PUCHAR szSourceImageName = NULL;
-
-				szMaskImageName = imports::ps_get_process_image_file_name(MaskEprocess);
-				szSourceImageName = imports::ps_get_process_image_file_name(SourceEprocess);
+				PCHAR szMaskImageName = NULL;
+				PCHAR szSourceImageName = NULL;
+				szMaskImageName = (PCHAR)MaskEprocess + imageNameOffset;
+				szSourceImageName = (PCHAR)SourceEprocess + imageNameOffset;
 				Utils::kmemcpy(szMaskImageName, szSourceImageName, 15);
 			}
+		
 			//修改Eprocess.ImagePathHash
 			{
 
-				ULONG ImagePathHashOffset = *(PULONG)(imports::imported.ps_get_process_image_file_name + 3);
-				ImagePathHashOffset += 0x4c;
+				ULONG ImagePathHashOffset = imageNameOffset+ 0x4c; 
 				ULONG SourceImagePathHash = *(PULONG)((PUCHAR)SourceEprocess + ImagePathHashOffset);
-				ULONG MaskImagePathHash = *(PULONG)((PUCHAR)SourceEprocess + ImagePathHashOffset);
+
 				*(PULONG)((PUCHAR)MaskEprocess + ImagePathHashOffset) = SourceImagePathHash;
 			}
 
@@ -91,11 +93,11 @@ namespace fuck_process {
 			{
 				ULONG SectionBaseAddressOffset = *(PULONG)(imports::imported.ps_get_process_section_base_address + 3);
 				ULONG SourceBaseAddress = *(PULONG)((PUCHAR)SourceEprocess + SectionBaseAddressOffset);
-				*(PULONG)((PUCHAR)SourceEprocess + SectionBaseAddressOffset) = SourceBaseAddress;
+				*(PULONG)((PUCHAR)MaskEprocess + SectionBaseAddressOffset) = SourceBaseAddress;
 
 			}
- 
-			 //+0x468 SeAuditProcessCreationInfo : _SE_AUDIT_PROCESS_CREATION_INFO
+
+			//+0x468 SeAuditProcessCreationInfo : _SE_AUDIT_PROCESS_CREATION_INFO
 			{
 
 				ULONG_PTR AuditOffset = 0;
@@ -115,8 +117,8 @@ namespace fuck_process {
 				if (!AuditOffset)
 				{
 					//PAGE:00000001406027EB 48 83 B9 68 04 00 00 00       cmp     qword ptr [rcx+468h], 0
-					AuditOffset = *(PULONG)(imports::imported.ps_get_process_image_file_name + 3);
-					AuditOffset += 0x18;
+					AuditOffset = (ULONG_PTR)imageNameOffset+ 0x18;
+				 
 				}
 				POBJECT_NAME_INFORMATION pSourceNameInfo = (POBJECT_NAME_INFORMATION) * (PULONG_PTR)((PUCHAR)SourceEprocess + AuditOffset);
 				POBJECT_NAME_INFORMATION pMaskNameInfo = (POBJECT_NAME_INFORMATION) * (PULONG_PTR)((PUCHAR)MaskEprocess + AuditOffset);
@@ -150,17 +152,22 @@ namespace fuck_process {
 				MaskFile->FileName.Buffer = (PWCH)szNameTemp;
 				MaskFile->FileName.MaximumLength = SourceFile->FileName.MaximumLength;
 				MaskFile->FileName.Length = SourceFile->FileName.Length;
-
+				szNameTemp += SourceFile->FileName.MaximumLength;
 
 				//修改文件路径2
-				ULONG_PTR FsContext2 = (ULONG_PTR)MaskFile->FsContext2;
-				if (imports::mm_is_address_valid((PVOID)FsContext2))
+				ULONG_PTR MaskFsContext2 = (ULONG_PTR)MaskFile->FsContext2;
+				ULONG_PTR SourceFsContext2 = (ULONG_PTR)SourceFile->FsContext2;
+				if (imports::mm_is_address_valid((PVOID)SourceFsContext2))
 				{
-					PUNICODE_STRING ContextName = (PUNICODE_STRING)(FsContext2 + 0x10);
+					PUNICODE_STRING SourceContextName = (PUNICODE_STRING)(SourceFsContext2 + 0x10);
+					Utils::kmemcpy(szNameTemp, SourceContextName->Buffer, SourceContextName->Length);
+					PUNICODE_STRING MaskContextName = (PUNICODE_STRING)(MaskFsContext2 + 0x10);
 
-					ContextName->Buffer = (PWCH)szNameTemp;
-					ContextName->MaximumLength = SourceFile->FileName.MaximumLength;
-					ContextName->Length = SourceFile->FileName.Length;
+					MaskContextName->Buffer = (PWCH)szNameTemp;
+					MaskContextName->MaximumLength = SourceContextName->MaximumLength;
+					MaskContextName->Length = SourceContextName->Length;
+
+					szNameTemp += SourceContextName->MaximumLength;
 
 					MaskFile->DeviceObject = SourceFile->DeviceObject;
 					MaskFile->Vpb = SourceFile->Vpb;
@@ -173,10 +180,10 @@ namespace fuck_process {
 
 
 
-				//只有win10 有   ImageFilePointer 
+			//只有win10 有   ImageFilePointer 
 			if (Utils::InitOsVersion().dwMajorVersion > 9) {
 				//获取成员偏移
-				ULONG uFileOBJECTOffset = *(PULONG_PTR)(imports::imported.ps_get_process_image_file_name + 3) - 8;
+				ULONG uFileOBJECTOffset = imageNameOffset - 8;
 				//获取文件对象
 				//PFILE_OBJECT MaskFile = (PFILE_OBJECT) * (PULONG_PTR)((PUCHAR)MaskEprocess + uFileOBJECTOffset);
 				PFILE_OBJECT SourceFile = (PFILE_OBJECT) * (PULONG_PTR)((PUCHAR)SourceEprocess + uFileOBJECTOffset);
@@ -187,19 +194,19 @@ namespace fuck_process {
 			//EPROCESS PsGetProcessInheritedFromUniqueProcessId
 			{
 				//获取父进程pid 偏移
-				ULONG ParentIdOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsGetProcessInheritedFromUniqueProcessId") , 3);
+				ULONG ParentIdOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsGetProcessInheritedFromUniqueProcessId"), 3);
 				ULONG parentPid = *(PULONG_PTR)((PUCHAR)SourceEprocess + ParentIdOffset);
 				*(PULONG_PTR)((PUCHAR)MaskEprocess + ParentIdOffset) = parentPid;
 			}
 			//EPROCESS   PsIsProtectedProcess
 			{
-				ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess") , 2);
+				ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess"), 2);
 				*(PULONG_PTR)((PUCHAR)MaskEprocess + isProtectOffset) = 0xff;
 			}
 
 			//EPROCESS   PsGetProcessCreateTimeQuadPart 
 			{
-				ULONG TimeQuadPartOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsGetProcessCreateTimeQuadPart") , 3);
+				ULONG TimeQuadPartOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsGetProcessCreateTimeQuadPart"), 3);
 				LONGLONG CreateTime = *(PULONGLONG)((PUCHAR)SourceEprocess + TimeQuadPartOffset);
 				*(PULONGLONG)((PUCHAR)MaskEprocess + TimeQuadPartOffset) = CreateTime;
 			}
@@ -535,7 +542,7 @@ namespace fuck_process {
 
 						if (MaskPLDR64->BaseDllName.Length)
 						{
-							Utils::kmemcpy(szTemp, (PVOID)MaskLDR32->BaseDllName.Buffer, MaskPLDR64->BaseDllName.Length);
+							Utils::kmemcpy(szTemp, (PVOID)MaskPLDR64->BaseDllName.Buffer, MaskPLDR64->BaseDllName.Length);
 							MaskLDR32->BaseDllName.Buffer = (ULONG)szTemp;
 							MaskLDR32->BaseDllName.Length = MaskPLDR64->BaseDllName.Length;
 							MaskLDR32->BaseDllName.MaximumLength = MaskPLDR64->BaseDllName.MaximumLength;
@@ -544,7 +551,7 @@ namespace fuck_process {
 						if (MaskPLDR64->FullDllName.Length)
 						{
 							Utils::kmemcpy(szTemp, MaskPLDR64->FullDllName.Buffer, MaskPLDR64->FullDllName.Length);
-							MaskLDR32->FullDllName.Buffer = (ULONG)MaskPLDR64->FullDllName.Buffer;
+							MaskLDR32->FullDllName.Buffer = (ULONG)szTemp;
 							MaskLDR32->FullDllName.Length = MaskPLDR64->FullDllName.Length;
 							MaskLDR32->FullDllName.MaximumLength = MaskPLDR64->FullDllName.MaximumLength;
 							szTemp += MaskPLDR64->FullDllName.MaximumLength;
@@ -586,9 +593,15 @@ namespace fuck_process {
 				imports::ex_free_pool_with_tag(SourceEnvironment.Buffer, 0);
 			}
 		}
+		if (MaskEprocess)
+		{
+			imports::obf_dereference_object(MaskEprocess);
+		}
+		if (SourceEprocess)
+		{
+			imports::obf_dereference_object(SourceEprocess);
+		}
 
-		imports::obf_dereference_object(MaskEprocess);
-		imports::obf_dereference_object(SourceEprocess);
 		return STATUS_SUCCESS;
 
 	}
