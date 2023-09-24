@@ -60,8 +60,8 @@ namespace ProtectWindow {
 			if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }//win7需要重新实现
 			if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }//win7需要重新实现
 			if (*ssdt_address == g_NtUserInternalGetWindowText) { *ssdt_address = MyNtUserInternalGetWindowText; return; }
-			if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }//win7需要重新实现
-			if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }//win7需要重新实现
+			//if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }//win7需要重新实现
+			//if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }//win7需要重新实现
 			if (*ssdt_address == g_NtUserFindWindowEx) { *ssdt_address = MyNtUserFindWindowEx; return; }//win7需要重新实现
 			if (*ssdt_address == g_NtUserQueryWindow) { *ssdt_address = MyNtUserQueryWindow; return; }
 			if (*ssdt_address == g_NtUserGetForegroundWindow) { *ssdt_address = MyNtUserGetForegroundWindow; return; }//win7需要重新实现
@@ -177,11 +177,13 @@ namespace ProtectWindow {
 				return g_NtUserGetClassName(hWnd, Ansi, ClassName);
 			}
 			else if (ret > 1) {
-				return FALSE;
+
+				return TRUE;
 			}
 			auto pid = g_NtUserQueryWindow(hWnd, WindowProcess);
 			if (Protect::IsProtectPID(pid)) {
-				return FALSE;
+
+				return TRUE;
 			}
 		}
 		return 	  g_NtUserGetClassName(hWnd, Ansi, ClassName);
@@ -189,7 +191,7 @@ namespace ProtectWindow {
 
 	BOOLEAN MyNtUserPostMessage(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam)
 	{
-		if (Msg == WM_GETTEXT || Msg == WM_GETICON)
+		if (Msg == WM_GETTEXT)
 		{
 			if (Protect::IsProtectProcess(imports::io_get_current_process()))
 			{
@@ -204,46 +206,47 @@ namespace ProtectWindow {
 					return g_NtUserPostMessage(hWnd, Msg, wParam, lParam);
 				}
 				else if (ret > 1) {
-					return FALSE;
+					return g_NtUserPostMessage((HANDLE)0x10010, Msg, wParam, lParam);
 				}
 				auto pid = g_NtUserQueryWindow(hWnd, WindowProcess);
 				if (Protect::IsProtectPID(pid)) {
-					return FALSE;
+					return g_NtUserPostMessage((HANDLE)0x10010, Msg, wParam, lParam);
 				}
 			}
 		}
 		return  g_NtUserPostMessage(hWnd, Msg, wParam, lParam);
 	}
 
-	BOOLEAN MyNtUserMessageCall(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam, ULONG_PTR ResultInfo, DWORD dwType, BOOLEAN Ansi)
+	__int64 MyNtUserMessageCall(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam, ULONG_PTR ResultInfo, DWORD dwType, BOOLEAN Ansi)
 	{
-		if (Msg == WM_GETTEXT || Msg == WM_GETICON)
-		{
-			if (Protect::IsProtectProcess(imports::io_get_current_process()))
-			{
-				return g_NtUserMessageCall(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
-			}
-			auto handle = g_NtUserQueryWindow(hWnd, WindowActiveWindow);
-			if (handle)
-			{
-				int ret = Protect::IsProtectWND(hWnd, 0, handle, imports::ps_get_current_thread_id());
-				if (ret == 1)
-				{
-					return g_NtUserMessageCall(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
-				}
-				else if (ret > 1) {
-
-					return FALSE;
-				}
-			}
-			auto pid = g_NtUserQueryWindow(hWnd, WindowProcess);
-			if (Protect::IsProtectPID(pid)) {
-				return FALSE;
-			}
-		}
+		//if (Msg == WM_GETTEXT)
+		//{
+		//	if (Protect::IsProtectProcess(imports::io_get_current_process()))
+		//	{
+		//		return g_NtUserMessageCall(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
+		//	}
+		//	auto handle = g_NtUserQueryWindow(hWnd, WindowActiveWindow);
+		//	if (handle)
+		//	{
+		//		int ret = Protect::IsProtectWND(hWnd, 0, handle, imports::ps_get_current_thread_id());
+		//		if (ret == 1)
+		//		{
+		//			return g_NtUserMessageCall(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
+		//		}
+		//		else if (ret > 1) {
+		//			return  g_NtUserMessageCall(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
+		//			 
+		//		}
+		//	}
+		//	auto pid = g_NtUserQueryWindow(hWnd, WindowProcess);
+		//	if (Protect::IsProtectPID(pid)) {
+		//		return   g_NtUserMessageCall(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
+		//		
+		//	}
+		//}
 		return  g_NtUserMessageCall(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
 	}
-
+ 
 	NTSTATUS MyNtQueryInformationProcess(HANDLE ProcessHandle, PROCESSINFOCLASS ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength, PULONG ReturnLength)
 	{
 
@@ -269,11 +272,11 @@ namespace ProtectWindow {
 			}
 			else if (ret > 1) {
 
-				return FALSE;
+				return  g_NtUserInternalGetWindowText((HANDLE)0x10010,  pString, cchMaxCount);
 			}
 			auto pid = g_NtUserQueryWindow(hWnd, WindowProcess);
 			if (Protect::IsProtectPID(pid)) {
-				return FALSE;
+				return  g_NtUserInternalGetWindowText((HANDLE)0x10010, pString, cchMaxCount);
 			}
 		}
 		return g_NtUserInternalGetWindowText(hWnd, pString, cchMaxCount);

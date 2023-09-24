@@ -88,8 +88,8 @@ struct _m_imported
 namespace imports {
 
 	extern struct _m_imported imported;
-
-
+ 
+ 
 	VentroAPI PVOID rtl_find_exported_routine_by_name(_In_ PVOID ImageBase, _In_ PCCH RoutineName);
 
 	VentroAPI PKTHREAD ke_get_current_thread(VOID);

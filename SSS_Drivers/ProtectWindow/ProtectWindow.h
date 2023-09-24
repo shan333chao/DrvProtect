@@ -31,7 +31,7 @@ namespace ProtectWindow {
 	typedef NTSTATUS(*FNtOpenThread)(PHANDLE ProcessHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PCLIENT_ID ClientId);
 	typedef ULONG(*FNtUserInternalGetWindowText)(HANDLE   hWnd, LPWSTR pString, int    cchMaxCount);
 	typedef BOOLEAN(*FNtUserPostMessage)(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam);
-	typedef BOOLEAN(*FNtUserMessageCall)(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam, ULONG_PTR ResultInfo, DWORD dwType, BOOLEAN Ansi);
+	typedef __int64(*FNtUserMessageCall)(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam, ULONG_PTR ResultInfo, DWORD dwType, BOOLEAN Ansi);
 	typedef DWORD_PTR(*FNtUserCallOneParam)(DWORD_PTR Param, DWORD Routine);
 	typedef BOOLEAN(*FNtUserValidateHandleSecure)(HANDLE hHdl);
 	typedef ULONG_PTR(*FNtUserCallHwndParam)(HANDLE hwnd, DWORD_PTR param, DWORD code);
@@ -50,7 +50,7 @@ namespace ProtectWindow {
 	INT64 MyNtUserGetPointerProprietaryId(uintptr_t data);
 	INT MyNtUserGetClassName(HANDLE hWnd, BOOLEAN Ansi, PUNICODE_STRING ClassName);
 	BOOLEAN MyNtUserPostMessage(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam);
-	BOOLEAN MyNtUserMessageCall(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam, ULONG_PTR ResultInfo, DWORD dwType, BOOLEAN Ansi);
+	__int64 MyNtUserMessageCall(HANDLE hWnd, UINT Msg, ULONG wParam, ULONG lParam, ULONG_PTR ResultInfo, DWORD dwType, BOOLEAN Ansi);
 	NTSTATUS MyNtQueryInformationProcess(HANDLE ProcessHandle, PROCESSINFOCLASS ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength, PULONG ReturnLength);
 	ULONG MyNtUserInternalGetWindowText(HANDLE   hWnd, LPWSTR pString, int    cchMaxCount);
 	NTSTATUS  MyNtOpenThread(PHANDLE ProcessHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PCLIENT_ID ClientId);

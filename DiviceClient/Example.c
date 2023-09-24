@@ -71,8 +71,8 @@ void InitDriver()
 
 	char currentPath[MAX_PATH] = { 0 };
 	GetCurrentDirectoryA(MAX_PATH, currentPath);
-	char szDriverName[20] = "DisapperDriver";
-	char szDriverPath[20] = "DisapperDriver.sys";
+	char szDriverName[20] = "ProxyDrv_nodbg";
+	char szDriverPath[20] = "ProxyDrv_nodbg.sys";
 	//char szDriverName[20] = "DisapperDriver.sys";
 	//char gang[5] = "\\";
 	//char szDriverPath[MAX_PATH] = { 0 };
@@ -86,7 +86,6 @@ void InitDriver()
 	CHAR szDriverFullPath[MAX_PATH] = { 0 };		//MAX_PATH 0x260
 	GetFullPathNameA(szDriverPath, MAX_PATH, szDriverFullPath, NULL);
 	printf("%s \r\n", szDriverFullPath);
-	system("pause");
 	//ULONG  driverStamp = getPeTimeStamp(szDriverFullPath);
 	//printf("%s\n", szDriverFullPath);
 	//2.打开服务控制管理器

@@ -7,7 +7,6 @@
 
 #include "../includes.h"
 #define WM_GETTEXT                      0x000D
-#define WM_GETICON                      0x007F
 typedef enum _WINDOWINFOCLASS {
 	WindowProcess,
 	WindowThread,

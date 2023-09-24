@@ -96,7 +96,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 
 
 
-#if 1
+#if 0
 EXTERN_C VOID DriverUnload(PDRIVER_OBJECT pDriver) {
 	UNREFERENCED_PARAMETER(pDriver);
 	ProtectRoute::RemoveProtectWindow();
