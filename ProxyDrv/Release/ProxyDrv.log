@@ -1,0 +1,156 @@
+﻿  Building 'ProxyDrv' with toolset 'WindowsKernelModeDriver10.0' and the 'Desktop' target platform.
+  Entry.cpp
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): error C2220: 以下警告被视为错误
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: 应输入“)”；找到标识符“_VCRUNTIME_DISABLED_WARNINGS”
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: “_CRT_STRINGIZE”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(85): message : 参见“_CRT_STRINGIZE”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(114,1): warning C4005: “_CRT_WIDE”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(88): message : 参见“_CRT_WIDE”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(155,1): warning C4005: “__CRTDECL”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(640): message : 参见“__CRTDECL”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdint.h(16,26): warning C4083: 应输入“)”；找到标识符“_VCRUNTIME_DISABLED_WARNINGS”
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.h(55,10): warning C4201: 使用了非标准扩展: 无名称的结构/联合
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(73,45): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(88,27): error C2664: “void KeQuerySystemTime(PLARGE_INTEGER)”: 无法将参数 1 从“ULONG64 *”转换为“PLARGE_INTEGER”
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(88,22): message : 与指向的类型无关；强制转换要求 reinterpret_cast、C 样式强制转换或函数样式强制转换
+C:\Windows Kits\10\Include\10.0.19041.0\km\wdm.h(22320,1): message : 参见“KeQuerySystemTime”的声明
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(120,4): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(135,4): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(195,4): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(209,4): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(253,50): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(268,4): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(333,50): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\ClearTrace\trace.hpp(355,4): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\Entry.cpp(31,23): warning C4244: “=”: 从“ULONG64”转换到“ULONG_PTR”，可能丢失数据
+  LoadDriver.cpp
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): error C2220: 以下警告被视为错误
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: 应输入“)”；找到标识符“_VCRUNTIME_DISABLED_WARNINGS”
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: “_CRT_STRINGIZE”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(85): message : 参见“_CRT_STRINGIZE”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(114,1): warning C4005: “_CRT_WIDE”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(88): message : 参见“_CRT_WIDE”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(155,1): warning C4005: “__CRTDECL”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(640): message : 参见“__CRTDECL”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdint.h(16,26): warning C4083: 应输入“)”；找到标识符“_VCRUNTIME_DISABLED_WARNINGS”
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.h(55,10): warning C4201: 使用了非标准扩展: 无名称的结构/联合
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(236,78): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(237,78): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(238,78): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(239,78): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(240,78): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(241,78): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(250,69): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(251,69): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\LoadDriver\LoadDriver.cpp(252,69): error C2065: “__TIME__”: 未声明的标识符
+  正在生成代码...
+  正在编译...
+  aes.c
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\aes.c(1,1): error C2220: 以下警告被视为错误
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\aes.c(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: 应输入“)”；找到标识符“_VCRUNTIME_DISABLED_WARNINGS”
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: “_CRT_STRINGIZE”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(85): message : 参见“_CRT_STRINGIZE”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(114,1): warning C4005: “_CRT_WIDE”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(88): message : 参见“_CRT_WIDE”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(155,1): warning C4005: “__CRTDECL”: 宏重定义
+C:\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(640): message : 参见“__CRTDECL”的前一个定义
+C:\ProgramFiles (x86)\VisualStudio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdint.h(16,26): warning C4083: 应输入“)”；找到标识符“_VCRUNTIME_DISABLED_WARNINGS”
+  正在生成代码...
+  正在编译...
+  crt.cpp
+  imports.cpp
+  Utils.cpp
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(60,11): error C2220: 以下警告被视为错误
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(60,11): warning C4189: “lpFuncs”: 局部变量已初始化但不引用
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(174,76): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(175,71): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(176,67): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(177,77): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(180,81): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(181,56): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(182,58): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(183,60): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(185,79): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(186,79): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(188,70): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(189,74): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(190,65): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(191,57): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(192,76): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(194,68): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(195,54): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(196,56): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(199,72): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(200,58): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(201,71): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(202,66): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(203,62): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(204,68): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(205,68): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(206,63): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(207,66): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(208,51): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(209,59): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(210,74): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(211,69): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(212,69): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(213,71): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(214,73): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(216,76): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(217,70): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(218,67): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(219,67): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(220,60): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(221,68): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(222,67): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(223,68): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(224,57): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(225,68): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(226,55): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(227,61): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(228,62): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(231,59): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(232,70): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(233,64): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(234,63): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(235,76): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(236,65): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(237,65): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(238,74): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(239,61): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(240,67): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(241,69): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(242,69): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(243,66): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(244,65): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(245,57): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(246,78): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(247,66): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(248,65): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(249,59): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(250,58): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(251,66): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(252,76): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(253,72): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(254,64): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(255,58): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(256,54): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(257,63): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(258,66): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(259,62): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(261,59): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(262,59): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(263,58): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(264,61): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(265,60): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(266,70): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(267,72): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(268,66): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(269,68): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(270,72): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(271,64): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(272,64): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(273,77): error C2065: “__TIME__”: 未声明的标识符
+C:\DriverCodes\HideDriver\驱动隐藏\ProxyDrv\tools\Utils.cpp(273,44): warning C4244: “=”: 从“ULONGLONG”转换到“uintptr_t”，可能丢失数据
+  正在生成代码...

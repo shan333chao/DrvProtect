@@ -1,31 +1,7 @@
 #pragma once
-#define _CRT_SECURE_NO_WARNINGS
-#include "Example.h"
-
-BOOL IsMainWindow(HWND handle)
-{
-	return GetWindow(handle, GW_OWNER) == (HWND)0 && IsWindowVisible(handle);
-}
-
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, PVOID lParam) {
-	DWORD dwProcessId;
-	DWORD threadid = GetWindowThreadProcessId(hwnd, &dwProcessId);
-	PFWindowInfo windowInfo = (PFWindowInfo)lParam;
-	if (dwProcessId == windowInfo->pid) {
-		if (IsMainWindow(hwnd))
-		{
-			// 找到进程的主窗口句柄
-			windowInfo->wndHw = hwnd;
-			windowInfo->tid = threadid;
-			return FALSE; // 返回 FALSE 停止枚举
-		}
-	}
-	return TRUE; // 返回 TRUE 继续枚举
-}
-
-#include <windows.h>
-
-
+#include "lib.h"
+#pragma warning(disable:4996)
+static BOOL isInit = FALSE;
 
 void SearchFiles(const char* path, const char* fileName, const char* pattern)
 {
@@ -49,11 +25,8 @@ void SearchFiles(const char* path, const char* fileName, const char* pattern)
 				char* found = strstr(searchData.cFileName, pattern);
 				if (found != NULL)
 				{
-					// 构建完整路径
-					//char filePath[MAX_PATH];
 					sprintf(path, "%s\\%s", path, searchData.cFileName);
-					sprintf(fileName, "%s",searchData.cFileName);
-					
+					sprintf(fileName, "%s", searchData.cFileName);
 				}
 			}
 		} while (FindNextFileA(hFind, &searchData) != 0);
@@ -62,7 +35,6 @@ void SearchFiles(const char* path, const char* fileName, const char* pattern)
 		FindClose(hFind);
 	}
 }
- 
 void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
 	HANDLE hFile;
 	DWORD dwBytesWritten = 0;
@@ -77,7 +49,7 @@ void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
 		NULL);                            // no attr. template
 
 	if (hFile == INVALID_HANDLE_VALUE) {
-		printf("[-] Failed to access: %s\n", (char*)filename);
+ 
 		return;
 	}
 
@@ -88,45 +60,15 @@ void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
 		&dwBytesWritten, // number of bytes that were written
 		NULL);           // no overlapped structure
 
-	if (FALSE == bErrorFlag) {
-		printf("[-] Unable to write into file.\n");
-	}
+ 
 
 	CloseHandle(hFile);
-	printf("[*] %s file created.\n", filename);
-}
-char* GenerateRandomString(int length) {
-	char* randomString = (char*)malloc((length + 1) * sizeof(char));
-	if (randomString == NULL) {
-		return NULL;
-	}
-
-	char characters[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-	srand((unsigned int)time(NULL));
-
-	for (int i = 0; i < length; i++) {
-		int randomIndex = rand() % (sizeof(characters) - 1);
-		randomString[i] = characters[randomIndex];
-	}
-
-	randomString[length] = '\0';
-
-	return randomString;
+ 
 }
  
-void InitDriver()
+
+BOOL InitDriver()
 {
-
-
-	//char currentPath[MAX_PATH] = { 0 };
-	//GetCurrentDirectoryA(MAX_PATH, currentPath);
-	//char szDriverName[20] = "ProxyDrv_nodbg";
-	//char szDriverPath[20] = "ProxyDrv_nodbg.sys"; 
-	////1.获取驱动文件全路径名
-	//CHAR szDriverFullPath[MAX_PATH] = { 0 };		//MAX_PATH 0x260
-	//GetFullPathNameA(szDriverPath, MAX_PATH, szDriverFullPath, NULL);
-
 	char szDriverFullPath[MAX_PATH];
 	GetCurrentDirectoryA(MAX_PATH, szDriverFullPath);
 	char szDriverName[MAX_PATH] = { 0 };
@@ -139,7 +81,6 @@ void InitDriver()
 	fopen_s(&pfile, szDriverFullPath, "rb");
 	if (!pfile)
 	{
-		printf("fopen_s file failed 1");
 		return 0;
 	}
 
@@ -152,17 +93,16 @@ void InitDriver()
 	if (!pFileData)
 	{
 		fclose(pfile);
-		printf("malloc failed \r\n");
 		return 0;
 	}
 	memset(pFileData, 0, lFileSize);
 	fread_s(pFileData, lFileSize, lFileSize, 1, pfile);
 	//关闭文件
 	fclose(pfile);
-	unsigned char key[17] = {0};
+	unsigned char key[17] = { 0 };
 	unsigned char iv[17] = { 0 };
-	memcpy(key, pFileData+4,17);
-	memcpy(iv, pFileData + 4+17, 17);
+	memcpy(key, pFileData + 4, 17);
+	memcpy(iv, pFileData + 4 + 17, 17);
 
 	PUCHAR mfile = pFileData + 4 + 17 + 17;
 	struct AES_ctx ctx = { 0 };
@@ -173,21 +113,17 @@ void InitDriver()
 	PCHAR loadFileName = GenerateRandomString(10);
 	writeFile(loadFileName, mfile, dumpFileLen);
 
-	memset(szDriverFullPath,0,MAX_PATH);
+	memset(szDriverFullPath, 0, MAX_PATH);
 	GetCurrentDirectoryA(MAX_PATH, szDriverFullPath);
 	memset(szDriverName, 0, MAX_PATH);
 	SearchFiles(szDriverFullPath, szDriverName, loadFileName);
- 
+	free(pFileData);
 	//2.打开服务控制管理器
 	SC_HANDLE hServiceMgr = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS); // SCM管理器句柄	
 	if (!hServiceMgr)
 	{
-		printf("OpenSCManagerW 失败, %d\n", GetLastError());
 		return FALSE;
 	}
-	printf("打开服务控制管理器成功.\n");
-
-
 	//3.创建驱动服务
 	SC_HANDLE hServiceDDK = NULL; // NT驱动程序服务句柄
 	//创建驱动服务
@@ -208,11 +144,9 @@ void InitDriver()
 		DWORD dwErr = GetLastError();
 		if (dwErr != ERROR_IO_PENDING && dwErr != ERROR_SERVICE_EXISTS)
 		{
-			printf("创建驱动服务失败, %d\n", dwErr);
 			return FALSE;
 		}
 	}
-	printf("创建驱动服务成功.\n");
 	// 驱动服务已经创建，打开服务
 	hServiceDDK = OpenServiceA(hServiceMgr, szDriverName, SERVICE_ALL_ACCESS);
 	if (!StartService(hServiceDDK, NULL, NULL))
@@ -220,7 +154,6 @@ void InitDriver()
 		DWORD dwErr = GetLastError();
 		if (dwErr != 23)
 		{
-			printf("运行驱动服务失败, %d\n", dwErr);
 			if (hServiceDDK)
 			{
 				CloseServiceHandle(hServiceDDK);
@@ -232,7 +165,7 @@ void InitDriver()
 			return FALSE;
 		}
 	}
-	printf("运行驱动服务成功.\n");
+
 	if (hServiceDDK)
 	{
 		CloseServiceHandle(hServiceDDK);
@@ -241,120 +174,94 @@ void InitDriver()
 	{
 		CloseServiceHandle(hServiceMgr);
 	}
-	//清理驱动在r3的加载痕迹
-	//clear_trace(L"DisapperDriver.sys", driverStamp);
+
 	return TRUE;
 
 
 }
 
-//-------------------测试通讯
-void TestComm()
+//初始化
+BOOL init()
 {
 	TEST_DATA testData = { 0 };
 	testData.uTest = 0;
 	DWORD status_code = DriverComm(TEST_COMM, &testData, sizeof(TEST_DATA));
 	if (testData.uTest > 0)
 	{
-		printf("测试通讯成功！\n");
+		isInit = TRUE;
+		return TRUE;
 	}
-	else {
-		printf("测试通讯失败 正在安裝驱动！\n");
-		InitDriver();
+	else
+	{
+		BOOL isok = InitDriver();
+		Sleep(5000);
+		return isok;
 	}
- 
 }
 
-void FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, ULONG uDataSize)
+BOOL FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, PVOID buffer, ULONG uDataSize)
 {
+	if (!isInit)
+	{
+		init();
+	}
 	RW_MEM_DATA TestMEM = { 0 };
-	TestMEM.pValBuffer = VirtualAlloc(NULL, uDataSize, MEM_COMMIT, PAGE_READWRITE);
-	memset(TestMEM.pValBuffer, 0, uDataSize);
+	TestMEM.pValBuffer = buffer;
 	TestMEM.uDataSize = uDataSize;
 	TestMEM.PID = PID;
 	TestMEM.FakePID = fakePid;
 	TestMEM.Address = Address;
 	DWORD status_code = DriverComm(FAKE_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
-	PUCHAR data = TestMEM.pValBuffer;
-	printf("读到的数据:\n");
-	for (size_t i = 0; i < uDataSize; i++)
-	{
-		if (!(i % 16))
-		{
-			printf("\n");
-		}
-		printf("%02x ", data[i]);
-	}
-	printf("\n");
-	VirtualFree(TestMEM.pValBuffer, 0, MEM_RELEASE);
-
+	return !status_code;
 }
 
-void FakeWriteMemory(ULONG PID, ULONG fakePid, PVOID Address, PUCHAR pValBuffer, ULONG length)
+BOOL FakeWriteMemory(ULONG PID, ULONG fakePid, PVOID Address, PUCHAR pValBuffer, ULONG length)
 {
+	if (!isInit)
+	{
+		init();
+	}
 	RW_MEM_DATA TestMEM = { 0 };
 	TestMEM.pValBuffer = pValBuffer;
 	TestMEM.uDataSize = length;
 	TestMEM.PID = PID;
 	TestMEM.FakePID = fakePid;
 	TestMEM.Address = Address;
-
 	DWORD status_code = DriverComm(FAKE_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
-	if (!status_code)
-	{
-		printf("写入成功:\n");
-	}
-	else {
-		printf("写入失败 %08x:\n", status_code);
-	}
-
-
+	return !status_code;
 }
 
-void PhyReadMemory(ULONG PID, PVOID Address, ULONG uDataSize)
+BOOL PhyReadMemory(ULONG PID, PVOID Address, PVOID buffer, ULONG uDataSize)
 {
+	if (!isInit)
+	{
+		init();
+	}
 	RW_MEM_DATA TestMEM = { 0 };
-	PUCHAR data = VirtualAlloc(NULL, uDataSize, MEM_COMMIT, PAGE_READWRITE);
-	memset(data, 0, uDataSize);
-	TestMEM.pValBuffer = data;
+	TestMEM.pValBuffer = buffer;
 	TestMEM.uDataSize = uDataSize;
 	TestMEM.PID = PID;
 	TestMEM.Address = Address;
 	DWORD status_code = DriverComm(PHY_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	if (status_code)
 	{
-		VirtualFree(TestMEM.pValBuffer, 0, MEM_RELEASE);
-		printf("读取出错  错误码%08x:\n", status_code);
-		return;
+		return FALSE;
 	}
-	printf("读到的数据:\n");
-	for (size_t i = 0; i < uDataSize; i++)
-	{
-		if (!(i % 16))
-		{
-			printf("\n");
-		}
-		printf("%02x ", data[i]);
-	}
-	printf("\n");
-	VirtualFree(TestMEM.pValBuffer, 0, MEM_RELEASE);
+	return TRUE;
 }
 
 BOOL PhyWriteMemory(ULONG PID, PVOID Address, PUCHAR pValBuffer, ULONG length)
 {
+	if (!isInit)
+	{
+		init();
+	}
 	RW_MEM_DATA TestMEM = { 0 };
 	TestMEM.pValBuffer = pValBuffer;
 	TestMEM.uDataSize = length;
 	TestMEM.PID = PID;
 	TestMEM.Address = Address;
 	DWORD status_code = DriverComm(PHY_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
-	if (!status_code)
-	{
-		printf("写入成功:\n");
-	}
-	else {
-		printf("写入失败 %08x:\n", status_code);
-	}
 	return !status_code;
 }
 
@@ -362,45 +269,38 @@ BOOL PhyWriteMemory(ULONG PID, PVOID Address, PUCHAR pValBuffer, ULONG length)
 //protectPid  要保护的进程id
 //fakePid	要伪装的进程id
 //返回值无
-void ProtectProcess(ULONG protectPid, ULONG fakePid) {
+BOOL ProtectProcess(ULONG protectPid, ULONG fakePid) {
+	if (!isInit)
+	{
+		init();
+	}
 	if (!protectPid)
 	{
-		printf("要保护的进程PID 为空\n");
-		return;
+		return  FALSE;
 	}
 	if (!fakePid)
 	{
-		printf("要伪装的进程PID 为空\n");
-		return;
+		return FALSE;
 	}
 	FAKE_PROCESS_DATA protectProcess = { 0 };
 	protectProcess.PID = protectPid;
 	protectProcess.FakePID = fakePid;
-	printf("保护进程： %d \n  \n", protectProcess.PID);
-	FWindowInfo winfo = { 0 };
-	winfo.pid = protectPid;
 
-	EnumWindows(EnumWindowsProc, &winfo);
-	if (winfo.wndHw)
-	{
-		char className[256] = { 0 };
-		char windowTitle[256] = { 0 };
-		GetWindowTextA(winfo.wndHw, windowTitle, sizeof(windowTitle));  // 获取窗口标题
-		GetClassNameA(winfo.wndHw, className, sizeof(className));
-		printf("窗口线程: %d \n 窗口句柄： %d \n 窗口类名:%s  \n 窗口标题:%s \n", winfo.tid, winfo.wndHw, className, windowTitle);
-	}
+
 	DWORD status_code = DriverComm(PROTECT_PROCESS, &protectProcess, sizeof(FAKE_PROCESS_DATA));
 	if (status_code > 0)
 	{
-		printf("%d \r\n", status_code);
-		printf("执行失败 错误码 %08x\n", status_code);
-		return;
+		return FALSE;
 	}
-	printf("执行成功\n");
+	return  TRUE;
 }
 
-void ProtectWindow(ULONG32 hwnd)
+BOOL ProtectWindow(ULONG32 hwnd)
 {
+	if (!isInit)
+	{
+		init();
+	}
 	WND_PROTECT_DATA WND_DATA = { 0 };
 	ULONG32 hwnds[10] = { 0 };
 	hwnds[0] = hwnd;
@@ -409,14 +309,17 @@ void ProtectWindow(ULONG32 hwnd)
 	DWORD status_code = DriverComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	if (status_code > 0)
 	{
-		printf("保护失败 错误码 %08x\n", status_code);
-		return;
+		return FALSE;
 	}
-	printf("保护成功\n");
+	return  TRUE;
 }
 
-void QueryModule(ULONG pid, PCHAR szModuleName)
+BOOL QueryModule(ULONG pid, PCHAR szModuleName)
 {
+	if (!isInit)
+	{
+		init();
+	}
 	QUERY_MODULE_DATA moduleData = { 0 };
 	moduleData.PID = pid;
 
@@ -426,45 +329,46 @@ void QueryModule(ULONG pid, PCHAR szModuleName)
 	DWORD status_code = DriverComm(QUERY_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA));
 	if (status_code)
 	{
-		printf("查询模块失败 错误码 %08x\n", status_code);
-		return;
+		return FALSE;
 	}
-	printf("\n模块名: %s \n 模块基址: 0x%p \n 模块大小: 0x%08x\n", szModuleName, moduleData.pModuleBase, uModuleSize);
+	return TRUE;
 
 }
 
 PUCHAR AllocateMem(ULONG PID, ULONG uDataSize)
 {
-
+	if (!isInit)
+	{
+		init();
+	}
 	PVOID Addr = 0;
 	CREATE_MEM_DATA CreateMemData = { 0 };
 	CreateMemData.PID = PID;
-
 	CreateMemData.pVAddress = &Addr;
 	CreateMemData.uSize = uDataSize;
-
 	DWORD status_code = DriverComm(CREATE_MEMORY, &CreateMemData, sizeof(CREATE_MEM_DATA));
 	if (status_code > 0)
 	{
-		printf("申请内存失败 错误码 %08x\n", status_code);
-		return;
+		return 0;
 	}
-	printf("申请到的内存地址:0x%p\n", Addr);
 	return Addr;
 }
 
-void CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len)
+BOOL CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len)
 {
-
+	if (!isInit)
+	{
+		init();
+	}
 	PUCHAR address = AllocateMem(PID, len);
 	if (!address)
 	{
-		return;
+		return FALSE;
 	}
 	BOOL isok = PhyWriteMemory(PID, address, shellcode, len);
 	if (!isok)
 	{
-		return;
+		return FALSE;
 	}
 
 	CREATE_THREAD_DATA THREAD_DATA = { 0 };
@@ -474,9 +378,9 @@ void CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len)
 	DWORD status_code = DriverComm(CREATE_THREAD, &THREAD_DATA, sizeof(CREATE_THREAD_DATA));
 	if (status_code > 0)
 	{
-		printf("创建线程 错误码 %08x\n", status_code);
-		return;
+
+		return FALSE;
 	}
-	printf("创建线程成功\n");
+	return TRUE;
 
 }

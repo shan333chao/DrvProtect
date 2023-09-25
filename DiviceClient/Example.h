@@ -1,5 +1,10 @@
 #include "Comm/CommR3.h"
 #include <stdio.h>
+#include <ntstatus.h>
+#include <stdio.h>
+#include <string.h>
+#include "aes.h"
+#include <windows.h>
 typedef struct _handle_information
 {
 	wchar_t name[100];

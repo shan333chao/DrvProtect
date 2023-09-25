@@ -1,11 +1,6 @@
 #pragma once
-#ifdef _R3
 #include <Windows.h>
-#else
-#include <ntifs.h>
-#endif 
 #define COMM_ID 0xFEAAC
-#define SYMBOL_NAME "\\??\\Nul"
 typedef enum _COMM_TYPE {
 	//测试通讯
 	TEST_COMM,
@@ -16,7 +11,7 @@ typedef enum _COMM_TYPE {
 	KILL,
 	//遍历进程
 	ENUM_PROCESS,
- 
+
 	//伪装读取内存
 	FAKE_READ_MEMORY,
 	//伪装写入内存
@@ -25,7 +20,7 @@ typedef enum _COMM_TYPE {
 	//伪装读取内存
 	PHY_READ_MEMORY,
 	//伪装写入内存
-	PHY_WRITE_MEMORY, 
+	PHY_WRITE_MEMORY,
 	//保护窗口
 	WND_PROTECT,
 	//申请内存
@@ -37,7 +32,7 @@ typedef enum _COMM_TYPE {
 	//内核模块注入
 	INJECT_DLL,
 	//文件保护
-	PROTECT_FILE, 
+	PROTECT_FILE,
 };
 
 
@@ -60,10 +55,10 @@ typedef struct _TEST_DATA {
 
 
 //伪装进程并保进程主窗口
-typedef struct _FAKE_PROCESS_DATA { 
+typedef struct _FAKE_PROCESS_DATA {
 	ULONG		FakePID;
-	ULONG		PID; 
-}FAKE_PROCESS_DATA,*PFAKE_PROCESS_DATA;
+	ULONG		PID;
+}FAKE_PROCESS_DATA, * PFAKE_PROCESS_DATA;
 
 //读写内存
 typedef struct _RW_MEM_DATA {
@@ -78,7 +73,7 @@ typedef struct _RW_MEM_DATA {
 
 
 //窗口保护
-typedef struct _WND_PROTECT_DATA { 
+typedef struct _WND_PROTECT_DATA {
 	PULONG32		hwnds;
 	ULONG32		Length;
 }WND_PROTECT_DATA, * PWND_PROTECT_DATA;

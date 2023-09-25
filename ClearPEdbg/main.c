@@ -4,6 +4,8 @@
 #include <memory.h>
 #include <time.h>
 #include <Windows.h>
+#include "aes.h"
+#include <time.h>
 void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
 	HANDLE hFile;
 	DWORD dwBytesWritten = 0;
@@ -120,7 +122,40 @@ void removeDebug() {
 	pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size = 0;
 
 	char nfileName[20] = "ProxyDrv_nodbg.sys";
+
+
+
 	writeFile(nfileName, pFileData, lFileSize);
+
+	struct AES_ctx ctx = {0};
+	unsigned char key[] = "\xde\xad\xbe\xef\xca\xfe\xba\xbe\xde\xad\xbe\xef\xca\xfe\xba\xbe";
+	unsigned char iv[] = "\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff";
+	srand(time(NULL));
+	for (size_t i = 0; i < sizeof(key); i++)
+	{
+		key[i] = rand() % 0x100;
+		iv[i] = rand() % 0x100;
+	}
+	AES_init_ctx_iv(&ctx, key, iv);
+	AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)pFileData, lFileSize);
+	
+	unsigned char magic[] = "\x89\x50\x4e\x47";
+	unsigned char prebuff[17 + 17 + 4] = { 0 };
+	memcpy(prebuff, magic,4);
+	memcpy(prebuff+4, key, 17);
+	memcpy(prebuff + 4+17, iv, 17);
+	int encryptSize = lFileSize + sizeof(prebuff);
+	PCHAR encryptData = malloc(encryptSize);
+	memset(encryptData, 0, encryptSize);
+	memcpy(encryptData, prebuff, sizeof(prebuff));
+	memcpy(encryptData + sizeof(prebuff), pFileData, lFileSize);
+
+	char nencryptfileName[20] = "encrypt.png";
+	writeFile(nencryptfileName, encryptData, encryptSize);
+
+
+
+	free(encryptData);
 	free(pFileData);
 
 }
