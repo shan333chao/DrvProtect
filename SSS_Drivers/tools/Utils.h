@@ -142,43 +142,12 @@ typedef enum _SYSTEM_INFORMATION_CLASS
 	system_lookaside_information,
 	system_bigpool_information = 0x42
 } SYSTEM_INFORMATION_CLASS, * PSYSTEM_INFORMATION_CLASS;
-typedef struct _IDTR {
-	USHORT Size;
-	ULONG_PTR Address;
-} IDTR;
-
-typedef union _IDT_ADDR_T {
-	ULONG64 Addr;
-	struct {
-		ULONG64 OffsetLow : 16;
-		ULONG64 OffsetMiddle : 16;
-		ULONG64 OffsetHigh : 32;
-	};
-} IDT_ADDR_T, * PIDT_ADDR_T;
-
-
-typedef union _KIDTENTRY64 {
-	union {
-		struct {
-			/* 0x0000 */ unsigned short OffsetLow;
-			/* 0x0002 */ unsigned short Selector;
-			struct /* bitfield */
-			{
-				/* 0x0004 */ unsigned short IstIndex : 3;  /* bit position: 0 */
-				/* 0x0004 */ unsigned short Reserved0 : 5; /* bit position: 3 */
-				/* 0x0004 */ unsigned short Type : 5;      /* bit position: 8 */
-				/* 0x0004 */ unsigned short Dpl : 2;       /* bit position: 13 */
-				/* 0x0004 */ unsigned short Present : 1;   /* bit position: 15 */
-			};                                           /* bitfield */
-			/* 0x0006 */ unsigned short OffsetMiddle;
-			/* 0x0008 */ unsigned long OffsetHigh;
-			/* 0x000c */ unsigned long Reserved1;
-		}; /* size: 0x0010 */
-		/* 0x0000 */ unsigned __int64 Alignment;
-	};                          /* size: 0x0010 */
-} KIDTENTRY64, * PKIDTENTRY64; /* size: 0x0010 */
-
-//EXTERN_C_END
+ 
+typedef struct _REG_VALID {
+	ULONGLONG TIMESPAN;
+	int DAYS;
+	ULONGLONG CTIME;
+}REG_VALID, * PREG_VALID;
 
  
 
@@ -205,4 +174,5 @@ namespace Utils {
 	char* kstrstr(const char* haystack, const char* needle);
 	//EXTERN_C_END
 }
+
 #endif // !UTILS_H

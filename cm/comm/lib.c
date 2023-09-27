@@ -65,7 +65,25 @@ void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
 	CloseHandle(hFile);
  
 }
- 
+char* GenerateRandomString(int length) {
+	char* randomString = (char*)malloc((length + 1) * sizeof(char));
+	if (randomString == NULL) {
+		return NULL;
+	}
+
+	char characters[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+	srand((unsigned int)time(NULL));
+
+	for (int i = 0; i < length; i++) {
+		int randomIndex = rand() % (sizeof(characters) - 1);
+		randomString[i] = characters[randomIndex];
+	}
+
+	randomString[length] = '\0';
+
+	return randomString;
+}
 
 BOOL InitDriver()
 {
@@ -185,7 +203,7 @@ BOOL init()
 {
 	TEST_DATA testData = { 0 };
 	testData.uTest = 0;
-	DWORD status_code = DriverComm(TEST_COMM, &testData, sizeof(TEST_DATA));
+	DWORD status_code = HookComm(TEST_COMM, &testData, sizeof(TEST_DATA));
 	if (testData.uTest > 0)
 	{
 		isInit = TRUE;
@@ -211,7 +229,7 @@ BOOL FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, PVOID buffer, ULONG
 	TestMEM.PID = PID;
 	TestMEM.FakePID = fakePid;
 	TestMEM.Address = Address;
-	DWORD status_code = DriverComm(FAKE_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
+	DWORD status_code = HookComm(FAKE_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	return !status_code;
 }
 
@@ -227,7 +245,7 @@ BOOL FakeWriteMemory(ULONG PID, ULONG fakePid, PVOID Address, PUCHAR pValBuffer,
 	TestMEM.PID = PID;
 	TestMEM.FakePID = fakePid;
 	TestMEM.Address = Address;
-	DWORD status_code = DriverComm(FAKE_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
+	DWORD status_code = HookComm(FAKE_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	return !status_code;
 }
 
@@ -242,7 +260,7 @@ BOOL PhyReadMemory(ULONG PID, PVOID Address, PVOID buffer, ULONG uDataSize)
 	TestMEM.uDataSize = uDataSize;
 	TestMEM.PID = PID;
 	TestMEM.Address = Address;
-	DWORD status_code = DriverComm(PHY_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
+	DWORD status_code = HookComm(PHY_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	if (status_code)
 	{
 		return FALSE;
@@ -261,7 +279,7 @@ BOOL PhyWriteMemory(ULONG PID, PVOID Address, PUCHAR pValBuffer, ULONG length)
 	TestMEM.uDataSize = length;
 	TestMEM.PID = PID;
 	TestMEM.Address = Address;
-	DWORD status_code = DriverComm(PHY_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
+	DWORD status_code = HookComm(PHY_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
 	return !status_code;
 }
 
@@ -287,7 +305,7 @@ BOOL ProtectProcess(ULONG protectPid, ULONG fakePid) {
 	protectProcess.FakePID = fakePid;
 
 
-	DWORD status_code = DriverComm(PROTECT_PROCESS, &protectProcess, sizeof(FAKE_PROCESS_DATA));
+	DWORD status_code = HookComm(PROTECT_PROCESS, &protectProcess, sizeof(FAKE_PROCESS_DATA));
 	if (status_code > 0)
 	{
 		return FALSE;
@@ -306,7 +324,7 @@ BOOL ProtectWindow(ULONG32 hwnd)
 	hwnds[0] = hwnd;
 	WND_DATA.hwnds = hwnds;
 	WND_DATA.Length = 1;
-	DWORD status_code = DriverComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
+	DWORD status_code = HookComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	if (status_code > 0)
 	{
 		return FALSE;
@@ -326,7 +344,7 @@ BOOL QueryModule(ULONG pid, PCHAR szModuleName)
 	moduleData.pcModuleName = szModuleName;
 	ULONG uModuleSize = 0;
 	moduleData.pModuleSize = &uModuleSize;
-	DWORD status_code = DriverComm(QUERY_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA));
+	DWORD status_code = HookComm(QUERY_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA));
 	if (status_code)
 	{
 		return FALSE;
@@ -346,7 +364,7 @@ PUCHAR AllocateMem(ULONG PID, ULONG uDataSize)
 	CreateMemData.PID = PID;
 	CreateMemData.pVAddress = &Addr;
 	CreateMemData.uSize = uDataSize;
-	DWORD status_code = DriverComm(CREATE_MEMORY, &CreateMemData, sizeof(CREATE_MEM_DATA));
+	DWORD status_code = HookComm(CREATE_MEMORY, &CreateMemData, sizeof(CREATE_MEM_DATA));
 	if (status_code > 0)
 	{
 		return 0;
@@ -375,7 +393,7 @@ BOOL CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len)
 	THREAD_DATA.PID = PID;
 	THREAD_DATA.Argument = NULL;
 	THREAD_DATA.ShellCode = address;
-	DWORD status_code = DriverComm(CREATE_THREAD, &THREAD_DATA, sizeof(CREATE_THREAD_DATA));
+	DWORD status_code = HookComm(CREATE_THREAD, &THREAD_DATA, sizeof(CREATE_THREAD_DATA));
 	if (status_code > 0)
 	{
 

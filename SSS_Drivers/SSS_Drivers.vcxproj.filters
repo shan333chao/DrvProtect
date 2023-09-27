@@ -106,6 +106,9 @@
     <ClCompile Include="ProtectRoute.cpp">
       <Filter>ProtectWindow</Filter>
     </ClCompile>
+    <ClCompile Include="tools\aes.c">
+      <Filter>tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools\crt.h">
@@ -185,6 +188,9 @@
     </ClInclude>
     <ClInclude Include="ProtectRoute.h">
       <Filter>ProtectWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tools\aes.h">
+      <Filter>tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

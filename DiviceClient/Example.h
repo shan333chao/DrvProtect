@@ -1,9 +1,5 @@
 #include "Comm/CommR3.h"
-#include <stdio.h>
-#include <ntstatus.h>
-#include <stdio.h>
-#include <string.h>
-#include "aes.h"
+
 #include <windows.h>
 typedef struct _handle_information
 {
@@ -21,7 +17,7 @@ typedef struct _FWindowInfo {
 
 
 void InitDriver();
-void TestComm();
+void TestComm(PVOID regCode, ULONG size);
 void FakeReadMemory(ULONG		PID, ULONG fakePid, PVOID	Address, ULONG		uDataSize);
 void FakeWriteMemory(ULONG		PID, ULONG fakePid, PVOID	Address, PUCHAR pValBuffer,ULONG length);
 void PhyReadMemory(ULONG		PID, PVOID	Address, ULONG		uDataSize);

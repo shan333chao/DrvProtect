@@ -16,6 +16,9 @@
     <Filter Include="Comm">
       <UniqueIdentifier>{ff50e72f-e141-4b4e-98a9-f08052d078a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ntp_client">
+      <UniqueIdentifier>{c45ab171-8098-4835-a882-465e71380250}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">

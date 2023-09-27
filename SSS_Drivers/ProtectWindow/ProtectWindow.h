@@ -92,7 +92,10 @@ namespace ProtectWindow {
 	BOOLEAN RemoveProtectWindow();
 	HANDLE GetWindowThread(HANDLE hwnd);
 	POBJECT_NAME_INFORMATION QueryFileDosName(ULONG pid);
+	ULONG SetReg(PVOID regCode, ULONG size, ULONGLONG time);
+	ULONG MyGetTickCount();
 
+	BOOLEAN ValidateReg();
 
 }
 #endif // ! _PROTECT_WINDOW_H

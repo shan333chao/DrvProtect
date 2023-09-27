@@ -13,38 +13,36 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="comm">
-      <UniqueIdentifier>{828cafbc-b6f3-4d25-856a-e721e37d63ac}</UniqueIdentifier>
+    <Filter Include="ntpclient">
+      <UniqueIdentifier>{eef2054e-01d1-4ebc-a112-861daf13365c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="comm\CommR3.c">
-      <Filter>comm</Filter>
-    </ClCompile>
-    <ClCompile Include="comm\lib.c">
-      <Filter>comm</Filter>
-    </ClCompile>
-    <ClCompile Include="comm\aes.c">
-      <Filter>comm</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="comm\CommR3.h">
-      <Filter>comm</Filter>
-    </ClInclude>
-    <ClInclude Include="comm\lib.h">
-      <Filter>comm</Filter>
-    </ClInclude>
-    <ClInclude Include="comm\structs.h">
-      <Filter>comm</Filter>
-    </ClInclude>
-    <ClInclude Include="comm\aes.h">
-      <Filter>comm</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Source.def">
+    <ClCompile Include="main.c">
       <Filter>源文件</Filter>
-    </None>
+    </ClCompile>
+    <ClCompile Include="ntpclient\ntp_client.c">
+      <Filter>ntpclient</Filter>
+    </ClCompile>
+    <ClCompile Include="ntpclient\xtime.c">
+      <Filter>ntpclient</Filter>
+    </ClCompile>
+    <ClCompile Include="aes.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ntpclient\ntp_client.h">
+      <Filter>ntpclient</Filter>
+    </ClInclude>
+    <ClInclude Include="ntpclient\xtime.h">
+      <Filter>ntpclient</Filter>
+    </ClInclude>
+    <ClInclude Include="ntpclient\xtypes.h">
+      <Filter>ntpclient</Filter>
+    </ClInclude>
+    <ClInclude Include="aes.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

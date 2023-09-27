@@ -170,6 +170,7 @@
     <ClCompile Include="SSDT\Functions.cpp" />
     <ClCompile Include="SSDT\ssdt.cpp" />
     <ClCompile Include="Thread\SThread.cpp" />
+    <ClCompile Include="tools\aes.c" />
     <ClCompile Include="tools\crt.cpp" />
     <ClCompile Include="tools\imports.cpp" />
     <ClCompile Include="tools\Utils.cpp" />
@@ -196,6 +197,7 @@
     <ClInclude Include="SSDT\Functions.h" />
     <ClInclude Include="SSDT\ssdt.h" />
     <ClInclude Include="Thread\SThread.h" />
+    <ClInclude Include="tools\aes.h" />
     <ClInclude Include="tools\crt.h" />
     <ClInclude Include="tools\imports.h" />
     <ClInclude Include="tools\Log.h" />

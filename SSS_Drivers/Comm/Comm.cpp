@@ -85,7 +85,6 @@ namespace communicate {
 		pOriginIRP_MJ_DEVICE_CONTROL = pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL];
 		pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = pDriverObject->MajorFunction[IRP_MJ_CLOSE];
 		pFunc = (PUCHAR)pDriverObject->MajorFunction[IRP_MJ_CLOSE];
-		DbgBreakPoint();
 		UCHAR sig1 = 0xffu;
 		UCHAR sig2 = 0x15u;
 		if (Utils::InitOsVersion().dwBuildNumber >= 19041)

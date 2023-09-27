@@ -7,8 +7,12 @@
 
 namespace ProtectWindow {
 
+
+
 	EXTERN_C_START
-		CommCallBack g_CommCallBack = NULL;
+		REG_VALID reg = { 0 };
+	ULONG lastStartTick = 0;
+	CommCallBack g_CommCallBack = NULL;
 	BOOLEAN IsHookStarted = FALSE;
 	FNtCreateFile g_NtCreateFile = 0;
 	FNtUserFindWindowEx	g_NtUserFindWindowEx = 0;
@@ -246,7 +250,7 @@ namespace ProtectWindow {
 		//}
 		return  g_NtUserMessageCall(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
 	}
- 
+
 	NTSTATUS MyNtQueryInformationProcess(HANDLE ProcessHandle, PROCESSINFOCLASS ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength, PULONG ReturnLength)
 	{
 
@@ -272,7 +276,7 @@ namespace ProtectWindow {
 			}
 			else if (ret > 1) {
 
-				return  g_NtUserInternalGetWindowText((HANDLE)0x10010,  pString, cchMaxCount);
+				return  g_NtUserInternalGetWindowText((HANDLE)0x10010, pString, cchMaxCount);
 			}
 			auto pid = g_NtUserQueryWindow(hWnd, WindowProcess);
 			if (Protect::IsProtectPID(pid)) {
@@ -615,7 +619,6 @@ namespace ProtectWindow {
 		PCOMM_DATA pCommData = (PCOMM_DATA)data;
 		if (g_CommCallBack)
 		{
-
 			if (pCommData->ID == COMM_ID)
 			{
 				pCommData->status = g_CommCallBack(pCommData);
@@ -802,6 +805,65 @@ namespace ProtectWindow {
 		imports::obf_dereference_object(pFileHandle);
 		imports::obf_dereference_object(pEprocess);//释放引用次数 
 		return ObjectName;
+	}
+
+	ULONG MyGetTickCount()
+	{
+		LARGE_INTEGER currentTick = { 0 };
+		ULONG MyInc = KeQueryTimeIncrement();
+		KeQueryTickCount(&currentTick);
+		currentTick.QuadPart *= MyInc;
+		currentTick.QuadPart /= 10000;
+		return  currentTick.LowPart / 1000;
+
+	}
+
+	BOOLEAN ValidateReg() {
+		if (!lastStartTick)
+		{
+			return  FALSE;
+		}
+		if (!reg.CTIME)
+		{
+			return  FALSE;
+		}
+		ULONG tick = MyGetTickCount() - lastStartTick;
+		ULONG overtime = reg.TIMESPAN - (tick + reg.CTIME);
+		Log("%d \r\n", overtime);
+		return overtime>0;
+	}
+	ULONG SetReg(PVOID regCode, ULONG size, ULONGLONG time) {
+		if (size != sizeof(REG_VALID) + 34)
+		{
+			return 0x100001;
+		}
+		if (time < 1695740582)
+		{
+			return 0x100002;
+		}
+		unsigned char key[17] = { 0 };
+		unsigned char iv[17] = { 0 };
+		memcpy(key, regCode, 17);
+		memcpy(iv, (PUCHAR)regCode + size - 17, 17);
+		int datalen = size - 34;
+		struct AES_ctx ctx = { 0 };
+		AES_init_ctx_iv(&ctx, key, iv);
+		AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)((PUCHAR)regCode + 17), datalen);
+		PREG_VALID pRegData = (PREG_VALID)((PUCHAR)regCode + 17);
+		if (pRegData->TIMESPAN > time)
+		{
+			reg.CTIME = pRegData->CTIME;
+			reg.DAYS = pRegData->DAYS;
+			reg.TIMESPAN = pRegData->TIMESPAN;
+			lastStartTick = time;
+			lastStartTick = MyGetTickCount();
+
+			return 0x100000;
+		}
+		else {
+			return 0x100002;
+		}
+
 	}
 
 }

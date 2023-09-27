@@ -71,7 +71,11 @@ LOOP:
 	switch (code)
 	{
 	case 0: {
-		TestComm();
+		printf("«Î ‰»Îø®√‹£∫\n");
+		char cardcode[0x1000] = { 0 };
+		scanf_s("%s", cardcode, 0x1000);
+		ULONG len = StringToBuff(cardcode, buffer);
+		TestComm(buffer, len);
 		break;
 	} 
 	case 1: { 

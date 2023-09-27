@@ -1,0 +1,12 @@
+LIBRARY
+	EXPORTS
+		init
+		FakeReadMemory
+		FakeWriteMemory
+		PhyReadMemory
+		PhyWriteMemory
+		ProtectProcess
+		ProtectWindow
+		QueryModule
+		AllocateMem
+		CreateMyThread

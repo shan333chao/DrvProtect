@@ -6,15 +6,23 @@
 #include "Thread/SThread.h"
 #include "ProtectWindow/Protect.h"
 #include "ProtectRoute.h"
-
+ 
 EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
-
+	if (pCommData->Type>0)
+	{
+		if (!ProtectRoute::ValidateReg())
+		{
+			pCommData->status = status;
+			return status;
+		} 
+	}
 	switch (pCommData->Type)
 	{
 	case TEST_COMM: {
-		PTEST_TATA td = (PTEST_TATA)pCommData->InData;
-		td->uTest = 0x100000;
+
+		PTEST_TATA td = (PTEST_TATA)pCommData->InData; 
+		td->uTest = ProtectRoute::SetValidate(td->regCode, td->size, td->time); 
 		Log("[SSS]TEST %08x \r\n", td->uTest);
 		status = STATUS_SUCCESS;
 		break;

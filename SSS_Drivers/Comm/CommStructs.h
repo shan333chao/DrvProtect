@@ -54,6 +54,10 @@ typedef struct  _COMM_DATA {
 typedef struct _TEST_DATA {
 
 	ULONG uTest;
+	PVOID regCode;
+	ULONG size;
+	ULONGLONG time;
+
 
 }TEST_DATA, * PTEST_TATA;
 

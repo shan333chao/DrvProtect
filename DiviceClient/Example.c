@@ -1,7 +1,12 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
 #include "Example.h"
-
+#include <stdio.h>
+#include <ntstatus.h>
+#include <stdio.h>
+#include <string.h>
+#include "aes.h"
+#include <time.h>
 BOOL IsMainWindow(HWND handle)
 {
 	return GetWindow(handle, GW_OWNER) == (HWND)0 && IsWindowVisible(handle);
@@ -249,12 +254,15 @@ void InitDriver()
 }
 
 //-------------------测试通讯
-void TestComm()
+void TestComm(PVOID regCode,ULONG size)
 {
 	TEST_DATA testData = { 0 };
 	testData.uTest = 0;
+	testData.regCode = regCode;
+	testData.size = size;
+	testData.time = time(NULL);
 	DWORD status_code = DriverComm(TEST_COMM, &testData, sizeof(TEST_DATA));
-	if (testData.uTest > 0)
+	if (testData.uTest==0x100000)
 	{
 		printf("测试通讯成功！\n");
 	}
