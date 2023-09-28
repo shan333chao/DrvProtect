@@ -142,6 +142,25 @@ ULONG_PTR Utils::GetKernelModule(PCHAR szModuleName, PULONG imageSize)
 	return imageBase;
 }
 
+ULONGLONG Utils::GetWin32kFull() {
+	static ULONGLONG win32kfull_address = 0;
+	if (!win32kfull_address)
+	{
+		ULONG size = 0;
+		win32kfull_address=GetKernelModule(skCrypt("win32kfull.sys"), &size); 
+	}
+	return win32kfull_address;
+}
+
+ULONGLONG Utils::GetWin32kBase() {
+	static ULONGLONG win32kbase_address = 0;
+	if (!win32kbase_address)
+	{
+		ULONG size = 0;
+		win32kbase_address = GetKernelModule(skCrypt("win32kbase.sys"), &size);
+	}
+	return win32kbase_address;
+}
 
 
 HANDLE Utils::GetPidByName(PWCH imageName)
@@ -168,6 +187,58 @@ HANDLE Utils::GetPidByName(PWCH imageName)
 	return pid;
 }
 
+bool  Utils::pattern_check(const char* data, const char* pattern, const char* mask)
+{
+	size_t len = strlen(mask);
+
+	for (size_t i = 0; i < len; i++)
+	{
+		if (data[i] == pattern[i] || mask[i] == '?')
+			continue;
+		else
+			return false;
+	}
+
+	return true;
+}
+
+unsigned long long  Utils::find_pattern(unsigned long long addr, unsigned long size, const char* pattern, const char* mask)
+{
+	size -= (unsigned long)strlen(mask);
+
+	for (unsigned long i = 0; i < size; i++)
+	{
+		if (pattern_check((const char*)addr + i, pattern, mask))
+			return addr + i;
+	}
+
+	return 0;
+}
+unsigned long long  Utils::find_pattern_image(unsigned long long addr, const char* pattern, const char* mask)
+{
+	PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)addr;
+	if (dos->e_magic != IMAGE_DOS_SIGNATURE)
+		return 0;
+
+	PIMAGE_NT_HEADERS64 nt = (PIMAGE_NT_HEADERS64)(addr + dos->e_lfanew);
+	if (nt->Signature != IMAGE_NT_SIGNATURE)
+		return 0;
+
+	PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(nt);
+
+	for (unsigned short i = 0; i < nt->FileHeader.NumberOfSections; i++)
+	{
+		PIMAGE_SECTION_HEADER p = &section[i];
+
+		if (strstr((const char*)p->Name, ".text") || 'EGAP' == *reinterpret_cast<int*>(p->Name))
+		{
+			unsigned long long res = find_pattern(addr + p->VirtualAddress, p->Misc.VirtualSize, pattern, mask);
+			if (res) return res;
+		}
+	}
+
+	return 0;
+}
 VOID Utils::InitApis() {
 
 	imports::imported.rtl_find_exported_routine_by_name = GetNtFuncExportName(skCrypt("RtlFindExportedRoutineByName"));

@@ -163,6 +163,10 @@ namespace Utils {
 	uintptr_t GetNtFuncExportName(_In_ PCHAR FuncName);
 	PVOID GetSystemInformation(const SYSTEM_INFORMATION_CLASS information_class);
 	ULONG_PTR GetKernelModule(PCHAR szModuleName, PULONG imageSize);
+
+	ULONGLONG GetWin32kFull();
+
+	ULONGLONG GetWin32kBase();
  
 	HANDLE GetPidByName(PWCH imageName);
 	VOID InitApis();
@@ -173,6 +177,10 @@ namespace Utils {
 	char* kstrchr(const char* str, int character);
 	char* kstrstr(const char* haystack, const char* needle);
 	//EXTERN_C_END
+
+	bool pattern_check(const char* data, const char* pattern, const char* mask); 
+	unsigned long long find_pattern(unsigned long long addr, unsigned long size, const char* pattern, const char* mask);
+	unsigned long long find_pattern_image(unsigned long long addr, const char* pattern, const char* mask);
 }
 
 #endif // !UTILS_H

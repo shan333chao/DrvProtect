@@ -46,6 +46,11 @@ namespace ProtectWindow {
 	ULONG_PTR MyNtUserCallHwndParam(HANDLE hwnd, DWORD_PTR param, DWORD code);
 	BOOLEAN MyNtUserValidateHandleSecure(HANDLE hHdl);
 
+	typedef __int64(__fastcall* FChangeWindowTreeProtection)(void* a1, int a2);
+	typedef __int64(__fastcall* FValidateHwnd)(__int64 a1);
+
+	ULONGLONG GetChangeWindowTreeProtection();
+	ULONGLONG GetFValidateHwnd();
 
 	INT64 MyNtUserGetPointerProprietaryId(uintptr_t data);
 	INT MyNtUserGetClassName(HANDLE hWnd, BOOLEAN Ansi, PUNICODE_STRING ClassName);
