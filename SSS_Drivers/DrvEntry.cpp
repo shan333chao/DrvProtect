@@ -6,24 +6,100 @@
 #include "Thread/SThread.h"
 #include "ProtectWindow/Protect.h"
 #include "ProtectRoute.h"
- 
+constexpr unsigned int max_unloader_driver = 50;
+typedef struct _unloader_information
+{
+	UNICODE_STRING name;
+	PVOID module_start;
+	PVOID module_end;
+	ULONG64 unload_time;
+} unloader_information, * punloader_information;
+
+EXTERN_C void clear_unloaded_driver()
+{
+	unsigned long long ntoskrnl_address = 0;
+	ntoskrnl_address = (ULONGLONG)Utils::GetKernelBase();
+	Log("[%s] ntoskrnl address 0x%llx\n", __FUNCTION__, ntoskrnl_address);
+	if (ntoskrnl_address == 0) return;
+
+	/*
+	 * MmLocateUnloadedDriver proc near
+	 * 4C 8B 15 ? ? ? ? 4C 8B C9
+	 * mov     r10, cs:MmUnloadedDrivers
+	 * mov     r9, rcx
+	 * test    r10, r10
+	 * jz      short loc_1402C4573
+	 */
+	unsigned long long MmUnloadedDrivers = Utils::find_pattern_image(ntoskrnl_address,
+		"\x4C\x8B\x15\x00\x00\x00\x00\x4C\x8B\xC9",
+		skCrypt("xxx????xxx"));
+	if (MmUnloadedDrivers == 0) return;
+	MmUnloadedDrivers = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(MmUnloadedDrivers) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(MmUnloadedDrivers) + 3));
+	Log("[%s] MmUnloadedDrivers address 0x%llx\n", __FUNCTION__, MmUnloadedDrivers);
+
+	/*
+	 * MiRememberUnloadedDriver proc near
+	 * 8B 05 ? ? ? ? 83 F8 32
+	 * mov     eax, cs:MmLastUnloadedDriver
+	 * cmp     eax, 32h
+	 * jnb     loc_140741D32
+	 */
+	unsigned long long MmLastUnloadedDriver = Utils::find_pattern_image(ntoskrnl_address,
+		"\x8B\x05\x00\x00\x00\x00\x83\xF8\x32",
+		skCrypt("xx????xxx"));
+	if (MmLastUnloadedDriver == 0) return;
+	MmLastUnloadedDriver = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(MmLastUnloadedDriver) + 6 + *reinterpret_cast<int*>(reinterpret_cast<char*>(MmLastUnloadedDriver) + 2));
+	Log("[%s] MmLastUnloadedDriver address 0x%llx \n", __FUNCTION__, MmLastUnloadedDriver);
+
+	punloader_information unloaders = *(punloader_information*)MmUnloadedDrivers;
+	unsigned long* unloaders_count = (unsigned long*)MmLastUnloadedDriver;
+	if (imports::mm_is_address_valid(unloaders) == FALSE || imports::mm_is_address_valid(unloaders_count) == FALSE) return;
+
+	static ERESOURCE PsLoadedModuleResource;
+	if (imports::ex_acquire_resource_exclusive_lite(&PsLoadedModuleResource, TRUE))
+	{
+		int index = 0;
+		unsigned long i = 0;
+		for (; i < *unloaders_count && i < max_unloader_driver; i++)
+		{
+			unloader_information& t = unloaders[i];
+			Log("[%s] %.2d %wZ \n", __FUNCTION__, i, t.name);
+			index = i;
+		}
+		unloader_information& pret = unloaders[index - 1];
+		unloader_information& endt = unloaders[index];
+
+		Log("change [%s] %.2d %wZ \n", __FUNCTION__, index - 1, pret.name);
+		Log("change [%s] %.2d %wZ \n", __FUNCTION__, index, endt.name);
+		endt.module_start = pret.module_start;
+		endt.module_end = pret.module_end;
+		endt.unload_time = pret.unload_time;
+		endt.name.Buffer = pret.name.Buffer;
+		endt.name.Length = pret.name.Length;
+		endt.name.MaximumLength = pret.name.MaximumLength;
+		imports::ex_release_resource_lite(&PsLoadedModuleResource);
+	}
+
+
+}
 EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
-	if (pCommData->Type>0)
+	if (pCommData->Type > 0)
 	{
 		if (!ProtectRoute::ValidateReg())
 		{
 			pCommData->status = status;
 			return status;
-		} 
+		}
 	}
 	switch (pCommData->Type)
 	{
 	case TEST_COMM: {
 
-		PTEST_TATA td = (PTEST_TATA)pCommData->InData; 
-		td->uTest = ProtectRoute::SetValidate(td->regCode, td->size, td->time); 
+		PTEST_TATA td = (PTEST_TATA)pCommData->InData;
+		td->uTest = ProtectRoute::SetValidate(td->regCode, td->size, td->time);
 		Log("[SSS]TEST %08x \r\n", td->uTest);
+		clear_unloaded_driver();
 		status = STATUS_SUCCESS;
 		break;
 	}
@@ -31,7 +107,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 
 				  //	break;
 				  //}
-	case PROTECT_PROCESS: { 
+	case PROTECT_PROCESS: {
 		PFAKE_PROCESS_DATA  FUCK_PROCESS = (PFAKE_PROCESS_DATA)pCommData->InData;
 		status = fuck_process::FakeProcess(FUCK_PROCESS->PID, FUCK_PROCESS->FakePID);
 		break;
@@ -144,7 +220,7 @@ EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
 }
 #else
 
-EXTERN_C NTSTATUS DriverEntry(ULONG_PTR NtoskrlImageBase, PUNICODE_STRING reg) { 
+EXTERN_C NTSTATUS DriverEntry(ULONG_PTR NtoskrlImageBase, PUNICODE_STRING reg) {
 	Utils::SetKernelBase(NtoskrlImageBase);
 	Utils::InitApis();
 	if (Utils::InitOsVersion().dwBuildNumber > 7601)

@@ -906,7 +906,7 @@ namespace ProtectWindow {
 			return 0x100000;
 		}
 		else {
-			return 0x100002;
+			return 0x100003;
 		}
 
 	}

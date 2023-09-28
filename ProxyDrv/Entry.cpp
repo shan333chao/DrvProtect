@@ -13,7 +13,7 @@ EXTERN_C VOID ClearDriverTrace(PDRIVER_OBJECT pDriver) {
 	memcpy(driverFullName, pDriver->DriverExtension->ServiceKeyName.Buffer, pDriver->DriverExtension->ServiceKeyName.Length);
 	//memcpy(driverFullName + pDriver->DriverExtension->ServiceKeyName.Length / sizeof(wchar_t), fileExt, sizeof(fileExt));
 	trace::clear_cache(driverFullName, driverTimeDateStamp);
-	trace::clear_unloaded_driver(driverFullName);
+	//trace::clear_unloaded_driver(driverFullName);
 	trace::clear_hash_bucket_list(driverFullName);
 	trace::clear_ci_ea_cache_lookaside_list();
 }

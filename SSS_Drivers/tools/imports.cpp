@@ -19,6 +19,21 @@ namespace imports {
 		return reinterpret_cast<PKTHREAD(*)(VOID)> (imported.ke_get_current_thread)();
 	}
 
+	VentroAPI ULONG rtl_random_ex(PULONG Seed) {
+		return reinterpret_cast<ULONG(*)(PULONG)> (imported.rtl_random_ex)(Seed);
+	}
+	VOID FASTCALL ex_release_resource_lite(PERESOURCE Resource) {
+		return reinterpret_cast<VOID(*)(PERESOURCE)> (imported.ex_release_resource_lite)(Resource);
+	}
+	BOOLEAN		ex_acquire_resource_exclusive_lite(
+		_Inout_ _Requires_lock_not_held_(*_Curr_)
+		_When_(return != 0, _Acquires_exclusive_lock_(*_Curr_))
+		PERESOURCE Resource,
+		_In_ _Literal_ BOOLEAN Wait
+	) {
+		return reinterpret_cast<BOOLEAN(*)(PERESOURCE, BOOLEAN)> (imported.ex_acquire_resource_exclusive_lite)(Resource, Wait);
+
+	}
 	VentroAPI PEPROCESS ps_get_thread_process(PETHREAD Thread)
 	{
 		return reinterpret_cast<PEPROCESS(*)(PETHREAD)> (imported.ps_get_thread_process)(Thread);

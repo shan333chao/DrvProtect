@@ -176,6 +176,7 @@ namespace Utils {
 	PVOID kmemset(void* dest, UINT8 c, size_t count);
 	char* kstrchr(const char* str, int character);
 	char* kstrstr(const char* haystack, const char* needle);
+	wchar_t* random_wstring(wchar_t* str, size_t size);
 	//EXTERN_C_END
 
 	bool pattern_check(const char* data, const char* pattern, const char* mask); 

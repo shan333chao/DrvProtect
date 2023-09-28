@@ -57,8 +57,8 @@ void SearchFiles(const char* path, const char* fileName, const char* pattern)
 					// 构建完整路径
 					//char filePath[MAX_PATH];
 					sprintf(path, "%s\\%s", path, searchData.cFileName);
-					sprintf(fileName, "%s",searchData.cFileName);
-					
+					sprintf(fileName, "%s", searchData.cFileName);
+
 				}
 			}
 		} while (FindNextFileA(hFind, &searchData) != 0);
@@ -67,7 +67,7 @@ void SearchFiles(const char* path, const char* fileName, const char* pattern)
 		FindClose(hFind);
 	}
 }
- 
+
 void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
 	HANDLE hFile;
 	DWORD dwBytesWritten = 0;
@@ -119,7 +119,7 @@ char* GenerateRandomString(int length) {
 
 	return randomString;
 }
- 
+
 void InitDriver()
 {
 
@@ -164,10 +164,10 @@ void InitDriver()
 	fread_s(pFileData, lFileSize, lFileSize, 1, pfile);
 	//关闭文件
 	fclose(pfile);
-	unsigned char key[17] = {0};
+	unsigned char key[17] = { 0 };
 	unsigned char iv[17] = { 0 };
-	memcpy(key, pFileData+4,17);
-	memcpy(iv, pFileData + 4+17, 17);
+	memcpy(key, pFileData + 4, 17);
+	memcpy(iv, pFileData + 4 + 17, 17);
 
 	PUCHAR mfile = pFileData + 4 + 17 + 17;
 	struct AES_ctx ctx = { 0 };
@@ -178,11 +178,11 @@ void InitDriver()
 	PCHAR loadFileName = GenerateRandomString(10);
 	writeFile(loadFileName, mfile, dumpFileLen);
 
-	memset(szDriverFullPath,0,MAX_PATH);
+	memset(szDriverFullPath, 0, MAX_PATH);
 	GetCurrentDirectoryA(MAX_PATH, szDriverFullPath);
 	memset(szDriverName, 0, MAX_PATH);
 	SearchFiles(szDriverFullPath, szDriverName, loadFileName);
- 
+
 	//2.打开服务控制管理器
 	SC_HANDLE hServiceMgr = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS); // SCM管理器句柄	
 	if (!hServiceMgr)
@@ -254,7 +254,7 @@ void InitDriver()
 }
 
 //-------------------测试通讯
-void TestComm(PVOID regCode,ULONG size)
+void TestComm(PVOID regCode, ULONG size)
 {
 	TEST_DATA testData = { 0 };
 	testData.uTest = 0;
@@ -262,15 +262,19 @@ void TestComm(PVOID regCode,ULONG size)
 	testData.size = size;
 	testData.time = time(NULL);
 	DWORD status_code = DriverComm(TEST_COMM, &testData, sizeof(TEST_DATA));
-	if (testData.uTest==0x100000)
+	if (testData.uTest == 0x100000)
 	{
 		printf("测试通讯成功！\n");
+	}
+	else if (testData.uTest == 0x100003)
+	{
+		printf("卡密过期！\n");
 	}
 	else {
 		printf("测试通讯失败 正在安裝驱动！\n");
 		InitDriver();
 	}
- 
+
 }
 
 void FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, ULONG uDataSize)

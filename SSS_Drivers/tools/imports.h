@@ -84,12 +84,22 @@ struct _m_imported
 	uintptr_t ke_get_current_thread;
 	uintptr_t mm_user_probe_address;
 	uintptr_t rtl_find_exported_routine_by_name;
+	uintptr_t ex_release_resource_lite;
+	uintptr_t ex_acquire_resource_exclusive_lite;
+	uintptr_t rtl_random_ex;
+
 };
 namespace imports {
 
 	extern struct _m_imported imported;
- 
- 
+	VentroAPI ULONG rtl_random_ex(PULONG Seed);
+	VOID FASTCALL ex_release_resource_lite(PERESOURCE Resource);
+	BOOLEAN		ex_acquire_resource_exclusive_lite(
+		_Inout_ _Requires_lock_not_held_(*_Curr_)
+		_When_(return != 0, _Acquires_exclusive_lock_(*_Curr_))
+		PERESOURCE Resource,
+		_In_ _Literal_ BOOLEAN Wait
+	);
 	VentroAPI PVOID rtl_find_exported_routine_by_name(_In_ PVOID ImageBase, _In_ PCCH RoutineName);
 
 	VentroAPI PKTHREAD ke_get_current_thread(VOID);

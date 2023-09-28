@@ -297,7 +297,7 @@ namespace trace
 
 				if (wcsstr(current_entry->name.Buffer, name))
 				{
-					Log("[%s] found %ws driver \n", __FUNCTION__, current_entry->name.Buffer);
+					Log("done clear_hash_bucket_list [%s] found %ws driver \n", __FUNCTION__, current_entry->name.Buffer);
 
 					// Ö¸Õë¶ÏÁ´
 					prev_entry->next = current_entry->next;

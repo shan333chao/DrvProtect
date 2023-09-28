@@ -240,7 +240,9 @@ unsigned long long  Utils::find_pattern_image(unsigned long long addr, const cha
 	return 0;
 }
 VOID Utils::InitApis() {
-
+	imports::imported.ex_release_resource_lite = GetNtFuncExportName(skCrypt("ExReleaseResourceLite"));
+	imports::imported.ex_acquire_resource_exclusive_lite = GetNtFuncExportName(skCrypt("ExAcquireResourceExclusiveLite"));
+	imports::imported.rtl_random_ex = GetNtFuncExportName(skCrypt("RtlRandomEx"));
 	imports::imported.rtl_find_exported_routine_by_name = GetNtFuncExportName(skCrypt("RtlFindExportedRoutineByName"));
 
 	imports::imported.mm_get_system_routine_address = GetNtFuncExportName(skCrypt("MmGetSystemRoutineAddress"));
@@ -468,6 +470,20 @@ char* Utils::kstrstr(const char* haystack, const char* needle)
 
 	return NULL;
 }
+wchar_t* Utils::random_wstring(wchar_t* str, size_t size)
+{
+	if (str)
+	{
+		ULONG64 time = 0;
+		KeQuerySystemTime(&time);
+		ULONG seed = (ULONG)time;
+		static const wchar_t maps[62] = L"123456789ZXCVBNMASDFGHJKLQWERTYUIOPzxcvbnmasdfghjklqwertyuiop";
 
+		if (size == 0) size = wcslen(str);
+		for (size_t i = 0; i < size; i++) str[i] = maps[imports::rtl_random_ex(&seed) % 60];
+	}
+
+	return str;
+}
 
 
