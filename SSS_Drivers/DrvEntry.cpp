@@ -68,16 +68,19 @@ EXTERN_C void clear_unloaded_driver()
 		}
 		unloader_information& pret = unloaders[index - 1];
 		unloader_information& endt = unloaders[index];
+		if (endt.module_start != pret.module_start)
+		{
+			Log("change [%s] %.2d %wZ \n", __FUNCTION__, index - 1, pret.name);
+			Log("change [%s] %.2d %wZ \n", __FUNCTION__, index, endt.name);
+			endt.module_start = pret.module_start;
+			endt.module_end = pret.module_end;
+			endt.unload_time = pret.unload_time;
+			endt.name.Buffer = pret.name.Buffer;
+			endt.name.Length = pret.name.Length;
+			endt.name.MaximumLength = pret.name.MaximumLength;
+			imports::ex_release_resource_lite(&PsLoadedModuleResource); 
+		}
 
-		Log("change [%s] %.2d %wZ \n", __FUNCTION__, index - 1, pret.name);
-		Log("change [%s] %.2d %wZ \n", __FUNCTION__, index, endt.name);
-		endt.module_start = pret.module_start;
-		endt.module_end = pret.module_end;
-		endt.unload_time = pret.unload_time;
-		endt.name.Buffer = pret.name.Buffer;
-		endt.name.Length = pret.name.Length;
-		endt.name.MaximumLength = pret.name.MaximumLength;
-		imports::ex_release_resource_lite(&PsLoadedModuleResource);
 	}
 
 
