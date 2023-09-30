@@ -109,6 +109,9 @@
     <ClCompile Include="tools\aes.c">
       <Filter>tools</Filter>
     </ClCompile>
+    <ClCompile Include="Memmory\VadModules.cpp">
+      <Filter>Memmory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools\crt.h">
@@ -191,6 +194,9 @@
     </ClInclude>
     <ClInclude Include="tools\aes.h">
       <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Memmory\VadModules.h">
+      <Filter>Memmory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

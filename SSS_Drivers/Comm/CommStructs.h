@@ -34,6 +34,8 @@ typedef enum _COMM_TYPE {
 	CREATE_THREAD,
 	//查询模块
 	QUERY_MODULE,
+	//查询VAD模块
+	QUERY_VAD_MODULE,
 	//内核模块注入
 	INJECT_DLL,
 	//文件保护

@@ -3,7 +3,9 @@
 #include <windows.h>
 #include <string.h>
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 BOOL InitDriver();
 BOOL init();
@@ -25,3 +27,7 @@ BOOL QueryModule(ULONG pid, PCHAR szModuleName);
 
 PUCHAR AllocateMem(ULONG PID, ULONG uDataSize);
 BOOL CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len);
+
+#ifdef __cplusplus
+}
+#endif

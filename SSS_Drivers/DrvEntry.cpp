@@ -6,6 +6,7 @@
 #include "Thread/SThread.h"
 #include "ProtectWindow/Protect.h"
 #include "ProtectRoute.h"
+#include "Memmory/VadModules.h"
 constexpr unsigned int max_unloader_driver = 50;
 typedef struct _unloader_information
 {
@@ -32,7 +33,7 @@ EXTERN_C void clear_unloaded_driver()
 	 */
 	unsigned long long MmUnloadedDrivers = Utils::find_pattern_image(ntoskrnl_address,
 		"\x4C\x8B\x15\x00\x00\x00\x00\x4C\x8B\xC9",
-		skCrypt("xxx????xxx"));
+		skCrypt("xxx????xxx"), skCrypt(".text"));
 	if (MmUnloadedDrivers == 0) return;
 	MmUnloadedDrivers = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(MmUnloadedDrivers) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(MmUnloadedDrivers) + 3));
 	Log("[%s] MmUnloadedDrivers address 0x%llx\n", __FUNCTION__, MmUnloadedDrivers);
@@ -46,7 +47,7 @@ EXTERN_C void clear_unloaded_driver()
 	 */
 	unsigned long long MmLastUnloadedDriver = Utils::find_pattern_image(ntoskrnl_address,
 		"\x8B\x05\x00\x00\x00\x00\x83\xF8\x32",
-		skCrypt("xx????xxx"));
+		skCrypt("xx????xxx"), skCrypt("PAGE"));
 	if (MmLastUnloadedDriver == 0) return;
 	MmLastUnloadedDriver = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(MmLastUnloadedDriver) + 6 + *reinterpret_cast<int*>(reinterpret_cast<char*>(MmLastUnloadedDriver) + 2));
 	Log("[%s] MmLastUnloadedDriver address 0x%llx \n", __FUNCTION__, MmLastUnloadedDriver);
@@ -78,9 +79,8 @@ EXTERN_C void clear_unloaded_driver()
 			endt.name.Buffer = pret.name.Buffer;
 			endt.name.Length = pret.name.Length;
 			endt.name.MaximumLength = pret.name.MaximumLength;
-			imports::ex_release_resource_lite(&PsLoadedModuleResource); 
 		}
-
+		imports::ex_release_resource_lite(&PsLoadedModuleResource);
 	}
 
 
@@ -106,10 +106,10 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = STATUS_SUCCESS;
 		break;
 	}
-				  //case INJECT_DLL: {
+	case INJECT_DLL: {
 
-				  //	break;
-				  //}
+		break;
+	}
 	case PROTECT_PROCESS: {
 		PFAKE_PROCESS_DATA  FUCK_PROCESS = (PFAKE_PROCESS_DATA)pCommData->InData;
 		status = fuck_process::FakeProcess(FUCK_PROCESS->PID, FUCK_PROCESS->FakePID);
@@ -118,7 +118,15 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	case QUERY_MODULE: {
 		PQUERY_MODULE_DATA  QUERY_MODULE = (PQUERY_MODULE_DATA)pCommData->InData;
 		QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfo(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, QUERY_MODULE->pModuleSize);
-
+		break;
+	}
+	case QUERY_VAD_MODULE: {
+		PQUERY_MODULE_DATA  QUERY_MODULE = (PQUERY_MODULE_DATA)pCommData->InData;
+		status = VadModules::GetModuleBaseInVAD(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, &QUERY_MODULE->pModuleBase);
+		if (NT_SUCCESS(status))
+		{
+			status = memory::SS_GetImageSize(QUERY_MODULE->PID, (PVOID)QUERY_MODULE->pModuleBase, QUERY_MODULE->pModuleSize);
+		}
 		status = QUERY_MODULE->pModuleBase ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
@@ -167,6 +175,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	case CREATE_MEMORY: {
 		PCREATE_MEM_DATA MEM_DATA = (PCREATE_MEM_DATA)pCommData->InData;
 		status = memory::SS_CreateMemory(MEM_DATA->PID, MEM_DATA->uSize, MEM_DATA->pVAddress);
+
 		break;
 	}
 	case CREATE_THREAD: {
@@ -183,7 +192,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 
 
 
-#if 0
+#if 1
 EXTERN_C VOID DriverUnload(PDRIVER_OBJECT pDriver) {
 	UNREFERENCED_PARAMETER(pDriver);
 	ProtectRoute::RemoveProtectWindow();

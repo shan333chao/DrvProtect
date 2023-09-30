@@ -22,7 +22,7 @@ namespace k_utils
 
 		unsigned long length = 0;
 		
-		imports::zw_query_system_information(system_module_information, &length, 0, &length);
+		imports::zw_query_system_information(SystemModuleInformation, &length, 0, &length);
 		if (!length) return result;
 
 		const unsigned long tag = 'VMON';
@@ -30,7 +30,7 @@ namespace k_utils
 		PSYSTEM_MODULE_INFORMATION system_modules = (PSYSTEM_MODULE_INFORMATION)imports::ex_allocate_pool_with_tag(NonPagedPool, length, tag);
 		if (!system_modules) return result;
 
-		NTSTATUS status = imports::zw_query_system_information(system_module_information, system_modules, length, 0);
+		NTSTATUS status = imports::zw_query_system_information(SystemModuleInformation, system_modules, length, 0);
 		if (NT_SUCCESS(status))
 		{
 			for (unsigned long long i = 0; i < system_modules->ulModuleCount; i++)

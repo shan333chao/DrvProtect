@@ -87,6 +87,7 @@ struct _m_imported
 	uintptr_t ex_release_resource_lite;
 	uintptr_t ex_acquire_resource_exclusive_lite;
 	uintptr_t rtl_random_ex;
+	uintptr_t rtl_avl_remove_node;
 
 };
 namespace imports {

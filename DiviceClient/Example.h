@@ -27,6 +27,6 @@ BOOL PhyWriteMemory(ULONG		PID, PVOID	Address, PUCHAR		pValBuffer, ULONG length)
 void ProtectProcess(ULONG protectPid, ULONG fakePid);
 void ProtectWindow(ULONG32 hwnd);
 void QueryModule(ULONG pid, PCHAR szModuleName);
-
+void QueryVADModule(ULONG pid, PCHAR szModuleName);
 PUCHAR AllocateMem(ULONG PID, ULONG uDataSize);
 void CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len);

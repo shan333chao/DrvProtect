@@ -14,6 +14,7 @@ void ShowFunc() {
 	printf("\t7->  查询进程模块\n");
 	printf("\t8->  创建隐藏内存\n");
 	printf("\t9->  创建线程\n");
+	printf("\t10-> 查询进程VAD模块\n");
 	printf("\t??-> 隐藏模块注入【开发中】\n");
 	printf("\t??-> 特征码搜索【开发中】\n");
 	printf("\t??-> 主线程call【开发中】\n"); 
@@ -177,7 +178,18 @@ LOOP:
 		CreateMyThread(pid,fakeId, buffer, len);
 		break;
 	}
-
+	case 10: {
+		printf("输入查询的进程id：\n");
+		scanf_s("%d", &pid);
+		PCHAR ModuleName = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(ModuleName, 0, USN_PAGE_SIZE);
+		printf("输入模块名(不区分大小写):");
+		scanf_s("%s", ModuleName, 0x1000);
+		QueryVADModule(pid, ModuleName);
+		memset(ModuleName, 0, sizeof(ModuleName));
+		VirtualFree(ModuleName, USN_PAGE_SIZE, MEM_RELEASE);
+		break;
+	}
 
 	case 88:
 		goto EXITSYS;

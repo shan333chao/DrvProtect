@@ -445,6 +445,23 @@ void QueryModule(ULONG pid, PCHAR szModuleName)
 
 }
 
+void QueryVADModule(ULONG pid, PCHAR szModuleName)
+{
+	QUERY_MODULE_DATA moduleData = { 0 };
+	moduleData.PID = pid;
+
+	moduleData.pcModuleName = szModuleName;
+	ULONG uModuleSize = 0;
+	moduleData.pModuleSize = &uModuleSize;
+	DWORD status_code = DriverComm(QUERY_VAD_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA));
+	if (status_code)
+	{
+		printf("查询模块失败 错误码 %08x\n", status_code);
+		return;
+	}
+	printf("\n模块名: %s \n 模块基址: 0x%p \n 模块大小: 0x%08x\n", szModuleName, moduleData.pModuleBase, uModuleSize);
+}
+
 PUCHAR AllocateMem(ULONG PID, ULONG uDataSize)
 {
 

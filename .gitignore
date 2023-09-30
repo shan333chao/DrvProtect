@@ -58,5 +58,8 @@ dkms.conf
 */Release
 */ARM
 /ARM
-ProxyDrv/MyDriver.h
+*/ProxyDrv/MyDriver.h
 */MyDriver.h
+*/Memmory/mm_vad.cpp
+*/Memmory/mm_vad.h
+

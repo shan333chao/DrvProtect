@@ -57,8 +57,8 @@ USHORT Utils::GetServiceNoByName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName) {
 	ULONG32* lpNameArr =
 		(ULONG32*)(lpExportDir->AddressOfNames + (ULONG64)ModuleBase);
 
-	ULONG32* lpFuncs =
-		(ULONG32*)(lpExportDir->AddressOfFunctions + (ULONG64)ModuleBase);
+	//ULONG32* lpFuncs =
+	//	(ULONG32*)(lpExportDir->AddressOfFunctions + (ULONG64)ModuleBase);
 
 	USHORT* lpOrdinals =
 		(USHORT*)(lpExportDir->AddressOfNameOrdinals + (ULONG64)ModuleBase);
@@ -117,7 +117,7 @@ retry:
 
 ULONG_PTR Utils::GetKernelModule(PCHAR szModuleName, PULONG imageSize)
 {
-	PUCHAR buffer = (PUCHAR)GetSystemInformation(system_module_information);
+	PUCHAR buffer = (PUCHAR)GetSystemInformation(SystemModuleInformation);
 	if (!buffer)
 	{
 		return 0;
@@ -168,7 +168,7 @@ HANDLE Utils::GetPidByName(PWCH imageName)
 
 	PSYSTEM_PROCESS_INFORMATION ProcessInfo = 0;
 	HANDLE pid = 0;
-	PUCHAR buffer = (PUCHAR)GetSystemInformation(system_process_information);
+	PUCHAR buffer = (PUCHAR)GetSystemInformation(SystemProcessInformation);
 	if (!buffer)
 	{
 		return NULL;
@@ -214,7 +214,7 @@ unsigned long long  Utils::find_pattern(unsigned long long addr, unsigned long s
 
 	return 0;
 }
-unsigned long long  Utils::find_pattern_image(unsigned long long addr, const char* pattern, const char* mask)
+unsigned long long  Utils::find_pattern_image(unsigned long long addr, const char* pattern, const char* mask,  const char* name = ".text")
 {
 	PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)addr;
 	if (dos->e_magic != IMAGE_DOS_SIGNATURE)
@@ -230,16 +230,18 @@ unsigned long long  Utils::find_pattern_image(unsigned long long addr, const cha
 	{
 		PIMAGE_SECTION_HEADER p = &section[i];
 
-		if (strstr((const char*)p->Name, ".text") || 'EGAP' == *reinterpret_cast<int*>(p->Name))
+		if (Utils::kstrstr((const char*)p->Name, name))
 		{
 			unsigned long long res = find_pattern(addr + p->VirtualAddress, p->Misc.VirtualSize, pattern, mask);
 			if (res) return res;
 		}
+ 
 	}
 
 	return 0;
 }
 VOID Utils::InitApis() {
+	imports::imported.rtl_avl_remove_node= GetNtFuncExportName(skCrypt("RtlAvlRemoveNode"));
 	imports::imported.ex_release_resource_lite = GetNtFuncExportName(skCrypt("ExReleaseResourceLite"));
 	imports::imported.ex_acquire_resource_exclusive_lite = GetNtFuncExportName(skCrypt("ExAcquireResourceExclusiveLite"));
 	imports::imported.rtl_random_ex = GetNtFuncExportName(skCrypt("RtlRandomEx"));
@@ -487,3 +489,23 @@ wchar_t* Utils::random_wstring(wchar_t* str, size_t size)
 }
 
 
+BOOLEAN Utils::safe_copy(PVOID dst, PVOID src, size_t size)
+{
+	SIZE_T bytes = 0;
+
+	if (imports::mm_copy_virtual_memory(imports::io_get_current_process(), src, imports::io_get_current_process(), dst, size, KernelMode, &bytes) == STATUS_SUCCESS && bytes == size)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOLEAN Utils::self_safe_copy(PEPROCESS self, PVOID dst, PVOID src, size_t size)
+{
+	SIZE_T bytes = 0;
+	if (imports::mm_copy_virtual_memory(self, src, self, dst, size, KernelMode, &bytes) == STATUS_SUCCESS && bytes == size)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}

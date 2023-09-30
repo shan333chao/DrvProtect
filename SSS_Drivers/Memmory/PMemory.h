@@ -392,7 +392,7 @@ namespace p_memory {
 
 	NTSTATUS ReadProcessMemory(PEPROCESS process, PVOID address, PVOID buffer, SIZE_T size, SIZE_T* read);
 	NTSTATUS WriteProcessMemory(PEPROCESS process, PVOID address, PVOID buffer, SIZE_T size, SIZE_T* written);
-	BOOLEAN safe_copy(PVOID dst, PVOID src, size_t size);
+
 
 }
 #endif // ! _PMEMORY_H

@@ -163,10 +163,21 @@ namespace ProtectWindow {
 	{
 		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
 		unsigned long long address = Utils::find_pattern_image(win32kfull_address,
-			"\xE8\x00\x00\x00\x00\x8B\xF0\x85\xC0\x75\x00\x44\x8B\x44",
-			skCrypt("x????xxxxx?xxx"));
+			skCrypt("\xE8\x00\x00\x00\x00\x8B\xF0\x85\xC0\x75\x00\x44\x8B\x44"),
+			skCrypt("x????xxxxx?xxx"),skCrypt(".text"));
 		Log("[+] ChangeWindowTreeProtection pattern address is 0x%llX \n", address);
-		if (address == 0) return false;
+		if (address == 0) { 
+			//ffffd61d`cf33fe90 e8fbfcffff      call    win32kfull!ChangeWindowTreeProtection(ffffd61d`cf33fb90)
+			//ffffd61d`cf33fe95 8bf8            mov     edi, eax
+			//ffffd61d`cf33fe97 85c0            test    eax, eax
+			//ffffd61d`cf33fe99 7518            jne     win32kfull!SetDisplayAffinity + 0xa3 (ffffd61d`cf33feb3)
+			//ffffd61d`cf33fe9b 448b442430      mov     r8d, dword ptr[rsp + 30h]
+			//ffffd61d`cf33fea0 448d4805        lea     r9d, [rax + 5]
+			address = Utils::find_pattern_image(win32kfull_address,
+				skCrypt("\xE8\x00\x00\x00\x00\x8B\xF8\x85\xC0\x75\x00\x44\x8B\x00\x00\x00\x44\x8D\x00\x00"),
+				skCrypt("x????xxxxx?xx???xx??"), skCrypt(".text"));
+			Log("refind ChangeWindowTreeProtection pattern address is 0x%llX \n", address);
+		}
 
 		ULONGLONG ChangeWindowTreeProtectionAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 5 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 1));
 		if (MmIsAddressValid((PVOID)ChangeWindowTreeProtectionAddr))

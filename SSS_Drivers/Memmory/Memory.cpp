@@ -52,7 +52,7 @@ namespace memory {
 			return STATUS_INVALID_PARAMETER_4;
 
 		}
- 
+
 		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
 		if (!NT_SUCCESS(status)) return status;
 		//ÅÐ¶Ï½ø³Ì×´Ì¬
@@ -117,7 +117,7 @@ namespace memory {
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
- 
+
 		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
 		if (!NT_SUCCESS(status)) return status;
 		//ÅÐ¶Ï½ø³Ì×´Ì¬
@@ -194,7 +194,7 @@ namespace memory {
 			PVOID pAddr = imports::mm_map_locked_pages_specify_cache(pMdl, KernelMode, MmCached, NULL, NULL, NormalPagePriority);
 			if (!pAddr) {
 				imports::io_free_mdl(pMdl);
-	 
+
 				imports::ke_unstack_detach_process(&kapc_state);
 				imports::ex_free_pool_with_tag(pTempInBuffer, 0);
 				return 0;
@@ -232,7 +232,7 @@ namespace memory {
 		if (!NT_SUCCESS(status)) return status;
 		SIZE_T NumberOfReadSize = 0;
 
-		 
+
 		status = p_memory::ReadProcessMemory(pTargetEprocess, Address, ReadBuffer, uReadSize, &NumberOfReadSize);
 
 
@@ -256,7 +256,7 @@ namespace memory {
 		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
 		if (!NT_SUCCESS(status)) return status;
 		SIZE_T NumberOfWriteSize = 0;
- 
+
 		status = p_memory::WriteProcessMemory(pTargetEprocess, Address, WriteBuffer, uWriteSize, &NumberOfWriteSize);
 		imports::obf_dereference_object(pTargetEprocess);
 		return status;
@@ -331,7 +331,43 @@ namespace memory {
 	}
 
 
+	NTSTATUS SS_GetImageSize(ULONG_PTR uPid, PVOID Address, PULONG pSizeOfImage) {
 
+		NTSTATUS status = STATUS_UNSUCCESSFUL;
+		PVOID ReadBuffer = imports::ex_allocate_pool(NonPagedPool, 500);
+		Utils::kmemset(ReadBuffer, 0, 500);
+		PEPROCESS								pTargetEprocess = NULL;
+
+
+		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
+		if (!NT_SUCCESS(status)) return status;
+		SIZE_T NumberOfReadSize = 0;
+		Utils::self_safe_copy(pTargetEprocess, Address, Address, 500);
+		
+		status = p_memory::ReadProcessMemory(pTargetEprocess, Address, ReadBuffer, 500, &NumberOfReadSize);
+		if (!NT_SUCCESS(status))
+		{
+			return status;
+		}
+		PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)ReadBuffer;
+		if (lpDosHeader->e_magic != 0x5a4d)
+		{
+			return STATUS_UNSUCCESSFUL;
+		}
+		PIMAGE_NT_HEADERS64 lpNtHeader = (PIMAGE_NT_HEADERS64)(lpDosHeader->e_lfanew + (ULONG64)ReadBuffer);
+		if (lpNtHeader->FileHeader.Machine == 0x8664)
+		{
+			*pSizeOfImage = lpNtHeader->OptionalHeader.SizeOfImage;
+		}
+		else {
+			PIMAGE_NT_HEADERS32 lpNtHeader32 = (PIMAGE_NT_HEADERS32)(lpDosHeader->e_lfanew + (ULONG64)ReadBuffer);
+			*pSizeOfImage = lpNtHeader32->OptionalHeader.SizeOfImage;
+
+		}
+		imports::ex_free_pool_with_tag(ReadBuffer, 0);
+		return status;
+
+	}
 
 
 

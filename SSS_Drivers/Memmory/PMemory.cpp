@@ -238,16 +238,7 @@ namespace p_memory {
 		imports::mm_unmap_io_space(mapped_mem, size);
 		return STATUS_SUCCESS;
 	}
-	BOOLEAN safe_copy(PVOID dst, PVOID src, size_t size)
-	{
-		SIZE_T bytes = 0;
-		
-		if (imports::mm_copy_virtual_memory(imports::io_get_current_process(), src, imports::io_get_current_process(), dst, size, KernelMode, &bytes) == STATUS_SUCCESS && bytes == size)
-		{
-			return TRUE;
-		}
-		return FALSE;
-	}
+
 
 	NTSTATUS ReadProcessMemory(PEPROCESS process, PVOID address, PVOID buffer, SIZE_T size, SIZE_T* read)
 	{
