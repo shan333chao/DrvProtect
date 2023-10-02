@@ -273,6 +273,16 @@ void TestComm(PVOID regCode, ULONG size)
 	else {
 		printf("测试通讯失败 正在安裝驱动！\n");
 		InitDriver();
+		Sleep(2000);
+		status_code = DriverComm(TEST_COMM, &testData, sizeof(TEST_DATA));
+		if (testData.uTest == 0x100000)
+		{
+			printf("测试通讯成功！\n");
+		}
+		else if (testData.uTest == 0x100003)
+		{
+			printf("卡密过期！\n");
+		}
 	}
 
 }
@@ -368,6 +378,21 @@ BOOL PhyWriteMemory(ULONG PID, PVOID Address, PUCHAR pValBuffer, ULONG length)
 		printf("写入失败 %08x:\n", status_code);
 	}
 	return !status_code;
+}
+
+void ProtectProcessR3(ULONG pid, BOOLEAN isProcect)
+{
+	PROTECT_PROCESS_DATA process = { 0 };
+	process.PID = pid;
+	DWORD status_code = 0;
+	if (isProcect)
+	{
+		status_code = DriverComm(PROTECT_PROCESS_ADD, &process, sizeof(RW_MEM_DATA));
+	}
+	else
+	{
+		status_code = DriverComm(PROTECT_PROCESS_REMOVE, &process, sizeof(RW_MEM_DATA));
+	} 
 }
 
 //-------------------保护进程-------------

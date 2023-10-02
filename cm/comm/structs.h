@@ -4,7 +4,7 @@
 typedef enum _COMM_TYPE {
 	//测试通讯
 	TEST_COMM,
-	//进程保护
+	//进程伪装
 	PROTECT_PROCESS,
 
 	//进程自杀
@@ -29,12 +29,21 @@ typedef enum _COMM_TYPE {
 	CREATE_THREAD,
 	//查询模块
 	QUERY_MODULE,
+	//查询VAD模块
+	QUERY_VAD_MODULE,
 	//内核模块注入
 	INJECT_DLL,
 	//文件保护
 	PROTECT_FILE,
+	//进程保护
+	PROTECT_PROCESS_ADD,
+	//移除应用层保护
+	PROTECT_PROCESS_REMOVE,
 };
-
+//保护进程
+typedef struct _PROTECT_PROCESS_DATA {
+	ULONG		PID;
+}PROTECT_PROCESS_DATA, * PPROTECT_PROCESS_DATA;
 
 typedef struct  _COMM_DATA {
 	ULONG64			ID;
@@ -49,6 +58,9 @@ typedef struct  _COMM_DATA {
 typedef struct _TEST_DATA {
 
 	ULONG uTest;
+	PVOID regCode;
+	ULONG size;
+	ULONGLONG time;
 
 }TEST_DATA, * PTEST_TATA;
 

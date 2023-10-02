@@ -112,6 +112,9 @@
     <ClCompile Include="Memmory\VadModules.cpp">
       <Filter>Memmory</Filter>
     </ClCompile>
+    <ClCompile Include="Memmory\MiMemory.cpp">
+      <Filter>Memmory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools\crt.h">
@@ -196,6 +199,9 @@
       <Filter>tools</Filter>
     </ClInclude>
     <ClInclude Include="Memmory\VadModules.h">
+      <Filter>Memmory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memmory\MiMemory.h">
       <Filter>Memmory</Filter>
     </ClInclude>
   </ItemGroup>

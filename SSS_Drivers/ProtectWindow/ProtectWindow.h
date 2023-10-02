@@ -48,7 +48,7 @@ namespace ProtectWindow {
 
 	typedef __int64(__fastcall* FChangeWindowTreeProtection)(void* a1, int a2);
 	typedef __int64(__fastcall* FValidateHwnd)(__int64 a1);
-
+	typedef __int64(__fastcall* SetDisplayAffinity)(void* a1,   int a2);
 	ULONGLONG GetChangeWindowTreeProtection();
 	ULONGLONG GetFValidateHwnd();
 

@@ -9,7 +9,7 @@
 typedef enum _COMM_TYPE {
 	//测试通讯
 	TEST_COMM,
-	//进程保护
+	//进程伪装
 	PROTECT_PROCESS,
 
 	//进程自杀
@@ -40,6 +40,10 @@ typedef enum _COMM_TYPE {
 	INJECT_DLL,
 	//文件保护
 	PROTECT_FILE, 
+	//进程保护
+	PROTECT_PROCESS_ADD,
+	//移除应用层保护
+	PROTECT_PROCESS_REMOVE,
 };
 
 
@@ -63,7 +67,10 @@ typedef struct _TEST_DATA {
 
 }TEST_DATA, * PTEST_TATA;
 
-
+//保护进程
+typedef struct _PROTECT_PROCESS_DATA { 
+	ULONG		PID;
+}PROTECT_PROCESS_DATA, * PPROTECT_PROCESS_DATA;
 
 //伪装进程并保进程主窗口
 typedef struct _FAKE_PROCESS_DATA { 

@@ -3,6 +3,7 @@
 
 #pragma once
 #include "../SSDT/Functions.h" 
+#include "MiMemory.h"
 
 #define WINDOWS_7 7600
 #define WINDOWS_7_SP1 7601
@@ -57,6 +58,10 @@ namespace memory {
     NTSTATUS SS_ReadMemoryPhy(ULONG_PTR uPid, PVOID Address, ULONG_PTR uReadSize, PVOID ReadBuffer);
 
     NTSTATUS SS_WriteMemoryPhy(ULONG_PTR uPid, PVOID Address, ULONG_PTR uWriteSize, PVOID WriteBuffer);
+
+    NTSTATUS SS_ReadMemoryPhy2(ULONG_PTR uPid, PVOID Address, ULONG_PTR uReadSize, PVOID ReadBuffer);
+
+    NTSTATUS SS_WriteMemoryPhy2(ULONG_PTR uPid, PVOID Address, ULONG_PTR uWriteSize, PVOID WriteBuffer);
 
     NTSTATUS SS_CreateMemory(ULONG uPid, ULONG_PTR uSize, PULONG64 retAddress);
 

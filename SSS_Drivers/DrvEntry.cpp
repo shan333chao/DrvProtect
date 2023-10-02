@@ -87,6 +87,7 @@ EXTERN_C void clear_unloaded_driver()
 }
 EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
+#if DEBUG_MODE == 0
 	if (pCommData->Type > 0)
 	{
 		if (!ProtectRoute::ValidateReg())
@@ -95,6 +96,9 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 			return status;
 		}
 	}
+#endif // DEBUG_MODE == 0
+
+
 	switch (pCommData->Type)
 	{
 	case TEST_COMM: {
@@ -118,6 +122,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	case QUERY_MODULE: {
 		PQUERY_MODULE_DATA  QUERY_MODULE = (PQUERY_MODULE_DATA)pCommData->InData;
 		QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfo(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, QUERY_MODULE->pModuleSize);
+		status = QUERY_MODULE->pModuleBase ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
 	case QUERY_VAD_MODULE: {
@@ -183,6 +188,18 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = sthread::MyNtCreateThreadEx(THREAD_FATA->PID, THREAD_FATA->ShellCode, THREAD_FATA->Argument);
 		break;
 	}
+	case PROTECT_PROCESS_ADD: {
+		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData;
+
+		status = fuck_process::RemoveProcessProtect(PROCESS_DATA->PID, TRUE);
+		break;
+	}
+	case PROTECT_PROCESS_REMOVE: {
+		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData;
+
+		status = fuck_process::RemoveProcessProtect(PROCESS_DATA->PID, FALSE);
+		break;
+	}
 
 	}
 	return status;
@@ -192,7 +209,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 
 
 
-#if 1
+#if DEBUG_MODE
 EXTERN_C VOID DriverUnload(PDRIVER_OBJECT pDriver) {
 	UNREFERENCED_PARAMETER(pDriver);
 	ProtectRoute::RemoveProtectWindow();

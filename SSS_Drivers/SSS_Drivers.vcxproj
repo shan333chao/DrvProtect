@@ -160,6 +160,7 @@
     <ClCompile Include="infinity_hook_pro\hde\hde64.cpp" />
     <ClCompile Include="infinity_hook_pro\hook.cpp" />
     <ClCompile Include="Memmory\Memory.cpp" />
+    <ClCompile Include="Memmory\MiMemory.cpp" />
     <ClCompile Include="Memmory\PMemory.cpp" />
     <ClCompile Include="Memmory\VadModules.cpp" />
     <ClCompile Include="Process\FakeProcess.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="infinity_hook_pro\imports.hpp" />
     <ClInclude Include="infinity_hook_pro\utils.hpp" />
     <ClInclude Include="Memmory\Memory.h" />
+    <ClInclude Include="Memmory\MiMemory.h" />
     <ClInclude Include="Memmory\PMemory.h" />
     <ClInclude Include="Memmory\VadModules.h" />
     <ClInclude Include="Process\FakeProcess.h" />

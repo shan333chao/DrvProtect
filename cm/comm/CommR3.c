@@ -24,7 +24,7 @@ BOOL DriverHookInit()
 	return TRUE;
 }
 
-//hookͨѶ
+//hookͨ
 DWORD HookComm(ULONG type, PVOID inData, ULONG inSize)
 {
 	if (!g_NtUserGetScrollBarInfo && !g_NtUserGetWindowPlacement && !g_NtUserGetTitleBarInfo && !g_NtUserGetPointerProprietaryId)

@@ -34,7 +34,7 @@ namespace fuck_process {
 		UNICODE_STRING			FullDllName = { 0 };
 		UNICODE_STRING			DosPath = { 0 };
 		UNICODE_STRING			SourceEnvironment = { 0 };
- 
+
 		while (1)
 		{
 
@@ -48,7 +48,7 @@ namespace fuck_process {
 				imports::obf_dereference_object(MaskEprocess);
 				return status;
 			}
-	
+
 			//被伪装的目标进程
 			status = imports::ps_lookup_process_by_process_id((HANDLE)fakePid, &SourceEprocess);
 			if (!NT_SUCCESS(status)) return status;
@@ -64,7 +64,7 @@ namespace fuck_process {
 			//	status = STATUS_UNSUCCESSFUL;
 			//	break;
 			//}
-	
+
 
 			PUCHAR nameBuffer = (PUCHAR)imports::ex_allocate_pool(NonPagedPool, USN_PAGE_SIZE);
 			PUCHAR szNameTemp = nameBuffer;
@@ -79,11 +79,11 @@ namespace fuck_process {
 				szSourceImageName = (PCHAR)SourceEprocess + imageNameOffset;
 				Utils::kmemcpy(szMaskImageName, szSourceImageName, 15);
 			}
-		
+
 			//修改Eprocess.ImagePathHash
 			{
 
-				ULONG ImagePathHashOffset = imageNameOffset+ 0x4c; 
+				ULONG ImagePathHashOffset = imageNameOffset + 0x4c;
 				ULONG SourceImagePathHash = *(PULONG)((PUCHAR)SourceEprocess + ImagePathHashOffset);
 
 				*(PULONG)((PUCHAR)MaskEprocess + ImagePathHashOffset) = SourceImagePathHash;
@@ -117,8 +117,8 @@ namespace fuck_process {
 				if (!AuditOffset)
 				{
 					//PAGE:00000001406027EB 48 83 B9 68 04 00 00 00       cmp     qword ptr [rcx+468h], 0
-					AuditOffset = (ULONG_PTR)imageNameOffset+ 0x18;
-				 
+					AuditOffset = (ULONG_PTR)imageNameOffset + 0x18;
+
 				}
 				POBJECT_NAME_INFORMATION pSourceNameInfo = (POBJECT_NAME_INFORMATION) * (PULONG_PTR)((PUCHAR)SourceEprocess + AuditOffset);
 				POBJECT_NAME_INFORMATION pMaskNameInfo = (POBJECT_NAME_INFORMATION) * (PULONG_PTR)((PUCHAR)MaskEprocess + AuditOffset);
@@ -604,6 +604,36 @@ namespace fuck_process {
 
 		return STATUS_SUCCESS;
 
+	}
+
+	NTSTATUS RemoveProcessProtect(ULONG_PTR pid, BOOLEAN isProtect)
+	{
+		PEPROCESS TargetEprocess = NULL;
+		//要解除保护的进程
+		NTSTATUS status = imports::ps_lookup_process_by_process_id((HANDLE)pid, &TargetEprocess);
+		if (!NT_SUCCESS(status)) return status;
+		status = imports::ps_get_process_exit_status(TargetEprocess);
+		if (status != STATUS_PENDING) {
+			imports::obf_dereference_object(TargetEprocess);
+			return status;
+		}
+		ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess"), 2);
+		if (!isProtectOffset)
+		{
+			return STATUS_UNSUCCESSFUL;
+		}
+		if (isProtect)
+		{
+			*(PULONG_PTR)((PUCHAR)TargetEprocess + isProtectOffset) = 0xff;
+		}
+		else
+		{
+			*(PULONG_PTR)((PUCHAR)TargetEprocess + isProtectOffset) = 0;
+		}
+		imports::obf_dereference_object(TargetEprocess);
+		status = STATUS_SUCCESS;
+
+		return status;
 	}
 
 

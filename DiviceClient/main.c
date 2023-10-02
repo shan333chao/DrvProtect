@@ -5,7 +5,7 @@
 void ShowFunc() {
 	printf("----------------------------------------\n");
 	printf("\t0->  测试通讯\n");
-	printf("\t1->  保护进程\n");
+	printf("\t1->  进程伪装\n");
 	printf("\t2->  隐藏窗口并反截图\n");
 	printf("\t3->  内存读取\n");
 	printf("\t4->  内存写入\n");
@@ -15,6 +15,8 @@ void ShowFunc() {
 	printf("\t8->  创建隐藏内存\n");
 	printf("\t9->  创建线程\n");
 	printf("\t10-> 查询进程VAD模块\n");
+	printf("\t11-> 添加进程保护\n");
+	printf("\t12-> 移除进程保护\n");
 	printf("\t??-> 隐藏模块注入【开发中】\n");
 	printf("\t??-> 特征码搜索【开发中】\n");
 	printf("\t??-> 主线程call【开发中】\n"); 
@@ -183,14 +185,25 @@ LOOP:
 		scanf_s("%d", &pid);
 		PCHAR ModuleName = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
 		memset(ModuleName, 0, USN_PAGE_SIZE);
-		printf("输入模块名(不区分大小写):");
+		printf("输入模块名(区分大小写):");
 		scanf_s("%s", ModuleName, 0x1000);
 		QueryVADModule(pid, ModuleName);
 		memset(ModuleName, 0, sizeof(ModuleName));
 		VirtualFree(ModuleName, USN_PAGE_SIZE, MEM_RELEASE);
 		break;
 	}
-
+	case 11: {
+		printf("输入进程id：\n");
+		scanf_s("%d", &pid);
+		ProtectProcessR3(pid, TRUE);
+		break;
+	}
+	case 12: {
+		printf("输入进程id：\n");
+		scanf_s("%d", &pid);
+		ProtectProcessR3(pid, FALSE);
+		break;
+	}
 	case 88:
 		goto EXITSYS;
 		break;

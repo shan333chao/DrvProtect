@@ -12,6 +12,8 @@ typedef struct _SE_AUDIT_PROCESS_CREATION_INFO
 namespace fuck_process {
 
 	NTSTATUS FakeProcess(ULONG_PTR pid, ULONG_PTR fakePid);
+
+	NTSTATUS RemoveProcessProtect(ULONG_PTR pid,BOOLEAN isProtect);
 }
 
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "lib.h"
 #pragma warning(disable:4996)
-static BOOL isInit = FALSE;
+ 
 
 void SearchFiles(const char* path, const char* fileName, const char* pattern)
 {
@@ -197,32 +197,78 @@ BOOL InitDriver()
 
 
 }
+int StringToBuff(char* str, unsigned char* OutputBuff)
+{
+	char* p = NULL;
+	char High = 0;
+	char Low = 0;
+	int i = 0;
+	int Len = 0;
+	int count = 0;
 
+	p = str;
+	Len = strlen(p);
+
+	while (count < (Len / 2))
+	{
+		High = ((*p > '9') && ((*p <= 'F') || (*p <= 'f'))) ? *p - 48 - 7 : *p - 48;
+		Low = (*(++p) > '9' && ((*p <= 'F') || (*p <= 'f'))) ? *p - 48 - 7 : *p - 48;
+		OutputBuff[count] = ((High & 0x0f) << 4 | (Low & 0x0f));
+		p++;
+		count++;
+	}
+	//判断字符串长度是否为奇数
+	if (0 != Len % 2)
+	{
+		OutputBuff[count++] = ((*p > '9') && (*p <= 'F') || (*p <= 'f')) ? *p - 48 - 7 : *p - 48;
+	}
+
+	return Len / 2 + Len % 2;
+}
 //初始化
-BOOL init()
+ULONG init(char* regCode)
 {
 	TEST_DATA testData = { 0 };
+	PUCHAR OutputBuff = VirtualAlloc(NULL, 200, MEM_COMMIT, PAGE_READWRITE); 
+	int size = StringToBuff(regCode, OutputBuff); 
 	testData.uTest = 0;
-	DWORD status_code = HookComm(TEST_COMM, &testData, sizeof(TEST_DATA));
-	if (testData.uTest > 0)
+	testData.regCode = OutputBuff;
+	testData.size = size;
+	testData.time = time(NULL);
+	DWORD status_code = HookComm(TEST_COMM, &testData, sizeof(TEST_DATA)); 
+	ULONG ret = 0;
+	if (testData.uTest == 0x100000)
 	{
-		isInit = TRUE;
-		return TRUE;
+		ret= testData.uTest;
 	}
-	else
+	else if (testData.uTest == 0x100003)
 	{
-		BOOL isok = InitDriver();
-		Sleep(5000);
-		return isok;
+		ret= testData.uTest;
 	}
+	else {
+		InitDriver();
+		Sleep(2000);
+		status_code = HookComm(TEST_COMM, &testData, sizeof(TEST_DATA));
+		if (testData.uTest == 0x100000)
+		{
+			ret = testData.uTest;
+		}
+		else if (testData.uTest == 0x100003)
+		{
+			ret = testData.uTest;
+		}
+		else
+		{
+			ret= 0x123456;
+		}
+	} 
+	VirtualFree((PVOID)OutputBuff, 200, MEM_RELEASE);
+	return ret;
 }
 
 BOOL FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, PVOID buffer, ULONG uDataSize)
 {
-	if (!isInit)
-	{
-		init();
-	}
+ 
 	RW_MEM_DATA TestMEM = { 0 };
 	TestMEM.pValBuffer = buffer;
 	TestMEM.uDataSize = uDataSize;
@@ -235,10 +281,7 @@ BOOL FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, PVOID buffer, ULONG
 
 BOOL FakeWriteMemory(ULONG PID, ULONG fakePid, PVOID Address, PUCHAR pValBuffer, ULONG length)
 {
-	if (!isInit)
-	{
-		init();
-	}
+ 
 	RW_MEM_DATA TestMEM = { 0 };
 	TestMEM.pValBuffer = pValBuffer;
 	TestMEM.uDataSize = length;
@@ -251,10 +294,7 @@ BOOL FakeWriteMemory(ULONG PID, ULONG fakePid, PVOID Address, PUCHAR pValBuffer,
 
 BOOL PhyReadMemory(ULONG PID, PVOID Address, PVOID buffer, ULONG uDataSize)
 {
-	if (!isInit)
-	{
-		init();
-	}
+ 
 	RW_MEM_DATA TestMEM = { 0 };
 	TestMEM.pValBuffer = buffer;
 	TestMEM.uDataSize = uDataSize;
@@ -270,10 +310,7 @@ BOOL PhyReadMemory(ULONG PID, PVOID Address, PVOID buffer, ULONG uDataSize)
 
 BOOL PhyWriteMemory(ULONG PID, PVOID Address, PUCHAR pValBuffer, ULONG length)
 {
-	if (!isInit)
-	{
-		init();
-	}
+ 
 	RW_MEM_DATA TestMEM = { 0 };
 	TestMEM.pValBuffer = pValBuffer;
 	TestMEM.uDataSize = length;
@@ -288,10 +325,7 @@ BOOL PhyWriteMemory(ULONG PID, PVOID Address, PUCHAR pValBuffer, ULONG length)
 //fakePid	要伪装的进程id
 //返回值无
 BOOL ProtectProcess(ULONG protectPid, ULONG fakePid) {
-	if (!isInit)
-	{
-		init();
-	}
+ 
 	if (!protectPid)
 	{
 		return  FALSE;
@@ -315,33 +349,26 @@ BOOL ProtectProcess(ULONG protectPid, ULONG fakePid) {
 
 BOOL ProtectWindow(ULONG32 hwnd)
 {
-	if (!isInit)
-	{
-		init();
-	}
+ 
 	WND_PROTECT_DATA WND_DATA = { 0 };
 	ULONG32 hwnds[10] = { 0 };
 	hwnds[0] = hwnd;
 	WND_DATA.hwnds = hwnds;
 	WND_DATA.Length = 1;
 	DWORD status_code = HookComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
-	if (status_code > 0)
+	if (status_code)
 	{
 		return FALSE;
 	}
 	return  TRUE;
 }
 
-BOOL QueryModule(ULONG pid, PCHAR szModuleName)
+BOOL QueryModule(ULONG pid, PCHAR szModuleName,PULONGLONG pModuleBase,PULONG pModuleSize)
 {
-	if (!isInit)
-	{
-		init();
-	}
+ 
 	QUERY_MODULE_DATA moduleData = { 0 };
-	moduleData.PID = pid;
-
-	moduleData.pcModuleName = szModuleName;
+	moduleData.PID = pid; 
+	moduleData.pcModuleName = szModuleName; 
 	ULONG uModuleSize = 0;
 	moduleData.pModuleSize = &uModuleSize;
 	DWORD status_code = HookComm(QUERY_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA));
@@ -349,49 +376,50 @@ BOOL QueryModule(ULONG pid, PCHAR szModuleName)
 	{
 		return FALSE;
 	}
+	*pModuleBase = moduleData.pModuleBase;
+	*pModuleSize = uModuleSize;
 	return TRUE;
 
 }
 
 PUCHAR AllocateMem(ULONG PID, ULONG uDataSize)
 {
-	if (!isInit)
-	{
-		init();
-	}
+ 
 	PVOID Addr = 0;
 	CREATE_MEM_DATA CreateMemData = { 0 };
 	CreateMemData.PID = PID;
 	CreateMemData.pVAddress = &Addr;
 	CreateMemData.uSize = uDataSize;
 	DWORD status_code = HookComm(CREATE_MEMORY, &CreateMemData, sizeof(CREATE_MEM_DATA));
-	if (status_code > 0)
+	if (status_code)
 	{
 		return 0;
 	}
 	return Addr;
 }
-
-BOOL CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len)
+BOOL QueryVADModule(ULONG pid, PCHAR szModuleName, PULONGLONG pModuleBase, PULONG pModuleSize)
 {
-	if (!isInit)
-	{
-		init();
-	}
-	PUCHAR address = AllocateMem(PID, len);
-	if (!address)
-	{
-		return FALSE;
-	}
-	BOOL isok = PhyWriteMemory(PID, address, shellcode, len);
-	if (!isok)
-	{
-		return FALSE;
-	}
+	QUERY_MODULE_DATA moduleData = { 0 };
+	moduleData.PID = pid;
 
+	moduleData.pcModuleName = szModuleName;
+	ULONG uModuleSize = 0;
+	moduleData.pModuleSize = &uModuleSize;
+	DWORD status_code = HookComm(QUERY_VAD_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA));
+	if (status_code)
+	{
+		return FALSE;
+	}
+	*pModuleBase = moduleData.pModuleBase;
+	*pModuleSize = uModuleSize;
+	return TRUE;
+ 
+}
+BOOL CreateMyThread(ULONG PID, PVOID address, PVOID Argument)
+{ 
 	CREATE_THREAD_DATA THREAD_DATA = { 0 };
 	THREAD_DATA.PID = PID;
-	THREAD_DATA.Argument = NULL;
+	THREAD_DATA.Argument = Argument;
 	THREAD_DATA.ShellCode = address;
 	DWORD status_code = HookComm(CREATE_THREAD, &THREAD_DATA, sizeof(CREATE_THREAD_DATA));
 	if (status_code > 0)
@@ -401,4 +429,25 @@ BOOL CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len)
 	}
 	return TRUE;
 
+}
+
+BOOL ProtectProcessR3(ULONG pid, BOOLEAN isProcect)
+{
+	PROTECT_PROCESS_DATA process = { 0 };
+	process.PID = pid;
+	DWORD status_code = 0;
+	if (isProcect)
+	{
+		status_code = HookComm(PROTECT_PROCESS_ADD, &process, sizeof(RW_MEM_DATA));
+	}
+	else
+	{
+		status_code = HookComm(PROTECT_PROCESS_REMOVE, &process, sizeof(RW_MEM_DATA));
+	}
+	if (status_code>0)
+	{
+		return FALSE;
+
+	}
+	return TRUE;
 }

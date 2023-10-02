@@ -39,7 +39,7 @@ namespace ProtectWindow {
 	FNtUserGetTitleBarInfo g_NtUserGetTitleBarInfo = 0;
 	FNtUserGetScrollBarInfo g_NtUserGetScrollBarInfo = 0;
 	FNtUserGetPointerProprietaryId g_NtUserGetPointerProprietaryId = 0;
-
+	SetDisplayAffinity g_SetDisplayAffinity = 0;
 	FChangeWindowTreeProtection g_ChangeWindowTreeProtection = 0;
 	FValidateHwnd g_ValidateHwnd = 0;
 
@@ -49,6 +49,11 @@ namespace ProtectWindow {
 		if (!*ssdt_address)
 		{
 			return;
+		}
+		if (*ssdt_address == g_ValidateHwnd)
+		{
+			DbgPrintEx(77, 0, "FValidateHwnd \r\n");
+
 		}
 		//if (*ssdt_address == g_NtQueryInformationProcess) { *ssdt_address = MyNtQueryInformationProcess; return; }
 		//if (*ssdt_address == g_NtOpenThread) { *ssdt_address = MyNtOpenThread; return; }
@@ -63,10 +68,10 @@ namespace ProtectWindow {
 			if (*ssdt_address == g_NtUserGetScrollBarInfo) { *ssdt_address = MyNtUserGetScrollBarInfo; return; }
 			if (*ssdt_address == g_NtUserGetPointerProprietaryId) { *ssdt_address = MyNtUserGetPointerProprietaryId; return; }
 
-			//if (*ssdt_address == g_NtUserCallHwndParam) { *ssdt_address = MyNtUserCallHwndParam; return; }//win7需要重新实现
-			//if (*ssdt_address == g_NtUserValidateHandleSecure) { *ssdt_address = MyNtUserValidateHandleSecure; return; }//win7需要重新实现
-			//if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }//win7需要重新实现
-			//if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserCallHwndParam) { *ssdt_address = MyNtUserCallHwndParam; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserValidateHandleSecure) { *ssdt_address = MyNtUserValidateHandleSecure; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }//win7需要重新实现
+			if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }//win7需要重新实现
 			if (*ssdt_address == g_NtUserInternalGetWindowText) { *ssdt_address = MyNtUserInternalGetWindowText; return; }
 			//if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }//win7需要重新实现
 			//if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }//win7需要重新实现
@@ -158,15 +163,26 @@ namespace ProtectWindow {
 	}
 
 
-
+	ULONGLONG GetFSetDisplayAffinity() {
+ 
+		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
+		unsigned long long address = Utils::find_pattern_image(win32kfull_address,
+			skCrypt("\x8B\xD6\x48\x8B\xCF\xE8\x00\x00\x00\x00\x85\xC0\x74\x00\xBB\x00\x00\x00\x00\xEB\x00\xB9\x00\x00\x00\x00\xEB\x00"),
+			skCrypt("xxxxxx????xxx?x????x?x????x?"), skCrypt(".text"));
+		address += 5;
+		ULONGLONG SetDisplayAffinityAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 5 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 1));
+		Log("[+] SetDisplayAffinityAddr pattern address is 0x%llX \n", SetDisplayAffinityAddr);
+		return SetDisplayAffinityAddr;
+ 
+	}
 	ULONGLONG GetChangeWindowTreeProtection()
 	{
 		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
 		unsigned long long address = Utils::find_pattern_image(win32kfull_address,
 			skCrypt("\xE8\x00\x00\x00\x00\x8B\xF0\x85\xC0\x75\x00\x44\x8B\x44"),
-			skCrypt("x????xxxxx?xxx"),skCrypt(".text"));
+			skCrypt("x????xxxxx?xxx"), skCrypt(".text"));
 		Log("[+] ChangeWindowTreeProtection pattern address is 0x%llX \n", address);
-		if (address == 0) { 
+		if (address == 0) {
 			//ffffd61d`cf33fe90 e8fbfcffff      call    win32kfull!ChangeWindowTreeProtection(ffffd61d`cf33fb90)
 			//ffffd61d`cf33fe95 8bf8            mov     edi, eax
 			//ffffd61d`cf33fe97 85c0            test    eax, eax
@@ -727,9 +743,10 @@ namespace ProtectWindow {
 
 		g_NtUserSetWindowDisplayAffinity = (FNtUserSetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserSetWindowDisplayAffinity"));
 		Log("g_NtUserSetWindowDisplayAffinity %p \r\n", g_NtUserSetWindowDisplayAffinity);
-		g_NtUserGetWindowDisplayAffinity = (FNtUserGetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowDisplayAffinity"));	
+		g_NtUserGetWindowDisplayAffinity = (FNtUserGetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowDisplayAffinity"));
 		Log("g_NtUserGetWindowDisplayAffinity %p \r\n", g_NtUserGetWindowDisplayAffinity);
-
+		g_SetDisplayAffinity = (SetDisplayAffinity)GetFSetDisplayAffinity();
+		Log("g_SetDisplayAffinity %p \r\n", g_SetDisplayAffinity);
 		g_ChangeWindowTreeProtection = (FChangeWindowTreeProtection)GetChangeWindowTreeProtection();
 		Log("g_ChangeWindowTreeProtection %p \r\n", g_ChangeWindowTreeProtection);
 		g_ValidateHwnd = (FValidateHwnd)GetFValidateHwnd();
@@ -755,8 +772,13 @@ namespace ProtectWindow {
 
 		PVOID wnd_ptr = (PVOID)g_ValidateHwnd((__int64)hwnd);
 		if (!MmIsAddressValid(wnd_ptr)) return STATUS_UNSUCCESSFUL;
-
-		result = g_ChangeWindowTreeProtection(wnd_ptr, 0x11);
+		if (!wnd_ptr)
+		{
+			return STATUS_UNSUCCESSFUL; 
+		}
+		result = g_SetDisplayAffinity(wnd_ptr, 0x11);
+	 
+		//result = g_ChangeWindowTreeProtection(wnd_ptr, 0x11);
 		g_NtUserSetParent(tmpHwnd, 0);
 		//status = imports::ps_lookup_process_by_process_id(pid, &pEprocess);
 		//if (!NT_SUCCESS(status))
@@ -911,9 +933,7 @@ namespace ProtectWindow {
 			reg.CTIME = pRegData->CTIME;
 			reg.DAYS = pRegData->DAYS;
 			reg.TIMESPAN = pRegData->TIMESPAN;
-			lastStartTick = time;
 			lastStartTick = MyGetTickCount();
-
 			return 0x100000;
 		}
 		else {

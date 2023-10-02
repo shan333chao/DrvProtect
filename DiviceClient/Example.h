@@ -23,6 +23,7 @@ void FakeWriteMemory(ULONG		PID, ULONG fakePid, PVOID	Address, PUCHAR pValBuffer
 void PhyReadMemory(ULONG		PID, PVOID	Address, ULONG		uDataSize);
 BOOL PhyWriteMemory(ULONG		PID, PVOID	Address, PUCHAR		pValBuffer, ULONG length);
 
+void ProtectProcessR3(ULONG pid ,BOOLEAN isProcect);
 
 void ProtectProcess(ULONG protectPid, ULONG fakePid);
 void ProtectWindow(ULONG32 hwnd);
