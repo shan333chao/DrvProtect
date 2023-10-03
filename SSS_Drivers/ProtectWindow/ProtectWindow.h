@@ -40,12 +40,12 @@ namespace ProtectWindow {
 	typedef BOOLEAN(* FNtUserGetWindowPlacement)(HANDLE 	hWnd, uintptr_t lpwndpl);
 	typedef BOOLEAN(* FNtUserGetTitleBarInfo)(HANDLE 	hwnd, uintptr_t 	pti);
 	typedef BOOLEAN(* FNtUserGetScrollBarInfo)(HANDLE 	hWnd, LONG 	idObject, uintptr_t 	psbi);
-
-
+	typedef __int64(__fastcall* FNtUserGetWindowDC)(__int64);
+	typedef __int64(__fastcall* FNtUserGetDC)(__int64 a1);
 	ULONG_PTR MyNtUserCallHwnd(HANDLE hwnd, DWORD code);
 	ULONG_PTR MyNtUserCallHwndParam(HANDLE hwnd, DWORD_PTR param, DWORD code);
 	BOOLEAN MyNtUserValidateHandleSecure(HANDLE hHdl);
-
+	typedef __int64(*gre_protect_sprite_content)(int64_t, uint64_t, int32_t, char);
 	typedef __int64(__fastcall* FChangeWindowTreeProtection)(void* a1, int a2);
 	typedef __int64(__fastcall* FValidateHwnd)(__int64 a1);
 	typedef __int64(__fastcall* SetDisplayAffinity)(void* a1,   int a2);
@@ -70,7 +70,8 @@ namespace ProtectWindow {
 	NTSTATUS   MyNtUserBuildHwndList7(HANDLE hDesktop, HANDLE hwndParent, BOOLEAN bChildren, ULONG dwThreadId, ULONG lParam, PHANDLE pWnd, PULONG pBufSize);
 	BOOLEAN MyNtUserSetWindowDisplayAffinity(HANDLE hWnd, LONG dwAffinity);
 	BOOLEAN MyNtUserGetWindowDisplayAffinity(HANDLE hWnd, PLONG dwAffinity);
-
+	__int64  MyNtUserGetWindowDC(__int64 hwnd);
+ 
 	BOOLEAN NTAPI MyNtUserGetWindowPlacement(HANDLE 	hWnd, uintptr_t lpwndpl);
 	BOOLEAN NTAPI MyNtUserGetTitleBarInfo(HANDLE 	hwnd, uintptr_t 	pti);
 	BOOLEAN NTAPI MyNtUserGetScrollBarInfo(HANDLE 	hWnd, LONG 	idObject, uintptr_t 	psbi);
