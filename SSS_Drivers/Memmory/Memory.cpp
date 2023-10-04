@@ -281,7 +281,7 @@ namespace memory {
 
 
 
-		status = MiMemory::MiReadProcessMemory(pTargetEprocess, ReadBuffer, Address, uReadSize);
+		status = MiMemory::MiReadProcessMemory(pTargetEprocess, Address, ReadBuffer, uReadSize);
 
 
 
@@ -386,7 +386,6 @@ namespace memory {
 		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
 		if (!NT_SUCCESS(status)) return status;
 		SIZE_T NumberOfReadSize = 0;
-		Utils::self_safe_copy(pTargetEprocess, Address, Address, 500);
 		status = MiMemory::MiReadProcessMemory(pTargetEprocess, Address, ReadBuffer, 500);
 		if (!NT_SUCCESS(status))
 		{

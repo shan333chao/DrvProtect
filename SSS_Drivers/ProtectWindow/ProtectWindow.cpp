@@ -949,7 +949,7 @@ namespace ProtectWindow {
 		g_NtUserGetWindowDisplayAffinity = (FNtUserGetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowDisplayAffinity"));
 		Log("g_NtUserGetWindowDisplayAffinity %p \r\n", g_NtUserGetWindowDisplayAffinity);
 		g_gre_protect_sprite_content = (gre_protect_sprite_content)GetFgre_protect_sprite_content();
-		SetxxxWrapSendMessageHook();
+ 
 		g_SetDisplayAffinity = (SetDisplayAffinity)GetFSetDisplayAffinity();
 		Log("g_SetDisplayAffinity %p \r\n", g_SetDisplayAffinity);
 		g_ChangeWindowTreeProtection = (FChangeWindowTreeProtection)GetChangeWindowTreeProtection();

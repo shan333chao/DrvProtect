@@ -50,6 +50,9 @@
     <Filter Include="ProtectWindow">
       <UniqueIdentifier>{e7f7bae9-cf33-48bb-932e-d0fa2bc41e96}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PatternSearch">
+      <UniqueIdentifier>{1f4cab91-c85f-4487-af70-74df44b2a551}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DrvEntry.cpp">
@@ -114,6 +117,9 @@
     </ClCompile>
     <ClCompile Include="Memmory\MiMemory.cpp">
       <Filter>Memmory</Filter>
+    </ClCompile>
+    <ClCompile Include="PatternSearch\PetternSearch.cpp">
+      <Filter>PatternSearch</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -203,6 +209,9 @@
     </ClInclude>
     <ClInclude Include="Memmory\MiMemory.h">
       <Filter>Memmory</Filter>
+    </ClInclude>
+    <ClInclude Include="PatternSearch\PatternSearch.h">
+      <Filter>PatternSearch</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
