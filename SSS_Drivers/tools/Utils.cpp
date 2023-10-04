@@ -487,7 +487,53 @@ wchar_t* Utils::random_wstring(wchar_t* str, size_t size)
 
 	return str;
 }
+wchar_t* Utils::kwcsstr(const wchar_t* haystack, const wchar_t* needle)
+{
+	if (!*needle)
+		return (wchar_t*)haystack;
 
+	const wchar_t needle_first = *needle;
+
+	haystack = wcsrchr(haystack, needle_first);
+	if (!haystack)
+		return NULL;
+
+	const wchar_t* i_haystack = haystack + 1, * i_needle = needle + 1;
+
+	unsigned int  sums_diff = *haystack;
+	bool          identical = true;
+
+	while (*i_haystack && *i_needle)
+	{
+		sums_diff += *i_haystack;
+		sums_diff -= *i_needle;
+		identical &= *i_haystack++ == *i_needle++;
+	}
+
+	if (*i_needle)
+		return NULL;
+	else if (identical)
+		return (wchar_t*)haystack;
+
+	size_t needle_len = i_needle - needle;
+	size_t needle_len_1 = needle_len - 1;
+
+	const wchar_t* sub_start;
+	for (sub_start = haystack; *i_haystack; i_haystack++)
+	{
+		sums_diff -= *sub_start++;
+		sums_diff += *i_haystack;
+
+		if (
+			sums_diff == 0
+			&& needle_first == *sub_start
+			&& memcmp(sub_start, needle, needle_len_1) == 0
+			)
+			return (wchar_t*)sub_start;
+	}
+
+	return NULL;
+}
 
 BOOLEAN Utils::safe_copy(PVOID dst, PVOID src, size_t size)
 {

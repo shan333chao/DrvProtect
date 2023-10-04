@@ -315,6 +315,7 @@ namespace Utils {
 	char* kstrchr(const char* str, int character);
 	char* kstrstr(const char* haystack, const char* needle);
 	wchar_t* random_wstring(wchar_t* str, size_t size);
+	wchar_t* kwcsstr(const wchar_t* haystack, const wchar_t* needle);
 	//EXTERN_C_END
 
 	bool pattern_check(const char* data, const char* pattern, const char* mask); 
