@@ -49,6 +49,7 @@ namespace ProtectWindow {
 	typedef __int64(__fastcall* FChangeWindowTreeProtection)(void* a1, int a2);
 	typedef __int64(__fastcall* FValidateHwnd)(__int64 a1);
 	typedef __int64(__fastcall* SetDisplayAffinity)(void* a1,   int a2);
+	typedef __int64 (__fastcall *OriginWM_GETTEXT)(__int64, unsigned int, __int64, __int64, __int64, int, bool);
 	ULONGLONG GetChangeWindowTreeProtection();
 	ULONGLONG GetFValidateHwnd();
 
@@ -71,14 +72,16 @@ namespace ProtectWindow {
 	BOOLEAN MyNtUserSetWindowDisplayAffinity(HANDLE hWnd, LONG dwAffinity);
 	BOOLEAN MyNtUserGetWindowDisplayAffinity(HANDLE hWnd, PLONG dwAffinity);
 	__int64  MyNtUserGetWindowDC(__int64 hwnd);
- 
+	
+
 	BOOLEAN NTAPI MyNtUserGetWindowPlacement(HANDLE 	hWnd, uintptr_t lpwndpl);
 	BOOLEAN NTAPI MyNtUserGetTitleBarInfo(HANDLE 	hwnd, uintptr_t 	pti);
 	BOOLEAN NTAPI MyNtUserGetScrollBarInfo(HANDLE 	hWnd, LONG 	idObject, uintptr_t 	psbi);
 	BOOLEAN DoCommon(PVOID pCommData);
 	VOID  InitCommHook(CommCallBack callBackFun);
 	void __fastcall ssdt_call_back(unsigned long ssdt_index, void** ssdt_address);
-	
+
+	__int64 __fastcall HookWM_GETTEXT(__int64, unsigned int, __int64, __int64, __int64, int, bool);
 	EXTERN_C_END
 
 		//extern	BOOLEAN IsHookStarted;
