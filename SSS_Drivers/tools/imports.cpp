@@ -9,6 +9,17 @@ namespace imports {
 
 	struct _m_imported imported = { 0 }; 
 
+
+	VentroAPI PEPROCESS ps_initial_system_process() {
+	
+		return reinterpret_cast<PEPROCESS> (*(PULONGLONG) imported.ps_initial_system_process);
+	}
+	
+	VentroAPI BOOLEAN ps_get_process_exit_process_called(PEPROCESS eprocess) { 
+		return reinterpret_cast<BOOLEAN(*)(PEPROCESS)> (imported.ps_get_process_exit_process_called)(eprocess);
+	}
+
+
 	VentroAPI PVOID rtl_find_exported_routine_by_name(_In_ PVOID ImageBase, _In_ PCCH RoutineName)
 	{
 		return reinterpret_cast<PVOID(*)(PVOID, PCCH)> (imported.rtl_find_exported_routine_by_name)(ImageBase, RoutineName);
@@ -140,9 +151,9 @@ namespace imports {
 	}
 
 
-	VentroAPI PUCHAR ps_get_process_image_file_name(PEPROCESS Process)
+	VentroAPI PCHAR ps_get_process_image_file_name(PEPROCESS Process)
 	{
-		return reinterpret_cast<PUCHAR(*)(PEPROCESS)> (imported.ps_get_process_image_file_name)(Process);
+		return reinterpret_cast<PCHAR(*)(PEPROCESS)> (imported.ps_get_process_image_file_name)(Process);
 	}
 	VentroAPI NTSTATUS ps_reference_process_file_pointer(IN PEPROCESS Process, OUT PVOID* OutFileObject)
 	{

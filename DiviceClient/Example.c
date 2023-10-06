@@ -452,7 +452,7 @@ void ProtectWindow(ULONG32 hwnd)
 	printf("保护成功\n");
 }
 
-void QueryModule(ULONG pid, PCHAR szModuleName)
+void QueryModule(ULONG pid, PCHAR szModuleName,UCHAR type)
 {
 	QUERY_MODULE_DATA moduleData = { 0 };
 	moduleData.PID = pid;
@@ -460,6 +460,7 @@ void QueryModule(ULONG pid, PCHAR szModuleName)
 	moduleData.pcModuleName = szModuleName;
 	ULONG uModuleSize = 0;
 	moduleData.pModuleSize = &uModuleSize;
+	moduleData.type = type;
 	DWORD status_code = DriverComm(QUERY_MODULE, &moduleData, sizeof(QUERY_MODULE_DATA));
 	if (status_code)
 	{
@@ -532,5 +533,50 @@ void CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len)
 		return;
 	}
 	printf("创建线程成功\n");
+
+}
+
+void SearchPattern(ULONG pid, PCHAR szModuleName, PCHAR pattern, PCHAR mask)
+{
+
+	PATTEERN_DATA patternData = { 0 };
+	patternData.PID = pid;
+	patternData.mask = mask;
+	char* testPattern = "\x48\x83\xEC\x50\x48\x89\xD6\x48\x8B\x05\x36\x1C\x18\x00\x48\x31";
+	int len = strlen(mask);
+
+	UCHAR upattern[0x100] = { 0 };
+
+	char byte_str[3];
+	byte_str[2] = '\0';  // 作为字符串结尾的 null 字符
+
+	for (int i = 0; i < len*4; i += 4) {
+		byte_str[0] = pattern[i + 2];
+		byte_str[1] = pattern[i + 3];
+		unsigned char byte = (unsigned char)strtoul(byte_str, NULL, 16);
+		upattern[i / 4] = byte; 
+	}
+
+	printf("------------------ \r\n ");
+
+	
+	for (int i = 0; i < len; i++) {
+		unsigned char byte  = (unsigned char)upattern[i];
+		upattern[i] = byte;
+		printf("%02X ", upattern[i]);
+	}
+	printf("------------------ \r\n " );
+	patternData.pattern = upattern;
+	patternData.pcModuleName = szModuleName;
+	patternData.addr = 0;
+	DWORD status_code = DriverComm(PATTERN_SEARCH, &patternData, sizeof(PATTEERN_DATA));
+	if (status_code > 0)
+	{
+		printf("SearchPattern 错误码 %08x\n", status_code);
+		return;
+	}
+	printf("SearchPattern 成功\n");
+	printf("特征地址： %p \r\n", patternData.addr);
+	getchar();
 
 }

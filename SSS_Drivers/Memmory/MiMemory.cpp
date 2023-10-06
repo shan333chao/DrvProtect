@@ -23,18 +23,18 @@
 // Define inline Function.
 // =====================================================================================================================
 namespace MiMemory {
-	static QWORD g_memory_range_low = 0;
-	static QWORD g_memory_range_high = 0;
-	QWORD  read_i64(QWORD address)
+	static ULONGLONG g_memory_range_low = 0;
+	static ULONGLONG g_memory_range_high = 0;
+	ULONGLONG  read_i64(ULONGLONG address)
 	{
-		QWORD result = 0;
+		ULONGLONG result = 0;
 		if (!read(address, &result, sizeof(result), 0))
 		{
 			return 0;
 		}
 		return result;
 	}
-	QWORD  translate(QWORD dir, QWORD va)
+	ULONGLONG  translate(ULONGLONG dir, ULONGLONG va)
 	{
 		if (!g_memory_range_low || !g_memory_range_low)
 		{
@@ -89,11 +89,11 @@ namespace MiMemory {
 		return 0i64;
 	}
  
-	BOOL read(QWORD address, PVOID buffer, QWORD length, QWORD* ret)
+	BOOLEAN read(ULONGLONG address, PVOID buffer, ULONGLONG length, ULONGLONG* ret)
 	{
-		BYTE MM_COPY_BUFFER[0x1000];
+		UCHAR MM_COPY_BUFFER[0x1000];
 
-		if (address < (QWORD)g_memory_range_low)
+		if (address < (ULONGLONG)g_memory_range_low)
 		{
 			return 0;
 		}
@@ -111,10 +111,10 @@ namespace MiMemory {
 		MM_COPY_ADDRESS physical_address{};
 		physical_address.PhysicalAddress.QuadPart = (LONGLONG)address;
 
-		BOOL v = imports::mm_copy_memory(MM_COPY_BUFFER, physical_address, length, MM_COPY_MEMORY_PHYSICAL, &length) == 0;
+		BOOLEAN v = imports::mm_copy_memory(MM_COPY_BUFFER, physical_address, length, MM_COPY_MEMORY_PHYSICAL, &length) == 0;
 		if (v)
 		{
-			for (QWORD i = length; i--;)
+			for (ULONGLONG i = length; i--;)
 			{
 				((unsigned char*)buffer)[i] = ((unsigned char*)MM_COPY_BUFFER)[i];
 			}
@@ -126,9 +126,9 @@ namespace MiMemory {
 		return v;
 	}
 
-	BOOL  write(QWORD address, PVOID buffer, QWORD length)
+	BOOLEAN  write(ULONGLONG address, PVOID buffer, ULONGLONG length)
 	{
-		if (address < (QWORD)g_memory_range_low)
+		if (address < (ULONGLONG)g_memory_range_low)
 		{
 			return 0;
 		}
@@ -141,9 +141,9 @@ namespace MiMemory {
 		PVOID va = imports::mm_map_io_space(*(PHYSICAL_ADDRESS*)&address, length, MEMORY_CACHING_TYPE::MmNonCached);
 		if (va)
 		{
-			for (QWORD i = length; i--;)
+			for (ULONGLONG i = length; i--;)
 			{
-				((BYTE*)va)[i] = ((BYTE*)buffer)[i];
+				((UCHAR*)va)[i] = ((UCHAR*)buffer)[i];
 			}
 			imports::mm_unmap_io_space(va, length);
 			return 1;
@@ -347,25 +347,25 @@ namespace MiMemory {
 			return Status;
 		}
 
-		QWORD cr3 = *(QWORD*)((QWORD)process + 0x28);
+		ULONGLONG cr3 = *(ULONGLONG*)((ULONGLONG)process + 0x28);
 		if (cr3 == 0)
 		{
 			Status = STATUS_ACCESS_VIOLATION;
 			return Status;
 		}
 
-		QWORD total_size = readSize;
-		QWORD offset = 0;
-		QWORD bytes_read = 0;
-		QWORD physical_address;
-		QWORD current_size;
+		ULONGLONG total_size = readSize;
+		ULONGLONG offset = 0;
+		ULONGLONG bytes_read = 0;
+		ULONGLONG physical_address;
+		ULONGLONG current_size;
 		while (total_size)
 		{
-			physical_address = translate(cr3, (QWORD)((QWORD)address + offset));
+			physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
 			if (!physical_address)
 			{
-				Utils::self_safe_copy(process, (PVOID)((QWORD)address + offset), (PVOID)((QWORD)address + offset), 0x1000);
-				physical_address = translate(cr3, (QWORD)((QWORD)address + offset));
+				Utils::self_safe_copy(process, (PVOID)((ULONGLONG)address + offset), 0x1000);
+				physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
 			}
 
 			if (!physical_address)
@@ -382,7 +382,7 @@ namespace MiMemory {
 			}
 
 			current_size = min(0x1000 - (physical_address & 0xFFF), total_size);
-			if (!read(physical_address, (PVOID)((QWORD)buffer + offset), current_size, &bytes_read))
+			if (!read(physical_address, (PVOID)((ULONGLONG)buffer + offset), current_size, &bytes_read))
 			{
 				break;
 			}
@@ -404,22 +404,22 @@ namespace MiMemory {
 			return Status;
 		}
 
-		QWORD cr3 = *(QWORD*)((QWORD)process + 0x28);
+		ULONGLONG cr3 = *(ULONGLONG*)((ULONGLONG)process + 0x28);
 		if (cr3 == 0)
 		{
 			Status = STATUS_ACCESS_VIOLATION;
 			return Status;
 		}
 
-		QWORD total_size = length;
-		QWORD offset = 0;
-		QWORD bytes_write = 0;
+		ULONGLONG total_size = length;
+		ULONGLONG offset = 0;
+		ULONGLONG bytes_write = 0;
 
-		QWORD physical_address;
-		QWORD current_size;
+		ULONGLONG physical_address;
+		ULONGLONG current_size;
 
 		while (total_size) {
-			physical_address = translate(cr3, (QWORD)((QWORD)address + offset));
+			physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
 			if (!physical_address) {
 				if (total_size >= 0x1000)
 				{
@@ -432,7 +432,7 @@ namespace MiMemory {
 				goto E0;
 			}
 			current_size = min(0x1000 - (physical_address & 0xFFF), total_size);
-			if (!write(physical_address, (PVOID)((QWORD)buffer + offset), current_size))
+			if (!write(physical_address, (PVOID)((ULONGLONG)buffer + offset), current_size))
 			{
 				break;
 			}

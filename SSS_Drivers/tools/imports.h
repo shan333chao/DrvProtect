@@ -4,7 +4,46 @@
 #include <ntifs.h>
 #define VentroAPI  
 
- 
+inline int to_lower_imp(int c)
+{
+	if (c >= 'A' && c <= 'Z')
+		return c + 'a' - 'A';
+	else
+		return c;
+}
+
+inline int strcmpi_imp(const char* s1, const char* s2)
+{
+	while (*s1 && (to_lower_imp(*s1) == to_lower_imp(*s2)))
+	{
+		s1++;
+		s2++;
+	}
+	return *(const unsigned char*)s1 - *(const unsigned char*)s2;
+}
+
+inline int wcscmpi_imp(unsigned short* s1, unsigned short* s2)
+{
+	while (*s1 && (to_lower_imp(*s1) == to_lower_imp(*s2)))
+	{
+		s1++;
+		s2++;
+	}
+	return *(unsigned short*)s1 - *(unsigned short*)s2;
+}
+
+//
+// sometimes compiler uses precompiled strlen, this is added to prevent that happen in any case.
+//
+inline unsigned long long strlen_imp(const char* str)
+{
+	const char* s;
+
+	for (s = str; *s; ++s)
+		;
+
+	return (s - str);
+}
 
 struct _m_imported
 {
@@ -89,10 +128,21 @@ struct _m_imported
 	uintptr_t rtl_random_ex;
 	uintptr_t rtl_avl_remove_node;
 
+	uintptr_t ps_initial_system_process;
+	uintptr_t ps_get_process_exit_process_called;
+
 };
 namespace imports {
 
+
+
+
 	extern struct _m_imported imported;
+
+	VentroAPI PEPROCESS ps_initial_system_process();
+
+	VentroAPI BOOLEAN ps_get_process_exit_process_called(PEPROCESS eprocess);
+
 	VentroAPI ULONG rtl_random_ex(PULONG Seed);
 	VOID FASTCALL ex_release_resource_lite(PERESOURCE Resource);
 	BOOLEAN		ex_acquire_resource_exclusive_lite(
@@ -151,7 +201,7 @@ namespace imports {
 	VentroAPI PVOID ps_get_process_wow64_process(PEPROCESS Process);
 
 
-	VentroAPI PUCHAR ps_get_process_image_file_name(PEPROCESS Process);
+	VentroAPI PCHAR ps_get_process_image_file_name(PEPROCESS Process);
 	VentroAPI NTSTATUS ps_reference_process_file_pointer(IN PEPROCESS Process, OUT PVOID* OutFileObject);
 	VentroAPI VOID ke_initialize_guarded_mutex(PKGUARDED_MUTEX Mutex);
 

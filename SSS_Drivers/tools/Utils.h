@@ -305,8 +305,8 @@ namespace Utils {
 	ULONGLONG GetWin32kFull();
 
 	ULONGLONG GetWin32kBase();
- 
-	HANDLE GetPidByName(PWCH imageName);
+	
+	PEPROCESS  GetEprocessByName(PCHAR process_name);
 	VOID InitApis();
 	RTL_OSVERSIONINFOW InitOsVersion();
 	INT kmemcmp(const void* s1, const void* s2, size_t n);
@@ -318,11 +318,13 @@ namespace Utils {
 	wchar_t* kwcsstr(const wchar_t* haystack, const wchar_t* needle);
 	//EXTERN_C_END
 
-	bool pattern_check(const char* data, const char* pattern, const char* mask); 
-	unsigned long long find_pattern(unsigned long long addr, unsigned long size, const char* pattern, const char* mask);
+	bool pattern_check(const char* data, const char* pattern, const char* mask, size_t masklen);
+	unsigned long long find_pattern(unsigned long long addr, unsigned long size, const char* pattern, const char* mask, size_t masklen);
 	unsigned long long find_pattern_image(unsigned long long addr, const char* pattern, const char* mask, const char* name);
 	BOOLEAN safe_copy(PVOID dst, PVOID src, size_t size);
-	BOOLEAN self_safe_copy(PEPROCESS self, PVOID dst, PVOID src, size_t size);
+	BOOLEAN self_safe_copy(PEPROCESS self, PVOID addr, size_t size);
+
+	PEPROCESS lookup_process_by_id(HANDLE pid);
 }
 
 #endif // !UTILS_H

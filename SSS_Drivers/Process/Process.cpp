@@ -1,36 +1,25 @@
 #pragma once
 #include "Process.h"
-
+#include "../PatternSearch/PatternSearch.h"
 namespace process_info {
 
 
 	ULONG_PTR GetProcessModuleInfo(ULONG pid, PCHAR pcModuleName, PULONG pModuleSize)
 	{
-		PVOID									pIsx86Process=NULL;
+		PVOID									pIsx86Process = NULL;
 		PEPROCESS								pTargetEprocess = NULL;
-		NTSTATUS								status = NULL;
-	 
+		NTSTATUS								status = STATUS_UNSUCCESSFUL;
+
 		if (!pcModuleName)
 		{
 			return 0;
 		}
-		status = imports::ps_lookup_process_by_process_id((HANDLE)pid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return status;
-		//ÅÐ¶Ï½ø³Ì×´Ì¬
-		status = imports::ps_get_process_exit_status(pTargetEprocess);
-		if (status != STATUS_PENDING) {
-			imports::obf_dereference_object(pTargetEprocess);
-			return status;
-		}
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)pid);
+		if (!pTargetEprocess) return status;
 		ANSI_STRING aName = { 0 };
-
 		imports::rtl_init_ansi_string(&aName, pcModuleName);
-
 		UNICODE_STRING moduleNameMem = { 0 };
-
 		imports::rtl_ansi_string_to_unicode_string(&moduleNameMem, &aName, TRUE);
-
-
 		pIsx86Process = imports::ps_get_process_wow64_process(pTargetEprocess);
 		ULONG moduleSize = 0;
 		ULONG_PTR moduleBase = 0;
@@ -42,8 +31,8 @@ namespace process_info {
 			moduleBase = GetX64ProcessModule(pTargetEprocess, &moduleNameMem, &moduleSize);
 		}
 		*pModuleSize = moduleSize; 
-		imports::obf_dereference_object(pTargetEprocess);
 		imports::rtl_free_unicode_string(&moduleNameMem);
+		status = STATUS_SUCCESS;
 		return moduleBase;
 	}
 	ULONG_PTR GetX86ProcessModule(PEPROCESS	pTargetEprocess, PUNICODE_STRING szModuleName, PULONG pModuleSize) {
@@ -53,12 +42,12 @@ namespace process_info {
 		PPEB32 peb32 = NULL;
 		SIZE_T size = 0;
 		KAPC_STATE kApcState = { 0 };
-		peb32 =(PPEB32)imports::ps_get_process_wow64_process(pTargetEprocess);
+		peb32 = (PPEB32)imports::ps_get_process_wow64_process(pTargetEprocess);
 		if (!peb32) return 0;
 		//ÐÞ¸´È±Ò³Òì³£
-		status =imports::mm_copy_virtual_memory(pTargetEprocess, peb32, pTargetEprocess, peb32, 4, UserMode, &size);
+		status = imports::mm_copy_virtual_memory(pTargetEprocess, peb32, pTargetEprocess, peb32, 4, UserMode, &size);
 		if (!NT_SUCCESS(status))return 0;
-		
+
 		imports::ke_stack_attach_process(pTargetEprocess, &kApcState);
 		if (imports::mm_is_address_valid(peb32))
 		{
@@ -75,7 +64,7 @@ namespace process_info {
 					(PLIST_ENTRY32)ListEntry->Flink)
 				{
 					UNICODE_STRING UnicodeString = { 0 };
-					PLDR_DATA_TABLE_ENTRY32 LdrDataTableEntry32 = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY32, InLoadOrderLinks); 
+					PLDR_DATA_TABLE_ENTRY32 LdrDataTableEntry32 = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY32, InLoadOrderLinks);
 					imports::rtl_init_unicode_string(&UnicodeString, (PWCH)LdrDataTableEntry32->BaseDllName.Buffer);
 					// ÕÒµ½ÁË·µ»ØÄ£¿é»ùÖ·
 					if (imports::rtl_compare_unicode_string(&UnicodeString, szModuleName, TRUE) == 0)
@@ -91,8 +80,6 @@ namespace process_info {
 		imports::ke_unstack_detach_process(&kApcState);
 		return uImageBase;
 	}
-
-
 	ULONG_PTR GetX64ProcessModule(PEPROCESS	pTargetEprocess, PUNICODE_STRING szModuleName, PULONG pModuleSize) {
 
 		NTSTATUS status;
@@ -100,7 +87,7 @@ namespace process_info {
 		PPEB64 peb64 = NULL;
 		SIZE_T size = 0;
 		KAPC_STATE kApcState = { 0 };
-		peb64 =(PPEB64)imports::ps_get_process_peb(pTargetEprocess);
+		peb64 = (PPEB64)imports::ps_get_process_peb(pTargetEprocess);
 		if (!peb64) return 0;
 		//ÐÞ¸´È±Ò³Òì³£
 		status = imports::mm_copy_virtual_memory(pTargetEprocess, peb64, pTargetEprocess, peb64, 4, UserMode, &size);
@@ -116,7 +103,7 @@ namespace process_info {
 			}
 			if (imports::mm_is_address_valid(peb64->Ldr)) {
 				// ±éÀúÁ´±í
-				for (PLIST_ENTRY ListEntry =(PLIST_ENTRY)peb64->Ldr->InLoadOrderModuleList.Flink;
+				for (PLIST_ENTRY ListEntry = (PLIST_ENTRY)peb64->Ldr->InLoadOrderModuleList.Flink;
 					ListEntry != (PLIST_ENTRY)&peb64->Ldr->InLoadOrderModuleList;
 					ListEntry = ListEntry->Flink)
 				{
@@ -137,12 +124,17 @@ namespace process_info {
 		return uImageBase;
 	}
 
-	ULONG_PTR GetProcessModuleFromVad(PEPROCESS pTargetEprocess, PUNICODE_STRING szModuleName, PULONG pModuleSize)
+
+
+
+	ULONG_PTR GetProcessModuleInfoNoAttach(ULONG pid, PCHAR pcModuleName, PULONG pModuleSize)
 	{
-		//PsGetProcessExitStatus
-		return 0;
+		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(pid));
+		if (!eprocess)
+		{
+			return 0;
+		}
+		return patternSearch::get_module(eprocess, pcModuleName, pModuleSize);
 	}
-
-
 
 }

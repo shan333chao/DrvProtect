@@ -66,7 +66,7 @@ namespace memory {
     NTSTATUS SS_CreateMemory(ULONG uPid, ULONG_PTR uSize, PULONG64 retAddress);
 
     VOID ChangePageAttributeExecute(ULONG64 uAddress, ULONG64 uSize);
-    NTSTATUS SS_GetImageSize(ULONG_PTR uPid, PVOID Address, PULONG pSizeOfImage);
+ 
 
 
 }

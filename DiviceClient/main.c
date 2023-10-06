@@ -12,14 +12,15 @@ void ShowFunc() {
 	printf("\t5->  物理内存读取\n");
 	printf("\t6->  物理内存写入\n");
 	printf("\t7->  查询进程模块\n");
+	printf("\t14->  查询进程模块(不附加进程)\n");
 	printf("\t8->  创建隐藏内存\n");
 	printf("\t9->  创建线程\n");
-	printf("\t10-> 查询进程VAD模块\n");
+	printf("\t10-> 查询进程VAD模块(不附加进程)\n");
 	printf("\t11-> 添加进程保护\n");
 	printf("\t12-> 移除进程保护\n");
+	printf("\t13-> 特征码搜索 \n");
 	printf("\t??-> 隐藏模块注入【开发中】\n");
-	printf("\t??-> 特征码搜索【开发中】\n");
-	printf("\t??-> 主线程call【开发中】\n"); 
+	printf("\t??-> 主线程call【开发中】\n");
 	printf("\t88-> 退出\n");
 	printf("----------------------------------------\n");
 
@@ -80,8 +81,8 @@ LOOP:
 		ULONG len = StringToBuff(cardcode, buffer);
 		TestComm(buffer, len);
 		break;
-	} 
-	case 1: { 
+	}
+	case 1: {
 		printf("输入要保护的进程id：\n");
 		scanf_s("%d", &pid);
 		printf("输入要伪装的进程id：\n");
@@ -130,21 +131,21 @@ LOOP:
 		scanf_s("%llx", &Address);
 		printf("请输入读取长度：\n");
 		scanf_s("%d", &uDataSize);
-		PhyReadMemory(pid, Address, uDataSize); 
-		break; 
+		PhyReadMemory(pid, Address, uDataSize);
+		break;
 	}
 
-		
+
 	case 6: {
 		memset(buffer, 0, USN_PAGE_SIZE);
 		printf("输入要写入的进程id：\n");
 		scanf_s("%d", &pid);
 		printf("请输入地址：\n");
-		scanf_s("%llx", &Address); 
+		scanf_s("%llx", &Address);
 		printf("请输入写入数据(HEX)：\n");
 		char shellcode[0x1000] = { 0 };
-		scanf_s("%s", shellcode,0x1000); 
-		ULONG len= StringToBuff(shellcode, buffer);
+		scanf_s("%s", shellcode, 0x1000);
+		ULONG len = StringToBuff(shellcode, buffer);
 		PhyWriteMemory(pid, Address, buffer, len);
 		memset(buffer, 0, USN_PAGE_SIZE);
 		break;
@@ -154,9 +155,9 @@ LOOP:
 		scanf_s("%d", &pid);
 		PCHAR ModuleName = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
 		memset(ModuleName, 0, USN_PAGE_SIZE);
-		printf("输入模块名(不区分大小写):"); 
-		scanf_s("%s", ModuleName, 0x1000); 
-		QueryModule(pid, ModuleName);
+		printf("输入模块名(不区分大小写):");
+		scanf_s("%s", ModuleName, 0x1000);
+		QueryModule(pid, ModuleName,1);
 		memset(ModuleName, 0, sizeof(ModuleName));
 		VirtualFree(ModuleName, USN_PAGE_SIZE, MEM_RELEASE);
 		break;
@@ -177,7 +178,7 @@ LOOP:
 		char shellcode[0x1000] = { 0 };
 		scanf_s("%s", shellcode, 0x1000);
 		ULONG len = StringToBuff(shellcode, buffer);
-		CreateMyThread(pid,fakeId, buffer, len);
+		CreateMyThread(pid, fakeId, buffer, len);
 		break;
 	}
 	case 10: {
@@ -204,6 +205,38 @@ LOOP:
 		ProtectProcessR3(pid, FALSE);
 		break;
 	}
+	case 13: {
+		printf("输入查询的进程id：\n");
+		scanf_s("%d", &pid);
+		PCHAR ModuleName = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(ModuleName, 0, USN_PAGE_SIZE);
+		printf("输入模块名(区分大小写):");
+		scanf_s("%s", ModuleName, 0x1000);
+
+		PCHAR pattern = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(pattern, 0, USN_PAGE_SIZE);
+		printf("输入特征码(格式:\\x64\\x00\\x00\\x00):");
+		scanf_s("%s", pattern, 0x1000);
+
+		PCHAR mask = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(mask, 0, USN_PAGE_SIZE);
+		printf("输入匹配模板(格式:x??????x??xx??):");
+		scanf_s("%s", mask, 0x1000);
+		SearchPattern(pid, ModuleName, pattern, mask);
+		break;
+	}
+	case 14: {
+		printf("输入查询的进程id：\n");
+		scanf_s("%d", &pid);
+		PCHAR ModuleName = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(ModuleName, 0, USN_PAGE_SIZE);
+		printf("输入模块名(严格区分大小写):");
+		scanf_s("%s", ModuleName, 0x1000);
+		QueryModule(pid, ModuleName,2);
+		memset(ModuleName, 0, sizeof(ModuleName));
+		VirtualFree(ModuleName, USN_PAGE_SIZE, MEM_RELEASE);
+		break;
+	}
 	case 88:
 		goto EXITSYS;
 		break;
@@ -215,7 +248,7 @@ LOOP:
 	system("cls");
 	goto LOOP;
 EXITSYS:
- 
+
 	return 0;
 
 }

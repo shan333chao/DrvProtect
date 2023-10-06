@@ -7,6 +7,7 @@
 #include "ProtectWindow/Protect.h"
 #include "ProtectRoute.h"
 #include "Memmory/VadModules.h"
+#include "PatternSearch/PatternSearch.h"
 constexpr unsigned int max_unloader_driver = 50;
 typedef struct _unloader_information
 {
@@ -102,7 +103,6 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	switch (pCommData->Type)
 	{
 	case TEST_COMM: {
-
 		PTEST_TATA td = (PTEST_TATA)pCommData->InData;
 		td->uTest = ProtectRoute::SetValidate(td->regCode, td->size, td->time);
 		Log("[SSS]TEST %08x \r\n", td->uTest);
@@ -121,17 +121,20 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	}
 	case QUERY_MODULE: {
 		PQUERY_MODULE_DATA  QUERY_MODULE = (PQUERY_MODULE_DATA)pCommData->InData;
-		QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfo(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, QUERY_MODULE->pModuleSize);
+		if (QUERY_MODULE->type == 1)
+		{
+			QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfo(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, QUERY_MODULE->pModuleSize);
+		}
+		else if (QUERY_MODULE->type == 2)
+		{
+			QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfoNoAttach(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, QUERY_MODULE->pModuleSize);
+		}
 		status = QUERY_MODULE->pModuleBase ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
 	case QUERY_VAD_MODULE: {
 		PQUERY_MODULE_DATA  QUERY_MODULE = (PQUERY_MODULE_DATA)pCommData->InData;
-		status = VadModules::GetModuleBaseInVAD(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, &QUERY_MODULE->pModuleBase);
-		if (NT_SUCCESS(status))
-		{
-			status = memory::SS_GetImageSize(QUERY_MODULE->PID, (PVOID)QUERY_MODULE->pModuleBase, QUERY_MODULE->pModuleSize);
-		}
+		status = VadModules::GetModuleBaseInVAD(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, &QUERY_MODULE->pModuleBase, QUERY_MODULE->pModuleSize);
 		status = QUERY_MODULE->pModuleBase ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
@@ -174,6 +177,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 			status = STATUS_UNSUCCESSFUL;
 			break;
 		}
+		
 		status = ProtectRoute::AntiSnapWindow(WND_PTDATA->hwnds[0]);
 		break;
 	}
@@ -200,7 +204,13 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = fuck_process::RemoveProcessProtect(PROCESS_DATA->PID, FALSE);
 		break;
 	}
+	case PATTERN_SEARCH: {
 
+		PPATTEERN_DATA PATTERN = (PPATTEERN_DATA)pCommData->InData;
+		PATTERN->addr = patternSearch::search_process_pattern(ULongToHandle(PATTERN->PID), PATTERN->pcModuleName, PATTERN->pattern, PATTERN->mask);
+		status = PATTERN->addr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+		break;
+	}
 	}
 	return status;
 }
@@ -233,6 +243,7 @@ EXTERN_C ULONG_PTR GetNtoskrlImageBase(PDRIVER_OBJECT pdriver) {
 	return imageBase;
 }
 EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
+
 	pdriver->DriverUnload = DriverUnload;
 	ULONG_PTR imageBase = GetNtoskrlImageBase(pdriver);
 	Utils::SetKernelBase(imageBase);

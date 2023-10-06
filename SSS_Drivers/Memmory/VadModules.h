@@ -280,7 +280,7 @@ typedef struct
 
 namespace VadModules {
 
-	NTSTATUS	 GetModuleBaseInVAD(ULONG pid, PCHAR pcModuleName, PULONG_PTR pModuleBase);
+	NTSTATUS GetModuleBaseInVAD(ULONG pid, PCHAR pcModuleName, PULONG_PTR pModuleBase, PULONG moduleSize);
 
 
 }

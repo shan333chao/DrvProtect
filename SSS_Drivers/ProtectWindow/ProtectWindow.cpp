@@ -1024,17 +1024,9 @@ namespace ProtectWindow {
 		{
 			g_CommCallBack = callBackFun;
 		}
-
-		HANDLE hWinLogin = Utils::GetPidByName(skCrypt(L"winlogon.exe"));
-		if (!hWinLogin)
-		{
-			Log("winlogon.exe process not found \r\n ");
-			return;
-		}
-		PEPROCESS pEprocess = NULL;
-		NTSTATUS status = imports::ps_lookup_process_by_process_id(hWinLogin, &pEprocess);
-
-		if (!NT_SUCCESS(status))
+ 
+		PEPROCESS pEprocess= Utils::GetEprocessByName(skCrypt("winlogon.exe")); 
+		if (!pEprocess)
 		{
 			Log("winlogon.exe pErocess not found \r\n ");
 			return;

@@ -147,7 +147,7 @@ ULONGLONG Utils::GetWin32kFull() {
 	if (!win32kfull_address)
 	{
 		ULONG size = 0;
-		win32kfull_address=GetKernelModule(skCrypt("win32kfull.sys"), &size); 
+		win32kfull_address = GetKernelModule(skCrypt("win32kfull.sys"), &size);
 	}
 	return win32kfull_address;
 }
@@ -163,35 +163,35 @@ ULONGLONG Utils::GetWin32kBase() {
 }
 
 
-HANDLE Utils::GetPidByName(PWCH imageName)
+PEPROCESS Utils::GetEprocessByName(PCHAR process_name)
 {
 
-	PSYSTEM_PROCESS_INFORMATION ProcessInfo = 0;
-	HANDLE pid = 0;
-	PUCHAR buffer = (PUCHAR)GetSystemInformation(SystemProcessInformation);
-	if (!buffer)
-	{
-		return NULL;
-	}
-	ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)buffer;
-	while (ProcessInfo->NextEntryOffset) {
-		if (ProcessInfo->ImageName.Length && wcsstr(ProcessInfo->ImageName.Buffer, imageName) != 0)
-		{
-			pid = ProcessInfo->UniqueProcessId;
-			break;
+ 
+	PEPROCESS process;
+	PEPROCESS entry;
+
+	ULONG gActiveProcessLink = *(PULONG)((PUCHAR)imports::imported.ps_get_process_id + 3) + 8;
+	process = imports::ps_initial_system_process();;
+
+	entry = process;
+	do {
+		if (imports::ps_get_process_exit_process_called(entry))
+			goto L0;
+
+		if (imports::ps_get_process_image_file_name((PEPROCESS)entry) &&
+			strcmpi_imp(imports::ps_get_process_image_file_name((PEPROCESS)entry), process_name) == 0) {
+			return (PEPROCESS)entry;
 		}
-		// 迭代到下一个节点
-		ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)(((PUCHAR)ProcessInfo) + ProcessInfo->NextEntryOffset);
-	}
-	imports::ex_free_pool_with_tag(buffer, 0);
-	return pid;
+	L0:
+		entry = (PEPROCESS)(*(PULONGLONG)((PUCHAR)entry + gActiveProcessLink) - gActiveProcessLink);
+	} while (entry != process);
+
+	return 0;
 }
 
-bool  Utils::pattern_check(const char* data, const char* pattern, const char* mask)
-{
-	size_t len = strlen(mask);
-
-	for (size_t i = 0; i < len; i++)
+bool  Utils::pattern_check(const char* data, const char* pattern, const char* mask,size_t masklen)
+{ 
+	for (size_t i = 0; i < masklen; i++)
 	{
 		if (data[i] == pattern[i] || mask[i] == '?')
 			continue;
@@ -202,19 +202,19 @@ bool  Utils::pattern_check(const char* data, const char* pattern, const char* ma
 	return true;
 }
 
-unsigned long long  Utils::find_pattern(unsigned long long addr, unsigned long size, const char* pattern, const char* mask)
+unsigned long long  Utils::find_pattern(unsigned long long addr, unsigned long size, const char* pattern, const char* mask, size_t masklen)
 {
-	size -= (unsigned long)strlen(mask);
+	size -= masklen;
 
 	for (unsigned long i = 0; i < size; i++)
 	{
-		if (pattern_check((const char*)addr + i, pattern, mask))
+		if (pattern_check((const char*)addr + i, pattern, mask, masklen))
 			return addr + i;
 	}
 
 	return 0;
 }
-unsigned long long  Utils::find_pattern_image(unsigned long long addr, const char* pattern, const char* mask,  const char* name = ".text")
+unsigned long long  Utils::find_pattern_image(unsigned long long addr, const char* pattern, const char* mask, const char* name = ".text")
 {
 	PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)addr;
 	if (dos->e_magic != IMAGE_DOS_SIGNATURE)
@@ -225,23 +225,28 @@ unsigned long long  Utils::find_pattern_image(unsigned long long addr, const cha
 		return 0;
 
 	PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(nt);
-
+	size_t masklen = crt::strlen(mask);
 	for (unsigned short i = 0; i < nt->FileHeader.NumberOfSections; i++)
 	{
 		PIMAGE_SECTION_HEADER p = &section[i];
 
 		if (Utils::kstrstr((const char*)p->Name, name))
 		{
-			unsigned long long res = find_pattern(addr + p->VirtualAddress, p->Misc.VirtualSize, pattern, mask);
+			unsigned long long res = find_pattern(addr + p->VirtualAddress, p->Misc.VirtualSize, pattern, mask, masklen);
 			if (res) return res;
 		}
- 
+
 	}
 
 	return 0;
 }
 VOID Utils::InitApis() {
-	imports::imported.rtl_avl_remove_node= GetNtFuncExportName(skCrypt("RtlAvlRemoveNode"));
+
+	imports::imported.ps_initial_system_process = GetNtFuncExportName(skCrypt("PsInitialSystemProcess"));
+
+	imports::imported.ps_get_process_exit_process_called = GetNtFuncExportName(skCrypt("PsGetProcessExitProcessCalled"));
+
+	imports::imported.rtl_avl_remove_node = GetNtFuncExportName(skCrypt("RtlAvlRemoveNode"));
 	imports::imported.ex_release_resource_lite = GetNtFuncExportName(skCrypt("ExReleaseResourceLite"));
 	imports::imported.ex_acquire_resource_exclusive_lite = GetNtFuncExportName(skCrypt("ExAcquireResourceExclusiveLite"));
 	imports::imported.rtl_random_ex = GetNtFuncExportName(skCrypt("RtlRandomEx"));
@@ -546,12 +551,35 @@ BOOLEAN Utils::safe_copy(PVOID dst, PVOID src, size_t size)
 	return FALSE;
 }
 
-BOOLEAN Utils::self_safe_copy(PEPROCESS self, PVOID dst, PVOID src, size_t size)
+BOOLEAN Utils::self_safe_copy(PEPROCESS self, PVOID addr,  size_t size)
 {
 	SIZE_T bytes = 0;
-	if (imports::mm_copy_virtual_memory(self, src, self, dst, size, KernelMode, &bytes) == STATUS_SUCCESS && bytes == size)
+	if (imports::mm_copy_virtual_memory(self, addr, self, addr, size, KernelMode, &bytes) == STATUS_SUCCESS && bytes == size)
 	{
 		return TRUE;
 	}
 	return FALSE;
+}
+
+PEPROCESS Utils::lookup_process_by_id(HANDLE pid)
+{
+	PEPROCESS process;
+	PEPROCESS entry;
+
+	ULONG gActiveProcessLink = *(PULONG)((PUCHAR)imports::imported.ps_get_process_id + 3) + 8;
+	process = imports::ps_initial_system_process();;
+
+	entry = process;
+	do {
+		if (imports::ps_get_process_exit_process_called(entry))
+			goto L0;
+	 
+		if (imports::ps_get_process_id(entry) == pid) {
+			return  entry;
+		}
+	L0:
+		entry = (PEPROCESS)(*(PULONGLONG)((PUCHAR)entry + gActiveProcessLink) - gActiveProcessLink);
+	} while (entry != process);
+
+	return 0;
 }

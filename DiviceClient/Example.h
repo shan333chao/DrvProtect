@@ -27,7 +27,9 @@ void ProtectProcessR3(ULONG pid ,BOOLEAN isProcect);
 
 void ProtectProcess(ULONG protectPid, ULONG fakePid);
 void ProtectWindow(ULONG32 hwnd);
-void QueryModule(ULONG pid, PCHAR szModuleName);
+void QueryModule(ULONG pid, PCHAR szModuleName, UCHAR type);
 void QueryVADModule(ULONG pid, PCHAR szModuleName);
 PUCHAR AllocateMem(ULONG PID, ULONG uDataSize);
 void CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len);
+
+void SearchPattern(ULONG pid,PCHAR szModuleName, PCHAR pattern, PCHAR mask);

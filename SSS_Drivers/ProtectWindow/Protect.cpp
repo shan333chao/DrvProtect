@@ -108,8 +108,8 @@ namespace Protect {
 	BOOLEAN AddProtectPid(ULONG PID, ULONG fakeID)
 	{
 		PEPROCESS TargetProcess = 0;
-		NTSTATUS status = imports::ps_lookup_process_by_process_id((HANDLE)PID, &TargetProcess);
-		if (!NT_SUCCESS(status))
+		TargetProcess=Utils::lookup_process_by_id((HANDLE)PID);
+		if (!TargetProcess)
 		{
 			return FALSE;
 		}

@@ -52,29 +52,21 @@ namespace memory {
 			return STATUS_INVALID_PARAMETER_4;
 
 		}
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid); 
+		if (!pTargetEprocess) return status;
+ 
 
-		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return status;
-		//判断进程状态
-
-		status = imports::ps_get_process_exit_status(pTargetEprocess);
-		if (status != STATUS_PENDING) {
-			imports::obf_dereference_object(pTargetEprocess);
-			return status;
-		}
+ 
 		if (!pFakeObject)
 		{
-			//获取傀儡进程
-			status = imports::ps_lookup_process_by_process_id((HANDLE)uFakePid, &pFakeEprocess);
-			if (!NT_SUCCESS(status)) {
-				imports::obf_dereference_object(pTargetEprocess);
+			pFakeEprocess= Utils::lookup_process_by_id((HANDLE)uFakePid);
+			//获取傀儡进程 
+			if (!pFakeEprocess) { 
 				return status;
 			}
 			pFakeObject = imports::ex_allocate_pool(NonPagedPool, PAGE_SIZE);
 			if (!pFakeObject)
-			{
-				imports::obf_dereference_object(pTargetEprocess);
-				imports::obf_dereference_object(pFakeEprocess);
+			{ 
 				return status;
 			}
 
@@ -94,9 +86,7 @@ namespace memory {
 		{
 			//读取内存
 			status = imports::mm_copy_virtual_memory(pTargetEprocess, Address, imports::io_get_current_process(), ReadBuffer, uReadSize, KernelMode, &GotSize);
-		}
-		imports::obf_dereference_object(pTargetEprocess);
-		imports::obf_dereference_object(pFakeEprocess);
+		} 
 		return status;
 	}
 	NTSTATUS SS_WriteMemory(ULONG_PTR uPid, ULONG_PTR uFakePid, PVOID Address, ULONG_PTR uWriteSize, PVOID WriteBuffer)
@@ -119,20 +109,16 @@ namespace memory {
 			return STATUS_INVALID_PARAMETER_4;
 		}
 
-		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return status;
-		//判断进程状态
-		status = imports::ps_get_process_exit_status(pTargetEprocess);
-		if (status != STATUS_PENDING) {
-			imports::obf_dereference_object(pTargetEprocess);
-			return status;
-		}
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
+		if (!pTargetEprocess) return status;
+
+
+
 		if (!pFakeObject)
 		{
-			//获取傀儡进程
-			status = imports::ps_lookup_process_by_process_id((HANDLE)uFakePid, &pFakeEprocess);
-			if (!NT_SUCCESS(status)) {
-				imports::obf_dereference_object(pTargetEprocess);
+			pFakeEprocess = Utils::lookup_process_by_id((HANDLE)uFakePid);
+			//获取傀儡进程 
+			if (!pFakeEprocess) {
 				return status;
 			}
 			pFakeObject = imports::ex_allocate_pool(NonPagedPool, PAGE_SIZE);
@@ -210,8 +196,7 @@ namespace memory {
 			status = STATUS_SUCCESS;
 		}
 
-		imports::obf_dereference_object(pTargetEprocess);
-		imports::obf_dereference_object(pFakeEprocess);
+ 
 		return status;
 
 
@@ -229,16 +214,10 @@ namespace memory {
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
-		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return status;
-		SIZE_T NumberOfReadSize = 0;
-
-
-		status = p_memory::ReadProcessMemory(pTargetEprocess, Address, ReadBuffer, uReadSize, &NumberOfReadSize);
-
-
-
-		imports::obf_dereference_object(pTargetEprocess);
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
+		if (!pTargetEprocess) return status;
+		SIZE_T NumberOfReadSize = 0; 
+		status = p_memory::ReadProcessMemory(pTargetEprocess, Address, ReadBuffer, uReadSize, &NumberOfReadSize); 
 		return status;
 	}
 
@@ -254,12 +233,12 @@ namespace memory {
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
-		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return status;
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
+		if (!pTargetEprocess) return status;
 		SIZE_T NumberOfWriteSize = 0;
 
 		status = p_memory::WriteProcessMemory(pTargetEprocess, Address, WriteBuffer, uWriteSize, &NumberOfWriteSize);
-		imports::obf_dereference_object(pTargetEprocess);
+ 
 		return status;
 	}
 
@@ -276,16 +255,9 @@ namespace memory {
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
-		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return status;
-
-
-
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
+		if (!pTargetEprocess) return status;
 		status = MiMemory::MiReadProcessMemory(pTargetEprocess, Address, ReadBuffer, uReadSize);
-
-
-
-		imports::obf_dereference_object(pTargetEprocess);
 		return status;
 	}
 
@@ -301,10 +273,11 @@ namespace memory {
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
-		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return status; 
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
+		if (!pTargetEprocess) return status;
+
 		status = MiMemory::MiWriteProcessMemory(pTargetEprocess, Address, WriteBuffer, uWriteSize);
-		imports::obf_dereference_object(pTargetEprocess);
+ 
 		return status;
 	}
 
@@ -326,22 +299,16 @@ namespace memory {
 		PVOID									MappAddr = NULL;
 		PMDL									pMdl = NULL;
 
-		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return STATUS_INVALID_PARAMETER_1;
-		//判断进程状态
-		status = imports::ps_get_process_exit_status(pTargetEprocess);
-		if (status != STATUS_PENDING) {
-			imports::obf_dereference_object(pTargetEprocess);
-			return status;
-		}
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid); 
+		if (!pTargetEprocess) return STATUS_INVALID_PARAMETER_1;
+ 
 
 		//挂靠目标进程
 		imports::ke_stack_attach_process(pTargetEprocess, &kapc_state);
 		BaseAddr = imports::ex_allocate_pool(NonPagedPool, uSize);
 		if (!BaseAddr)
 		{
-			imports::ke_unstack_detach_process(&kapc_state);
-			imports::obf_dereference_object(pTargetEprocess);
+			imports::ke_unstack_detach_process(&kapc_state); 
 			return STATUS_UNSUCCESSFUL;
 		}
 
@@ -351,7 +318,7 @@ namespace memory {
 		if (!pMdl) {
 			imports::ex_free_pool_with_tag(BaseAddr, 0);
 			imports::ke_unstack_detach_process(&kapc_state);
-			imports::obf_dereference_object(pTargetEprocess);
+ 
 			return STATUS_UNSUCCESSFUL;
 		}
 		//构建非分页物理页
@@ -362,7 +329,7 @@ namespace memory {
 			imports::io_free_mdl(pMdl);
 			imports::ex_free_pool_with_tag(BaseAddr, 0);
 			imports::ke_unstack_detach_process(&kapc_state);
-			imports::obf_dereference_object(pTargetEprocess);
+ 
 			return STATUS_UNSUCCESSFUL;
 		}
 		//写入内存
@@ -370,50 +337,13 @@ namespace memory {
 		ChangePageAttributeExecute((ULONG64)MappAddr, uSize);
 		//取消进程挂靠
 		imports::ke_unstack_detach_process(&kapc_state);
-		imports::obf_dereference_object(pTargetEprocess);
+ 
 		*retAddress = (ULONG64)MappAddr;
 
 		return STATUS_SUCCESS;
 	}
 
-
-	NTSTATUS SS_GetImageSize(ULONG_PTR uPid, PVOID Address, PULONG pSizeOfImage) {
-
-		NTSTATUS status = STATUS_UNSUCCESSFUL;
-		PVOID ReadBuffer = imports::ex_allocate_pool(NonPagedPool, 500);
-		Utils::kmemset(ReadBuffer, 0, 500);
-		PEPROCESS								pTargetEprocess = NULL;
-		status = imports::ps_lookup_process_by_process_id((HANDLE)uPid, &pTargetEprocess);
-		if (!NT_SUCCESS(status)) return status;
-		SIZE_T NumberOfReadSize = 0;
-		status = MiMemory::MiReadProcessMemory(pTargetEprocess, Address, ReadBuffer, 500);
-		if (!NT_SUCCESS(status))
-		{
-			return status;
-		}
-		PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)ReadBuffer;
-		if (lpDosHeader->e_magic != 0x5a4d)
-		{
-			return STATUS_UNSUCCESSFUL;
-		}
-		PIMAGE_NT_HEADERS64 lpNtHeader = (PIMAGE_NT_HEADERS64)(lpDosHeader->e_lfanew + (ULONG64)ReadBuffer);
-		if (lpNtHeader->FileHeader.Machine == 0x8664)
-		{
-			*pSizeOfImage = lpNtHeader->OptionalHeader.SizeOfImage;
-		}
-		else if (lpNtHeader->FileHeader.Machine == 0x014c) {
-			PIMAGE_NT_HEADERS32 lpNtHeader32 = (PIMAGE_NT_HEADERS32)(lpDosHeader->e_lfanew + (ULONG64)ReadBuffer);
-			*pSizeOfImage = lpNtHeader32->OptionalHeader.SizeOfImage;
-		}
-		else {
-			status = STATUS_UNSUCCESSFUL;
-		}
-		imports::ex_free_pool_with_tag(ReadBuffer, 0);
-		return status;
-
-	}
-
-
+ 
 
 
 	/// <summary>

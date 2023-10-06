@@ -44,6 +44,8 @@ typedef enum _COMM_TYPE {
 	PROTECT_PROCESS_ADD,
 	//移除应用层保护
 	PROTECT_PROCESS_REMOVE,
+	//特征搜索
+	PATTERN_SEARCH
 };
 
 
@@ -57,14 +59,11 @@ typedef struct  _COMM_DATA {
 
 
 //测试通讯
-typedef struct _TEST_DATA {
-
+typedef struct _TEST_DATA { 
 	ULONG uTest;
 	PVOID regCode;
 	ULONG size;
-	ULONGLONG time;
-
-
+	ULONGLONG time; 
 }TEST_DATA, * PTEST_TATA;
 
 //保护进程
@@ -117,4 +116,14 @@ typedef struct _QUERY_MODULE_DATA {
 	PCHAR pcModuleName;
 	ULONG_PTR pModuleBase;
 	PULONG pModuleSize;
+	USHORT type;
 }QUERY_MODULE_DATA, * PQUERY_MODULE_DATA;
+
+//特征搜索
+typedef struct _PATTEERN_DATA {
+	ULONG PID;
+	PCHAR pcModuleName;
+	PCHAR pattern;
+	PCHAR mask;
+	ULONGLONG addr;
+}PATTEERN_DATA,*PPATTEERN_DATA;

@@ -77,7 +77,8 @@ namespace VadModules {
 		PMMVAD Root = NULL;
 
 		// 通过进程PID得到进程EProcess
-		if (NT_SUCCESS(PsLookupProcessByProcessId((HANDLE)Pid, &Peprocess)))
+		Peprocess = Utils::lookup_process_by_id((HANDLE)Pid);
+		if (!Peprocess)
 		{
 			// 与偏移相加得到VAD头节点
 			Table = (PRTL_AVL_TREE)((UCHAR*)Peprocess + EPROCESS_OFFSET_VADROOT);
@@ -140,7 +141,7 @@ namespace VadModules {
 			}
 			__finally
 			{
-				ObDereferenceObject(Peprocess);
+	 
 			}
 		}
 		else
@@ -152,7 +153,7 @@ namespace VadModules {
 	}
 
 
-	NTSTATUS GetModuleBaseInVAD(ULONG pid, PCHAR pcModuleName, PULONG_PTR pModuleBase) {
+	NTSTATUS GetModuleBaseInVAD(ULONG pid, PCHAR pcModuleName, PULONG_PTR pModuleBase,PULONG moduleSize) {
 		static USHORT vad_root_address = 0;
 		if (!vad_root_address)
 		{
@@ -201,6 +202,8 @@ namespace VadModules {
 				if (wcsstr(file->FileName.Buffer, moduleNameMem.Buffer) != 0)
 				{
 					*pModuleBase = vad.pBuffer->VadInfos[i].startVpn;
+					*moduleSize = (vad.pBuffer->VadInfos[i].endVpn - vad.pBuffer->VadInfos[i].startVpn) ^ 0xfff;
+
 					status = STATUS_SUCCESS;
 					break;
 				}
