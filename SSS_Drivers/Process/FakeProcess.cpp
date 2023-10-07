@@ -41,21 +41,14 @@ namespace fuck_process {
 
 
 			//要伪装的进程
-			status = imports::ps_lookup_process_by_process_id((HANDLE)pid, &MaskEprocess);
-			if (!NT_SUCCESS(status)) return status;
-			status = imports::ps_get_process_exit_status(MaskEprocess);
-			if (status != STATUS_PENDING) {
-				imports::obf_dereference_object(MaskEprocess);
-				return status;
-			}
+			MaskEprocess = Utils::lookup_process_by_id((HANDLE)pid);
+			if (!MaskEprocess) return status;
+ 
 
 			//被伪装的目标进程
-			status = imports::ps_lookup_process_by_process_id((HANDLE)fakePid, &SourceEprocess);
-			if (!NT_SUCCESS(status)) return status;
-			status = imports::ps_get_process_exit_status(SourceEprocess);
-			if (status != STATUS_PENDING) {
-				break;
-			}
+			SourceEprocess = Utils::lookup_process_by_id((HANDLE)fakePid);  
+			if (!SourceEprocess) return status;
+ 
 			//PPEB32 isMask32Bit = PsGetProcessWow64Process(MaskEprocess);
 			//PPEB32 isSource32Bit = PsGetProcessWow64Process(SourceEprocess);
 
@@ -593,14 +586,7 @@ namespace fuck_process {
 				imports::ex_free_pool_with_tag(SourceEnvironment.Buffer, 0);
 			}
 		}
-		if (MaskEprocess)
-		{
-			imports::obf_dereference_object(MaskEprocess);
-		}
-		if (SourceEprocess)
-		{
-			imports::obf_dereference_object(SourceEprocess);
-		}
+ 
 
 		return STATUS_SUCCESS;
 
@@ -608,15 +594,12 @@ namespace fuck_process {
 
 	NTSTATUS RemoveProcessProtect(ULONG_PTR pid, BOOLEAN isProtect)
 	{
+		NTSTATUS status = STATUS_UNSUCCESSFUL;
 		PEPROCESS TargetEprocess = NULL;
 		//要解除保护的进程
-		NTSTATUS status = imports::ps_lookup_process_by_process_id((HANDLE)pid, &TargetEprocess);
-		if (!NT_SUCCESS(status)) return status;
-		status = imports::ps_get_process_exit_status(TargetEprocess);
-		if (status != STATUS_PENDING) {
-			imports::obf_dereference_object(TargetEprocess);
-			return status;
-		}
+		TargetEprocess = Utils::lookup_process_by_id((HANDLE)pid);
+		if (!TargetEprocess) return status;
+ 
 		ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess"), 2);
 		if (!isProtectOffset)
 		{
@@ -630,7 +613,7 @@ namespace fuck_process {
 		{
 			*(PULONG_PTR)((PUCHAR)TargetEprocess + isProtectOffset) = 0;
 		}
-		imports::obf_dereference_object(TargetEprocess);
+ 
 		status = STATUS_SUCCESS;
 
 		return status;

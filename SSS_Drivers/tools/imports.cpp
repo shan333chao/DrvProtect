@@ -290,10 +290,7 @@ namespace imports {
 		return reinterpret_cast<NTSTATUS(*)(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG)> (imported.zw_allocate_virtual_memory)(ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protect);
 	}
 
-	VentroAPI NTSTATUS ps_lookup_process_by_process_id(HANDLE ProcessId, PEPROCESS* Process)
-	{
-		return reinterpret_cast<NTSTATUS(*)(HANDLE, PEPROCESS*)> (imported.ps_lookup_process_by_process_id)(ProcessId, Process);
-	}
+ 
 
 	VentroAPI PPEB ps_get_process_peb(PEPROCESS Process)
 	{

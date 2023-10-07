@@ -82,8 +82,7 @@ VOID Utils::SetKernelBase(ULONG_PTR ntoskrnl_base) {
 PVOID Utils::GetKernelBase() {
 	return KernelBase;
 }
-
-
+ 
 uintptr_t Utils::GetNtFuncExportName(_In_ PCHAR FuncName) {
 	return (uintptr_t)GetFuncExportName(GetKernelBase(), FuncName);
 }
@@ -291,8 +290,7 @@ VOID Utils::InitApis() {
 	imports::imported.rtl_ansi_string_to_unicode_string = GetNtFuncExportName(skCrypt("RtlAnsiStringToUnicodeString"));
 	imports::imported.mm_copy_virtual_memory = GetNtFuncExportName(skCrypt("MmCopyVirtualMemory"));
 	imports::imported.io_get_current_process = GetNtFuncExportName(skCrypt("IoGetCurrentProcess"));
-	imports::imported.ps_lookup_process_by_process_id = GetNtFuncExportName(skCrypt("PsLookupProcessByProcessId"));
-	imports::imported.ps_get_process_peb = GetNtFuncExportName(skCrypt("PsGetProcessPeb"));
+ 	imports::imported.ps_get_process_peb = GetNtFuncExportName(skCrypt("PsGetProcessPeb"));
 	imports::imported.ob_reference_object_safe = GetNtFuncExportName(skCrypt("ObReferenceObjectSafe"));
 	imports::imported.zw_allocate_virtual_memory = GetNtFuncExportName(skCrypt("ZwAllocateVirtualMemory"));
 	imports::imported.rtl_compare_unicode_string = GetNtFuncExportName(skCrypt("RtlCompareUnicodeString"));

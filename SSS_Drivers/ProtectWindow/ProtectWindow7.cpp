@@ -670,8 +670,6 @@ namespace ProtectWindow7 {
 
 	NTSTATUS AntiSnapWindow(ULONG32 hwnd)
 	{
-
-
 		KAPC_STATE apcState = { 0 };
 		PEPROCESS pEprocess = 0;
 		HANDLE tmpHwnd = (HANDLE)hwnd;
@@ -682,10 +680,10 @@ namespace ProtectWindow7 {
 		{
 			return STATUS_UNSUCCESSFUL;
 		}
-		status = imports::ps_lookup_process_by_process_id(pid, &pEprocess);
-		if (!NT_SUCCESS(status))
+		pEprocess = Utils::lookup_process_by_id(pid);
+		if (!pEprocess)
 		{
-			return STATUS_UNSUCCESSFUL;
+			return NULL;
 		}
 		imports::ke_stack_attach_process(pEprocess, &apcState);
 		g_NtUserSetParent7(tmpHwnd, 0);
@@ -727,9 +725,12 @@ namespace ProtectWindow7 {
 		POBJECT_NAME_INFORMATION ObjectName = (POBJECT_NAME_INFORMATION)imports::ex_allocate_pool(NonPagedPool, 0x300);
 		PEPROCESS pEprocess;
 		PVOID pFileHandle;
-
-		NTSTATUS status = imports::ps_lookup_process_by_process_id(UlongToHandle(pid), &pEprocess);
-
+		pEprocess = Utils::lookup_process_by_id(UlongToHandle(pid));
+		if (!pEprocess)
+		{
+			return NULL;
+		}
+ 
 		if (!NT_SUCCESS(imports::ps_reference_process_file_pointer(pEprocess, &pFileHandle)))
 		{
 			return NULL;
@@ -740,7 +741,7 @@ namespace ProtectWindow7 {
 			return NULL;
 		}
 		imports::obf_dereference_object(pFileHandle);
-		imports::obf_dereference_object(pEprocess);//释放引用次数 
+ 
 		return ObjectName;
 	}
 

@@ -84,7 +84,7 @@ struct _m_imported
 	uintptr_t rtl_ansi_string_to_unicode_string;
 	uintptr_t mm_copy_virtual_memory;
 	uintptr_t io_get_current_process;
-	uintptr_t ps_lookup_process_by_process_id;
+ 
 	uintptr_t ps_get_process_peb;
 	uintptr_t ob_reference_object_safe;
 	uintptr_t zw_allocate_virtual_memory;
@@ -259,7 +259,7 @@ namespace imports {
 
 	VentroAPI NTSTATUS zw_allocate_virtual_memory(HANDLE ProcessHandle, PVOID* BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protect);
 
-	VentroAPI NTSTATUS ps_lookup_process_by_process_id(HANDLE ProcessId, PEPROCESS* Process);
+ 
 
 	VentroAPI PPEB ps_get_process_peb(PEPROCESS Process);
 

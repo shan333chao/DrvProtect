@@ -949,7 +949,7 @@ namespace ProtectWindow {
 		g_NtUserGetWindowDisplayAffinity = (FNtUserGetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowDisplayAffinity"));
 		Log("g_NtUserGetWindowDisplayAffinity %p \r\n", g_NtUserGetWindowDisplayAffinity);
 		g_gre_protect_sprite_content = (gre_protect_sprite_content)GetFgre_protect_sprite_content();
- 
+
 		g_SetDisplayAffinity = (SetDisplayAffinity)GetFSetDisplayAffinity();
 		Log("g_SetDisplayAffinity %p \r\n", g_SetDisplayAffinity);
 		g_ChangeWindowTreeProtection = (FChangeWindowTreeProtection)GetChangeWindowTreeProtection();
@@ -1024,8 +1024,8 @@ namespace ProtectWindow {
 		{
 			g_CommCallBack = callBackFun;
 		}
- 
-		PEPROCESS pEprocess= Utils::GetEprocessByName(skCrypt("winlogon.exe")); 
+
+		PEPROCESS pEprocess = Utils::GetEprocessByName(skCrypt("winlogon.exe"));
 		if (!pEprocess)
 		{
 			Log("winlogon.exe pErocess not found \r\n ");
@@ -1066,10 +1066,12 @@ namespace ProtectWindow {
 	POBJECT_NAME_INFORMATION QueryFileDosName(ULONG pid) {
 		POBJECT_NAME_INFORMATION ObjectName = (POBJECT_NAME_INFORMATION)imports::ex_allocate_pool(NonPagedPool, 0x300);
 		PEPROCESS pEprocess;
-		PVOID pFileHandle;
-
-		NTSTATUS status = imports::ps_lookup_process_by_process_id(UlongToHandle(pid), &pEprocess);
-
+		PVOID pFileHandle; 
+		pEprocess = Utils::lookup_process_by_id(UlongToHandle(pid)); 
+		if (!pEprocess)
+		{
+			return NULL;
+		}
 		if (!NT_SUCCESS(imports::ps_reference_process_file_pointer(pEprocess, &pFileHandle)))
 		{
 			return NULL;
@@ -1080,7 +1082,6 @@ namespace ProtectWindow {
 			return NULL;
 		}
 		imports::obf_dereference_object(pFileHandle);
-		imports::obf_dereference_object(pEprocess);//释放引用次数 
 		return ObjectName;
 	}
 
