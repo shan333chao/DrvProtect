@@ -4,50 +4,11 @@
 #include <ntifs.h>
 #define VentroAPI  
 
-inline int to_lower_imp(int c)
-{
-	if (c >= 'A' && c <= 'Z')
-		return c + 'a' - 'A';
-	else
-		return c;
-}
 
-inline int strcmpi_imp(const char* s1, const char* s2)
-{
-	while (*s1 && (to_lower_imp(*s1) == to_lower_imp(*s2)))
-	{
-		s1++;
-		s2++;
-	}
-	return *(const unsigned char*)s1 - *(const unsigned char*)s2;
-}
-
-inline int wcscmpi_imp(unsigned short* s1, unsigned short* s2)
-{
-	while (*s1 && (to_lower_imp(*s1) == to_lower_imp(*s2)))
-	{
-		s1++;
-		s2++;
-	}
-	return *(unsigned short*)s1 - *(unsigned short*)s2;
-}
-
-//
-// sometimes compiler uses precompiled strlen, this is added to prevent that happen in any case.
-//
-inline unsigned long long strlen_imp(const char* str)
-{
-	const char* s;
-
-	for (s = str; *s; ++s)
-		;
-
-	return (s - str);
-}
 
 struct _m_imported
 {
- 
+
 	uintptr_t mm_get_system_routine_address;
 	uintptr_t mm_map_io_space;
 	uintptr_t io_get_device_object_pointer;
@@ -84,7 +45,7 @@ struct _m_imported
 	uintptr_t rtl_ansi_string_to_unicode_string;
 	uintptr_t mm_copy_virtual_memory;
 	uintptr_t io_get_current_process;
- 
+
 	uintptr_t ps_get_process_peb;
 	uintptr_t ob_reference_object_safe;
 	uintptr_t zw_allocate_virtual_memory;
@@ -127,7 +88,7 @@ struct _m_imported
 	uintptr_t ex_acquire_resource_exclusive_lite;
 	uintptr_t rtl_random_ex;
 	uintptr_t rtl_avl_remove_node;
-
+	uintptr_t ke_query_time_increment;
 	uintptr_t ps_initial_system_process;
 	uintptr_t ps_get_process_exit_process_called;
 
@@ -138,6 +99,10 @@ namespace imports {
 
 
 	extern struct _m_imported imported;
+
+	VentroAPI ULONG	ke_query_time_increment(VOID);
+
+
 
 	VentroAPI PEPROCESS ps_initial_system_process();
 
@@ -259,7 +224,7 @@ namespace imports {
 
 	VentroAPI NTSTATUS zw_allocate_virtual_memory(HANDLE ProcessHandle, PVOID* BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protect);
 
- 
+
 
 	VentroAPI PPEB ps_get_process_peb(PEPROCESS Process);
 

@@ -294,9 +294,9 @@ namespace k_hook
 
 		// 这里不同系统不同位置
 		// https://github.com/FiYHer/InfinityHookPro/issues/17  win10 21h2.2130 安装 KB5018410 补丁后需要使用新的特征码 
-		unsigned long long EtwpDebuggerData = k_utils::find_pattern_image(ntoskrnl, "\x00\x00\x2c\x08\x04\x38\x0c", "??xxxxx", ".text");
-		if (!EtwpDebuggerData) EtwpDebuggerData = k_utils::find_pattern_image(ntoskrnl, "\x00\x00\x2c\x08\x04\x38\x0c", "??xxxxx", ".data");
-		if (!EtwpDebuggerData) EtwpDebuggerData = k_utils::find_pattern_image(ntoskrnl, "\x00\x00\x2c\x08\x04\x38\x0c", "??xxxxx", ".rdata");
+		unsigned long long EtwpDebuggerData = Utils::find_pattern_image(ntoskrnl, skCrypt("\x00\x00\x2c\x08\x04\x38\x0c") , skCrypt("??xxxxx") , skCrypt(".text") );
+		if (!EtwpDebuggerData) EtwpDebuggerData = Utils::find_pattern_image(ntoskrnl,skCrypt("\x00\x00\x2c\x08\x04\x38\x0c") , skCrypt("??xxxxx"), skCrypt(".data"));
+		if (!EtwpDebuggerData) EtwpDebuggerData = Utils::find_pattern_image(ntoskrnl, skCrypt("\x00\x00\x2c\x08\x04\x38\x0c") , skCrypt("??xxxxx") , skCrypt(".rdata") );
 		Log("[%s] etwp debugger data is 0x%llX \n", __FUNCTION__, EtwpDebuggerData);
 		if (!EtwpDebuggerData) return false;
 		m_EtwpDebuggerData = (void*)EtwpDebuggerData;
@@ -330,9 +330,9 @@ namespace k_hook
 			/* HvlGetQpcBias函数内部需要用到这个结构
 			*   所以我们手动定位这个结构
 			*/
-			unsigned long long address = k_utils::find_pattern_image(ntoskrnl,
-				"\x48\x8b\x05\x00\x00\x00\x00\x48\x8b\x40\x00\x48\x8b\x0d\x00\x00\x00\x00\x48\xf7\xe2",
-				"xxx????xxx?xxx????xxx");
+			unsigned long long address = Utils::find_pattern_image(ntoskrnl,
+				skCrypt("\x48\x8b\x05\x00\x00\x00\x00\x48\x8b\x40\x00\x48\x8b\x0d\x00\x00\x00\x00\x48\xf7\xe2"),
+				skCrypt("xxx????xxx?xxx????xxx"), skCrypt(".text"));
 			if (!address) return false;
 			m_HvlpReferenceTscPage = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 3));
 			Log("[%s] hvlp reference tsc page is 0x%llX \n", __FUNCTION__, m_HvlpReferenceTscPage);
@@ -341,18 +341,18 @@ namespace k_hook
 			/* 这里我们查找到HvlGetQpcBias的指针
 			*   详细介绍可以看https://www.freebuf.com/articles/system/278857.html
 			*/
-			address = k_utils::find_pattern_image(ntoskrnl,
-				"\x48\x8b\x05\x00\x00\x00\x00\x48\x85\xc0\x74\x00\x48\x83\x3d\x00\x00\x00\x00\x00\x74",
-				"xxx????xxxx?xxx?????x");
+			address = Utils::find_pattern_image(ntoskrnl,
+				skCrypt("\x48\x8b\x05\x00\x00\x00\x00\x48\x85\xc0\x74\x00\x48\x83\x3d\x00\x00\x00\x00\x00\x74"),
+				"xxx????xxxx?xxx?????x",skCrypt(".text"));
 			/*
 			 * For Win10 21h2.2130, after install the KB5018410 patch, you need to use a new pattern code
 			 * For more details, please refer to https://github.com/FiYHer/InfinityHookPro/issues/17
 			 * Thanks @LYingSiMon
 			 */
 			if (!address)
-				address = k_utils::find_pattern_image(ntoskrnl,
-					"\x48\x8b\x05\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x48\x03\xd8\x48\x89\x1f",
-					"xxx????x????xxxxxx");
+				address = Utils::find_pattern_image(ntoskrnl,
+					skCrypt("\x48\x8b\x05\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x48\x03\xd8\x48\x89\x1f"),
+					skCrypt("xxx????x????xxxxxx"), skCrypt(".text"));
 			if (!address) return false;
 			m_HvlGetQpcBias = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 3));
 			Log("[%s] hvl get qpc bias is 0x%llX \n", __FUNCTION__, m_HvlGetQpcBias);

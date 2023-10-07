@@ -32,7 +32,7 @@ namespace ssdt_serv {
 				char sectionName[IMAGE_SIZEOF_SHORT_NAME + 1];
 				RtlCopyMemory(sectionName, section->Name, IMAGE_SIZEOF_SHORT_NAME);
 				sectionName[IMAGE_SIZEOF_SHORT_NAME] = '\0';
-				if (crt::strcmp(sectionName, skCrypt(".text")) == 0)
+				if (strcmpi_imp(sectionName, skCrypt(".text")) == 0)
 				{
 					textSection = section;
 					break;
@@ -163,7 +163,7 @@ namespace ssdt_serv {
 			{
 				PVOID _FunctionAddress = (PVOID)(lpdwFunAddr[lpword[i]] + (ULONG64)Win32KBase);
 				char* FunctionName = Utils::kstrstr(pFunName, skCrypt("Nt"));
-				if (crt::strcmp(FunctionName, inFuncName) == 0)
+				if (strcmpi_imp(FunctionName, inFuncName) == 0)
 				{
 					ULONG lFunctionIndex = *(ULONG*)((PUCHAR)_FunctionAddress + 1);
 					ULONG64 FunctionAddress = GetShadowSSDTFuncCurAddr(lFunctionIndex);

@@ -74,7 +74,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
-    <DriverType>WDM</DriverType>
+    <DriverType>KMDF</DriverType>
     <ALLOW_DATE_TIME>1</ALLOW_DATE_TIME>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
@@ -174,7 +174,6 @@
     <ClCompile Include="SSDT\ssdt.cpp" />
     <ClCompile Include="Thread\SThread.cpp" />
     <ClCompile Include="tools\aes.c" />
-    <ClCompile Include="tools\crt.cpp" />
     <ClCompile Include="tools\imports.cpp" />
     <ClCompile Include="tools\Utils.cpp" />
   </ItemGroup>
@@ -204,7 +203,6 @@
     <ClInclude Include="SSDT\ssdt.h" />
     <ClInclude Include="Thread\SThread.h" />
     <ClInclude Include="tools\aes.h" />
-    <ClInclude Include="tools\crt.h" />
     <ClInclude Include="tools\imports.h" />
     <ClInclude Include="tools\Log.h" />
     <ClInclude Include="tools\Utils.h" />

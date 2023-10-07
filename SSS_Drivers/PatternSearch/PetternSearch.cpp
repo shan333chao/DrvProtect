@@ -277,7 +277,7 @@ namespace patternSearch {
 		}
 
 
-		ret = (UCHAR*)ExAllocatePool(NonPagedPool, (ULONGLONG)(image_size + 16));
+		ret = (UCHAR*)imports::ex_allocate_pool(NonPagedPool, (ULONGLONG)(image_size + 16));
 
 		if (ret == 0)
 			return 0;
@@ -326,7 +326,7 @@ namespace patternSearch {
 
 		a0 -= 16;
 
-		ExFreePoolWithTag((void*)a0, 0);
+		imports::ex_free_pool_with_tag((void*)a0, 0);
 
 	}
 

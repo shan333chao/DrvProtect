@@ -1,7 +1,6 @@
 #pragma once
 #include "Utils.h"
 #include "imports.h"
-#include "crt.h"
 #include "Log.h"
 #include "xor.h"
 
@@ -29,8 +28,8 @@ PVOID Utils::GetFuncExportName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName) {
 	for (auto nIdx = 0u; nIdx < lpExportDir->NumberOfFunctions; ++nIdx) {
 		if (!lpNameArr[nIdx] || !lpOrdinals[nIdx])
 			continue;
-
-		if (crt::strcmp((PCHAR)((PUCHAR)ModuleBase + lpNameArr[nIdx]), FuncName) == 0) {
+		
+		if (strcmpi_imp((PCHAR)((PUCHAR)ModuleBase + lpNameArr[nIdx]), FuncName) == 0) {
 			Log("%s %p \r\n", FuncName, (PUCHAR)ModuleBase + lpFuncs[lpOrdinals[nIdx]]);
 			return (PVOID)((PUCHAR)ModuleBase + lpFuncs[lpOrdinals[nIdx]]);
 		}
@@ -67,7 +66,7 @@ USHORT Utils::GetServiceNoByName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName) {
 		if (!lpNameArr[nIdx] || !lpOrdinals[nIdx])
 			continue;
 
-		if (crt::strcmp((PCHAR)((PUCHAR)ModuleBase + lpNameArr[nIdx]), FuncName) == 0) {
+		if (strcmpi_imp((PCHAR)((PUCHAR)ModuleBase + lpNameArr[nIdx]), FuncName) == 0) {
 			return lpOrdinals[nIdx];
 		}
 	}
@@ -224,7 +223,7 @@ unsigned long long  Utils::find_pattern_image(unsigned long long addr, const cha
 		return 0;
 
 	PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(nt);
-	size_t masklen = crt::strlen(mask);
+	size_t masklen = strlen_imp(mask);
 	for (unsigned short i = 0; i < nt->FileHeader.NumberOfSections; i++)
 	{
 		PIMAGE_SECTION_HEADER p = &section[i];
@@ -243,6 +242,7 @@ VOID Utils::InitApis() {
 
 	imports::imported.ps_initial_system_process = GetNtFuncExportName(skCrypt("PsInitialSystemProcess"));
 
+	imports::imported.ke_query_time_increment = GetNtFuncExportName(skCrypt("KeQueryTimeIncrement"));
 	imports::imported.ps_get_process_exit_process_called = GetNtFuncExportName(skCrypt("PsGetProcessExitProcessCalled"));
 
 	imports::imported.rtl_avl_remove_node = GetNtFuncExportName(skCrypt("RtlAvlRemoveNode"));
@@ -404,16 +404,7 @@ PVOID Utils::kmemset(void* dest, UINT8 c, size_t count)
 
 	return dest;
 }
-char* Utils::kstrchr(const char* str, int character) {
-	for (; *str != '\0'; ++str) {
-		if (*str == (char)character)
-			return (char*)str;
-	}
-	if (*str == '\0') {
-		return NULL;
-	}
-	return NULL;
-}
+
 char* Utils::kstrstr(const char* haystack, const char* needle)
 {
 	if (!*needle) // Empty needle.
@@ -425,7 +416,7 @@ char* Utils::kstrstr(const char* haystack, const char* needle)
 
 	// Runs strchr() on the first section of the haystack as it has a lower
 	// algorithmic complexity for discarding the first non-matching characters.
-	haystack = Utils::kstrchr(haystack, needle_first);
+	haystack = strchr_imp(haystack, needle_first);
 	if (!haystack) // First character of needle is not in the haystack.
 		return NULL;
 
@@ -497,7 +488,7 @@ wchar_t* Utils::kwcsstr(const wchar_t* haystack, const wchar_t* needle)
 
 	const wchar_t needle_first = *needle;
 
-	haystack = wcsrchr(haystack, needle_first);
+	haystack = wcsrchr_imp(haystack, needle_first);
 	if (!haystack)
 		return NULL;
 

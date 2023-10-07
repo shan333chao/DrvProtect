@@ -277,7 +277,7 @@ namespace MiMemory {
 
 		Status = STATUS_INVALID_ADDRESS;
 
-		if (!MmIsAddressValid(Destination))
+		if (!imports::mm_is_address_valid(Destination))
 		{
 			return Status;
 		}
@@ -309,7 +309,7 @@ namespace MiMemory {
 
 		Status = STATUS_INVALID_ADDRESS;
 
-		if (!MmIsAddressValid(Source))
+		if (!imports::mm_is_address_valid(Source))
 		{
 			return Status;
 		}

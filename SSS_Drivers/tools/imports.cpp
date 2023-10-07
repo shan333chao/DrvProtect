@@ -10,6 +10,11 @@ namespace imports {
 	struct _m_imported imported = { 0 }; 
 
 
+	VentroAPI ULONG ke_query_time_increment()
+	{
+		return reinterpret_cast<ULONG(*)(VOID)> (imported.ke_query_time_increment)();
+	}
+
 	VentroAPI PEPROCESS ps_initial_system_process() {
 	
 		return reinterpret_cast<PEPROCESS> (*(PULONGLONG) imported.ps_initial_system_process);

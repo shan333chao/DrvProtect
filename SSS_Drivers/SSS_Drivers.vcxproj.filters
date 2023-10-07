@@ -58,9 +58,6 @@
     <ClCompile Include="DrvEntry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tools\crt.cpp">
-      <Filter>tools</Filter>
-    </ClCompile>
     <ClCompile Include="tools\imports.cpp">
       <Filter>tools</Filter>
     </ClCompile>
@@ -123,9 +120,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="tools\crt.h">
-      <Filter>tools</Filter>
-    </ClInclude>
     <ClInclude Include="tools\imports.h">
       <Filter>tools</Filter>
     </ClInclude>

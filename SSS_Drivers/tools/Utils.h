@@ -287,8 +287,67 @@ typedef struct _REG_VALID {
 	ULONGLONG CTIME;
 }REG_VALID, * PREG_VALID;
 
- 
+inline int to_lower_imp(int c)
+{
+	if (c >= 'A' && c <= 'Z')
+		return c + 'a' - 'A';
+	else
+		return c;
+}
 
+inline int strcmpi_imp(const char* s1, const char* s2)
+{
+	while (*s1 && (to_lower_imp(*s1) == to_lower_imp(*s2)))
+	{
+		s1++;
+		s2++;
+	}
+	return *(const unsigned char*)s1 - *(const unsigned char*)s2;
+}
+
+inline int wcscmpi_imp(unsigned short* s1, unsigned short* s2)
+{
+	while (*s1 && (to_lower_imp(*s1) == to_lower_imp(*s2)))
+	{
+		s1++;
+		s2++;
+	}
+	return *(unsigned short*)s1 - *(unsigned short*)s2;
+}
+
+//
+// sometimes compiler uses precompiled strlen, this is added to prevent that happen in any case.
+//
+inline unsigned long long strlen_imp(const char* str)
+{
+	const char* s;
+
+	for (s = str; *s; ++s)
+		;
+
+	return (s - str);
+}
+inline wchar_t* wcsrchr_imp(const wchar_t* str, wchar_t ch) {
+	const wchar_t* last = NULL;
+	while (*str) {
+		if (*str == ch) {
+			last = str;
+		}
+		str++;
+	}
+	return (wchar_t*)last;
+}
+
+inline char*  strchr_imp(const char* str, int character) {
+	for (; *str != '\0'; ++str) {
+		if (*str == (char)character)
+			return (char*)str;
+	}
+	if (*str == '\0') {
+		return NULL;
+	}
+	return NULL;
+}
 namespace Utils {
 
 	//EXTERN_C_START
@@ -312,7 +371,7 @@ namespace Utils {
 	INT kmemcmp(const void* s1, const void* s2, size_t n);
 	PVOID kmemcpy(void* dest, const void* src, size_t len);
 	PVOID kmemset(void* dest, UINT8 c, size_t count);
-	char* kstrchr(const char* str, int character);
+ 
 	char* kstrstr(const char* haystack, const char* needle);
 	wchar_t* random_wstring(wchar_t* str, size_t size);
 	wchar_t* kwcsstr(const wchar_t* haystack, const wchar_t* needle);
@@ -325,6 +384,8 @@ namespace Utils {
 	BOOLEAN self_safe_copy(PEPROCESS self, PVOID addr, size_t size);
 
 	PEPROCESS lookup_process_by_id(HANDLE pid);
+
+
 }
 
 #endif // !UTILS_H

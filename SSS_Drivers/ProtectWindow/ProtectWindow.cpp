@@ -230,7 +230,7 @@ namespace ProtectWindow {
 
 		ULONG64* vtable = (ULONG64*)vtable_inst;
 		BYTE vindex = (((BYTE)index + (6)) & (0x1F));
-		if (MmIsAddressValid((void*)vtable[vindex])) {
+		if (imports::mm_is_address_valid((void*)vtable[vindex])) {
 			*(ULONG64*)&OriginalFunction = vtable[vindex];
 
 			// disable write protect bit in cr0...
@@ -369,7 +369,7 @@ namespace ProtectWindow {
 		}
 
 		ULONGLONG ChangeWindowTreeProtectionAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 5 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 1));
-		if (MmIsAddressValid((PVOID)ChangeWindowTreeProtectionAddr))
+		if (imports::mm_is_address_valid((PVOID)ChangeWindowTreeProtectionAddr))
 		{
 			return ChangeWindowTreeProtectionAddr;
 		}
@@ -383,7 +383,7 @@ namespace ProtectWindow {
 		ULONGLONG ValidateHwnd_addr = (ULONGLONG)Utils::GetFuncExportName((PVOID)win32kbase_address, skCrypt("ValidateHwnd"));
 
 
-		if (MmIsAddressValid((PVOID)ValidateHwnd_addr))
+		if (imports::mm_is_address_valid((PVOID)ValidateHwnd_addr))
 		{
 			return ValidateHwnd_addr;
 		}
@@ -976,7 +976,7 @@ namespace ProtectWindow {
 
 		g_NtUserSetParent(tmpHwnd, 0);
 		PVOID wnd_ptr = (PVOID)g_ValidateHwnd((__int64)hwnd);
-		if (!MmIsAddressValid(wnd_ptr)) return STATUS_UNSUCCESSFUL;
+		if (!imports::mm_is_address_valid(wnd_ptr)) return STATUS_UNSUCCESSFUL;
 		if (!wnd_ptr)
 		{
 			return STATUS_UNSUCCESSFUL;
@@ -1088,7 +1088,7 @@ namespace ProtectWindow {
 	ULONG MyGetTickCount()
 	{
 		LARGE_INTEGER currentTick = { 0 };
-		ULONG MyInc = KeQueryTimeIncrement();
+		ULONG MyInc = imports::ke_query_time_increment();
 		KeQueryTickCount(&currentTick);
 		currentTick.QuadPart *= MyInc;
 		currentTick.QuadPart /= 10000;
