@@ -26,7 +26,7 @@ namespace functions {
 		if (NtProtectVirtualMemoryAddr)
 		{
 			return NtProtectVirtualMemoryAddr;
-		} 
+		}
 		NtProtectVirtualMemoryAddr = (PNtProtectVirtualMemory)ssdt_serv::GetFunctionAddrInSSDT(GetProtectVirtualMemoryIdx());
 
 		return NtProtectVirtualMemoryAddr;
@@ -69,6 +69,13 @@ namespace functions {
 		}
 		return serviceNum;
 	}
+
+	ULONG GetNtFuncNoByStr(wchar_t* funcStr) {
+		UNICODE_STRING funcName = { 0 };
+		imports::rtl_init_unicode_string(&funcName, funcStr);
+		return GetNtFuncNumber(&funcName, 0x50, 0xB8);
+	}
+
 	ULONG GetFunctionVariableOffset(PCWSTR funcName, ULONG asmOffset)
 	{
 		UNICODE_STRING uFuncName = { 0 };
@@ -96,9 +103,71 @@ namespace functions {
 			break;
 		}
 
- 
+
 	}
 
+	ULONG GetNtSuspendThreadServNo() {
+		switch (Utils::InitOsVersion().dwBuildNumber)
+		{
+		case 10061:
+			return 420;
+		case 10240:
+			return 416;
+		case 10586:
+			return 419;
+		case 14393:
+			return 425;
+		case 15063:
+			return 434;
+		case 17134:
+			return 436;
+		case 17763:
+			return 437;
+		case 18362:
+		case 18363:
+			return 438;
+		case 19041:
+			return 445;
+		case 20348:
+			return 451;
+		case 22000:
+			return 455;
+		case 22621:
+		case 22622:
+		case 22623:
+		case 22645:
+		case 23451:
+		case 23481:
+			return 460;
+		case 25905:
+		case 25936:
+			return 462;
+		default:
+			return 0;
+			break;
+		}
+
+	}
+
+	ULONGLONG GetFuncAddrInAddr(PUCHAR pFunc, UCHAR sig1, UCHAR sig2) {
+		LONG64 offset = 0;
+		ULONGLONG funcAddr = 0;
+		size_t i = 0;
+		for (; i < 0x150; i++)
+		{
+			if (pFunc[i] == sig1 && pFunc[i + 1] == sig2)
+			{
+				offset = *(PLONG32)(pFunc + i + 2);
+				break;
+			}
+		}
+		if (offset)
+		{
+			funcAddr = (ULONGLONG)(pFunc + i + 2 + 4 + offset);
+		}
+		return funcAddr;
+
+	}
 
 
 }

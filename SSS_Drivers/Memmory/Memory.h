@@ -1,9 +1,9 @@
 #ifndef  _MEMORY_H 
 #define _MEMORY_H
-
-#pragma once
-#include "../SSDT/Functions.h" 
 #include "MiMemory.h"
+#pragma once
+//#include "../SSDT/Functions.h" 
+
 
 #define WINDOWS_7 7600
 #define WINDOWS_7_SP1 7601
@@ -64,7 +64,8 @@ namespace memory {
     NTSTATUS SS_WriteMemoryPhy2(ULONG_PTR uPid, PVOID Address, ULONG_PTR uWriteSize, PVOID WriteBuffer);
 
     NTSTATUS SS_CreateMemory(ULONG uPid, ULONG_PTR uSize, PULONG64 retAddress);
-
+    NTSTATUS   CreateMemory(PEPROCESS pTargetEprocess, ULONG_PTR uSize, PULONG64 retAddress, PULONG64 kernelAllocAddr, PMDL pmdl);
+    void FreeMemory(PEPROCESS eprocess, ULONGLONG mapLockAddr, PVOID kernelAddr, PMDL pmdl);
     VOID ChangePageAttributeExecute(ULONG64 uAddress, ULONG64 uSize);
  
 

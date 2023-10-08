@@ -1,5 +1,6 @@
 #pragma once
 #include "Memory.h"
+
 #include "PMemory.h"
 #include "../SSDT/Functions.h"
 
@@ -52,21 +53,21 @@ namespace memory {
 			return STATUS_INVALID_PARAMETER_4;
 
 		}
-		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid); 
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
 		if (!pTargetEprocess) return status;
- 
 
- 
+
+
 		if (!pFakeObject)
 		{
-			pFakeEprocess= Utils::lookup_process_by_id((HANDLE)uFakePid);
+			pFakeEprocess = Utils::lookup_process_by_id((HANDLE)uFakePid);
 			//获取傀儡进程 
-			if (!pFakeEprocess) { 
+			if (!pFakeEprocess) {
 				return status;
 			}
 			pFakeObject = imports::ex_allocate_pool(NonPagedPool, PAGE_SIZE);
 			if (!pFakeObject)
-			{ 
+			{
 				return status;
 			}
 
@@ -86,7 +87,7 @@ namespace memory {
 		{
 			//读取内存
 			status = imports::mm_copy_virtual_memory(pTargetEprocess, Address, imports::io_get_current_process(), ReadBuffer, uReadSize, KernelMode, &GotSize);
-		} 
+		}
 		return status;
 	}
 	NTSTATUS SS_WriteMemory(ULONG_PTR uPid, ULONG_PTR uFakePid, PVOID Address, ULONG_PTR uWriteSize, PVOID WriteBuffer)
@@ -196,7 +197,7 @@ namespace memory {
 			status = STATUS_SUCCESS;
 		}
 
- 
+
 		return status;
 
 
@@ -216,8 +217,8 @@ namespace memory {
 		}
 		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
 		if (!pTargetEprocess) return status;
-		SIZE_T NumberOfReadSize = 0; 
-		status = p_memory::ReadProcessMemory(pTargetEprocess, Address, ReadBuffer, uReadSize, &NumberOfReadSize); 
+		SIZE_T NumberOfReadSize = 0;
+		status = p_memory::ReadProcessMemory(pTargetEprocess, Address, ReadBuffer, uReadSize, &NumberOfReadSize);
 		return status;
 	}
 
@@ -238,7 +239,7 @@ namespace memory {
 		SIZE_T NumberOfWriteSize = 0;
 
 		status = p_memory::WriteProcessMemory(pTargetEprocess, Address, WriteBuffer, uWriteSize, &NumberOfWriteSize);
- 
+
 		return status;
 	}
 
@@ -277,8 +278,80 @@ namespace memory {
 		if (!pTargetEprocess) return status;
 
 		status = MiMemory::MiWriteProcessMemory(pTargetEprocess, Address, WriteBuffer, uWriteSize);
- 
+
 		return status;
+	}
+	NTSTATUS  CreateMemory(PEPROCESS pTargetEprocess, ULONG_PTR uSize, PULONG64 retAddress, PULONG64 kernelAllocAddr, PMDL pmdl  )
+	{ 
+		NTSTATUS								status = STATUS_UNSUCCESSFUL;
+		KAPC_STATE								kapc_state = { 0 };
+		PVOID									BaseAddr = NULL;
+		PVOID									MappAddr = NULL;
+		PMDL									pMdl = NULL;
+
+		//挂靠目标进程
+		imports::ke_stack_attach_process(pTargetEprocess, &kapc_state);
+		BaseAddr = imports::ex_allocate_pool(NonPagedPool, uSize);
+		if (!BaseAddr)
+		{
+			imports::ke_unstack_detach_process(&kapc_state);
+			return STATUS_UNSUCCESSFUL;
+		}
+
+		Utils::kmemset(BaseAddr, 0, uSize);
+		///创建pMdl
+		pMdl = imports::io_allocate_mdl(BaseAddr, uSize, FALSE, NULL, NULL);
+		if (!pMdl) {
+			imports::ex_free_pool_with_tag(BaseAddr, 0);
+			imports::ke_unstack_detach_process(&kapc_state);
+			return STATUS_UNSUCCESSFUL;
+		}
+		//构建非分页物理页
+		imports::mm_build_mdl_for_non_paged_pool(pMdl);
+		__try {
+			//MDL指向的物理页映射值虚拟地址
+			MappAddr = imports::mm_map_locked_pages_specify_cache(pMdl, UserMode, MmCached, NULL, NULL, NormalPagePriority);
+			if (!MappAddr) {
+				imports::io_free_mdl(pMdl);
+				imports::ex_free_pool_with_tag(BaseAddr, 0);
+				imports::ke_unstack_detach_process(&kapc_state);
+				return STATUS_UNSUCCESSFUL;
+			} 
+		}
+		__except(EXCEPTION_EXECUTE_HANDLER){
+			imports::io_free_mdl(pMdl);
+			imports::ex_free_pool_with_tag(BaseAddr, 0);
+			imports::ke_unstack_detach_process(&kapc_state);
+			return STATUS_UNSUCCESSFUL;
+		}
+
+		
+		//写入内存
+		Utils::kmemset(MappAddr, 0, uSize);
+		ChangePageAttributeExecute((ULONG64)MappAddr, uSize);
+		*retAddress = (ULONG64)MappAddr;
+		*kernelAllocAddr = (ULONG64)BaseAddr;
+		Utils::kmemcpy(pmdl, pMdl, sizeof(MDL)); 
+		//取消进程挂靠
+		imports::ke_unstack_detach_process(&kapc_state); 
+		status = *retAddress > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+		return status;
+	}
+
+	void FreeMemory(PEPROCESS eprocess,ULONGLONG mapLockAddr, PVOID kernelAddr, PMDL pmdl) {
+		KAPC_STATE								kapc_state = { 0 };
+		if (imports::ps_get_process_exit_process_called(eprocess))
+		{
+			return;
+		}
+		//挂靠目标进程
+		imports::ke_stack_attach_process(eprocess, &kapc_state); 
+		MmUnmapLockedPages((PVOID)mapLockAddr,pmdl);
+		imports::ex_free_pool_with_tag(kernelAddr, 0);
+		imports::io_free_mdl(pmdl);
+
+		//取消进程挂靠
+		imports::ke_unstack_detach_process(&kapc_state);
 	}
 
 	NTSTATUS SS_CreateMemory(ULONG uPid, ULONG_PTR uSize, PULONG64 retAddress)
@@ -297,53 +370,16 @@ namespace memory {
 		KAPC_STATE								kapc_state = { 0 };
 		PVOID									BaseAddr = NULL;
 		PVOID									MappAddr = NULL;
-		PMDL									pMdl = NULL;
-
-		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid); 
+		MDL								Mdl = {0};
+		ULONG64		kernelAllocateAddr = 0;
+		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
 		if (!pTargetEprocess) return STATUS_INVALID_PARAMETER_1;
- 
+		return CreateMemory(pTargetEprocess, uSize, retAddress,&kernelAllocateAddr, &Mdl);
 
-		//挂靠目标进程
-		imports::ke_stack_attach_process(pTargetEprocess, &kapc_state);
-		BaseAddr = imports::ex_allocate_pool(NonPagedPool, uSize);
-		if (!BaseAddr)
-		{
-			imports::ke_unstack_detach_process(&kapc_state); 
-			return STATUS_UNSUCCESSFUL;
-		}
 
-		Utils::kmemset(BaseAddr, 0, uSize);
-		///创建pMdl
-		pMdl = imports::io_allocate_mdl(BaseAddr, uSize, FALSE, NULL, NULL);
-		if (!pMdl) {
-			imports::ex_free_pool_with_tag(BaseAddr, 0);
-			imports::ke_unstack_detach_process(&kapc_state);
- 
-			return STATUS_UNSUCCESSFUL;
-		}
-		//构建非分页物理页
-		imports::mm_build_mdl_for_non_paged_pool(pMdl);
-		//MDL指向的物理页映射值虚拟地址
-		MappAddr = imports::mm_map_locked_pages_specify_cache(pMdl, UserMode, MmCached, NULL, NULL, NormalPagePriority);
-		if (!MappAddr) {
-			imports::io_free_mdl(pMdl);
-			imports::ex_free_pool_with_tag(BaseAddr, 0);
-			imports::ke_unstack_detach_process(&kapc_state);
- 
-			return STATUS_UNSUCCESSFUL;
-		}
-		//写入内存
-		Utils::kmemset(MappAddr, 0, uSize);
-		ChangePageAttributeExecute((ULONG64)MappAddr, uSize);
-		//取消进程挂靠
-		imports::ke_unstack_detach_process(&kapc_state);
- 
-		*retAddress = (ULONG64)MappAddr;
-
-		return STATUS_SUCCESS;
 	}
 
- 
+
 
 
 	/// <summary>

@@ -96,7 +96,7 @@ namespace ProtectWindow {
 		Log("hwnd %08x msg %08x \r\n", hWnd, Msg);
 		if (Msg == WM_GETTEXT)
 		{
-			DbgBreakPoint();
+	 
 			ULONG hwnddd = 0;
 			memcpy(&hwnddd, (PVOID)hWnd, 4);
 			HANDLE handle = ULongToHandle(hwnddd);

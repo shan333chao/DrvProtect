@@ -28,7 +28,7 @@ PVOID Utils::GetFuncExportName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName) {
 	for (auto nIdx = 0u; nIdx < lpExportDir->NumberOfFunctions; ++nIdx) {
 		if (!lpNameArr[nIdx] || !lpOrdinals[nIdx])
 			continue;
-		
+
 		if (strcmpi_imp((PCHAR)((PUCHAR)ModuleBase + lpNameArr[nIdx]), FuncName) == 0) {
 			Log("%s %p \r\n", FuncName, (PUCHAR)ModuleBase + lpFuncs[lpOrdinals[nIdx]]);
 			return (PVOID)((PUCHAR)ModuleBase + lpFuncs[lpOrdinals[nIdx]]);
@@ -81,7 +81,7 @@ VOID Utils::SetKernelBase(ULONG_PTR ntoskrnl_base) {
 PVOID Utils::GetKernelBase() {
 	return KernelBase;
 }
- 
+
 uintptr_t Utils::GetNtFuncExportName(_In_ PCHAR FuncName) {
 	return (uintptr_t)GetFuncExportName(GetKernelBase(), FuncName);
 }
@@ -164,7 +164,7 @@ ULONGLONG Utils::GetWin32kBase() {
 PEPROCESS Utils::GetEprocessByName(PCHAR process_name)
 {
 
- 
+
 	PEPROCESS process;
 	PEPROCESS entry;
 
@@ -187,8 +187,8 @@ PEPROCESS Utils::GetEprocessByName(PCHAR process_name)
 	return 0;
 }
 
-bool  Utils::pattern_check(const char* data, const char* pattern, const char* mask,size_t masklen)
-{ 
+bool  Utils::pattern_check(const char* data, const char* pattern, const char* mask, size_t masklen)
+{
 	for (size_t i = 0; i < masklen; i++)
 	{
 		if (data[i] == pattern[i] || mask[i] == '?')
@@ -240,6 +240,12 @@ unsigned long long  Utils::find_pattern_image(unsigned long long addr, const cha
 }
 VOID Utils::InitApis() {
 
+
+	imports::imported.ps_get_thread_win_thread = GetNtFuncExportName(skCrypt("PsGetThreadWin32Thread"));
+	imports::imported.ps_get_thread_id = GetNtFuncExportName(skCrypt("PsGetThreadId"));
+	imports::imported.ps_get_thread_teb = GetNtFuncExportName(skCrypt("PsGetThreadTeb"));
+ 
+
 	imports::imported.ps_initial_system_process = GetNtFuncExportName(skCrypt("PsInitialSystemProcess"));
 
 	imports::imported.ke_query_time_increment = GetNtFuncExportName(skCrypt("KeQueryTimeIncrement"));
@@ -290,7 +296,7 @@ VOID Utils::InitApis() {
 	imports::imported.rtl_ansi_string_to_unicode_string = GetNtFuncExportName(skCrypt("RtlAnsiStringToUnicodeString"));
 	imports::imported.mm_copy_virtual_memory = GetNtFuncExportName(skCrypt("MmCopyVirtualMemory"));
 	imports::imported.io_get_current_process = GetNtFuncExportName(skCrypt("IoGetCurrentProcess"));
- 	imports::imported.ps_get_process_peb = GetNtFuncExportName(skCrypt("PsGetProcessPeb"));
+	imports::imported.ps_get_process_peb = GetNtFuncExportName(skCrypt("PsGetProcessPeb"));
 	imports::imported.ob_reference_object_safe = GetNtFuncExportName(skCrypt("ObReferenceObjectSafe"));
 	imports::imported.zw_allocate_virtual_memory = GetNtFuncExportName(skCrypt("ZwAllocateVirtualMemory"));
 	imports::imported.rtl_compare_unicode_string = GetNtFuncExportName(skCrypt("RtlCompareUnicodeString"));
@@ -540,7 +546,7 @@ BOOLEAN Utils::safe_copy(PVOID dst, PVOID src, size_t size)
 	return FALSE;
 }
 
-BOOLEAN Utils::self_safe_copy(PEPROCESS self, PVOID addr,  size_t size)
+BOOLEAN Utils::self_safe_copy(PEPROCESS self, PVOID addr, size_t size)
 {
 	SIZE_T bytes = 0;
 	if (imports::mm_copy_virtual_memory(self, addr, self, addr, size, KernelMode, &bytes) == STATUS_SUCCESS && bytes == size)
@@ -562,7 +568,7 @@ PEPROCESS Utils::lookup_process_by_id(HANDLE pid)
 	do {
 		if (imports::ps_get_process_exit_process_called(entry))
 			goto L0;
-	 
+
 		if (imports::ps_get_process_id(entry) == pid) {
 			return  entry;
 		}
@@ -571,4 +577,18 @@ PEPROCESS Utils::lookup_process_by_id(HANDLE pid)
 	} while (entry != process);
 
 	return 0;
+}
+// 休眠函数 
+void Utils::sleep(long msec)
+{
+	{
+		LARGE_INTEGER integer{ 0 };
+
+		// 这里的负数表示的是相对时间，正数拒说表示绝对时间，我没试出效果。单位是100nm,此处乘以10000是让单位变为s,很多代码都是乘以10,即传入的单位是ms;
+		integer.QuadPart = -10000;
+		integer.QuadPart *= msec;
+
+		imports::ke_delay_execution_thread(KernelMode, FALSE, &integer);
+	}
+
 }

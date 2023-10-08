@@ -8,6 +8,7 @@
 #include "ProtectRoute.h"
 #include "Memmory/VadModules.h"
 #include "PatternSearch/PatternSearch.h"
+#include "inject/inject_main.h"
 constexpr unsigned int max_unloader_driver = 50;
 typedef struct _unloader_information
 {
@@ -111,7 +112,18 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case INJECT_DLL: {
-
+		PINJECT_DLL_DATA data = (PINJECT_DLL_DATA)pCommData->InData;
+		status = inject_main::inject_x64DLL(data->dllFilePath, data->PID);
+		break;
+	}
+	case CALL_MAIN: {
+		PCALL_DATA CALL_DATA = (PCALL_DATA)pCommData->InData;
+		status = inject_main::KernelCall(CALL_DATA->PID, CALL_DATA->shellcodeAddr, CALL_DATA->shellcodeLen);
+		break;
+	}
+	case WRITE_DLL: {
+		PWRITE_DLL_DATA dllDATA = (PWRITE_DLL_DATA)pCommData->InData;
+		status = inject_main::WriteDLLx64_dll(dllDATA->dllFilePath, dllDATA->PID, &dllDATA->entryPoint, &dllDATA->imageBase, &dllDATA->kimageBase);
 		break;
 	}
 	case PROTECT_PROCESS: {
@@ -177,7 +189,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 			status = STATUS_UNSUCCESSFUL;
 			break;
 		}
-		
+
 		status = ProtectRoute::AntiSnapWindow(WND_PTDATA->hwnds[0]);
 		break;
 	}
@@ -205,12 +217,12 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case PATTERN_SEARCH: {
-
 		PPATTEERN_DATA PATTERN = (PPATTEERN_DATA)pCommData->InData;
 		PATTERN->addr = patternSearch::search_process_pattern(ULongToHandle(PATTERN->PID), PATTERN->pcModuleName, PATTERN->pattern, PATTERN->mask);
 		status = PATTERN->addr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
+
 	}
 	return status;
 }

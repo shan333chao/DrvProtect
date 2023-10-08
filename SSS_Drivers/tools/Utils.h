@@ -385,7 +385,8 @@ namespace Utils {
 
 	PEPROCESS lookup_process_by_id(HANDLE pid);
 
-
+	// ÐÝÃßº¯Êý ÌîºÁÃë
+	void sleep(long msec);
 }
 
 #endif // !UTILS_H

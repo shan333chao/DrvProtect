@@ -53,6 +53,15 @@
     <Filter Include="PatternSearch">
       <UniqueIdentifier>{1f4cab91-c85f-4487-af70-74df44b2a551}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Inject">
+      <UniqueIdentifier>{98f09f4b-ccbd-492e-8682-91921d1d3a4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inject\x86">
+      <UniqueIdentifier>{0a22300e-c208-461a-b5d7-ef2d4c75338f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inject\x64">
+      <UniqueIdentifier>{f2e42061-518b-46d8-abdb-8942d78392a5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DrvEntry.cpp">
@@ -117,6 +126,15 @@
     </ClCompile>
     <ClCompile Include="PatternSearch\PetternSearch.cpp">
       <Filter>PatternSearch</Filter>
+    </ClCompile>
+    <ClCompile Include="inject\module_x64\PeHelper64.cpp">
+      <Filter>Inject\x64</Filter>
+    </ClCompile>
+    <ClCompile Include="inject\inject_main.cpp">
+      <Filter>Inject</Filter>
+    </ClCompile>
+    <ClCompile Include="inject\eip_execute.cpp">
+      <Filter>Inject</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -206,6 +224,15 @@
     </ClInclude>
     <ClInclude Include="PatternSearch\PatternSearch.h">
       <Filter>PatternSearch</Filter>
+    </ClInclude>
+    <ClInclude Include="inject\module_x64\PeHelper64.h">
+      <Filter>Inject\x64</Filter>
+    </ClInclude>
+    <ClInclude Include="inject\inject_main.h">
+      <Filter>Inject</Filter>
+    </ClInclude>
+    <ClInclude Include="inject\eip_execute.h">
+      <Filter>Inject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

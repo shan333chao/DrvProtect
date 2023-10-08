@@ -16,5 +16,8 @@ namespace functions {
 	ULONG GetNtFuncNumber(PUNICODE_STRING funcName, UCHAR sig1, UCHAR sig2);
 	ULONG GetFunctionVariableOffset(PCWSTR funcName, ULONG asmOffset); 
 	ULONG GetProtectVirtualMemoryIdx();
+	ULONG GetNtSuspendThreadServNo();
+	ULONG GetNtFuncNoByStr(wchar_t* funcStr);
+	ULONGLONG GetFuncAddrInAddr(PUCHAR pFunc, UCHAR sig1, UCHAR sig2);
 }
 #endif // ! _FUNCIONS_H

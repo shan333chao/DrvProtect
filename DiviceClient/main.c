@@ -19,8 +19,9 @@ void ShowFunc() {
 	printf("\t11-> 添加进程保护\n");
 	printf("\t12-> 移除进程保护\n");
 	printf("\t13-> 特征码搜索 \n");
-	printf("\t??-> 隐藏模块注入【开发中】\n");
-	printf("\t??-> 主线程call【开发中】\n");
+	printf("\t15-> 无模块无线程注入DLL \n");
+	printf("\t16-> 主线程call(不附加进程无线程) \n");
+	printf("\t17-> 内核拉伸DLL \n");
 	printf("\t88-> 退出\n");
 	printf("----------------------------------------\n");
 
@@ -157,7 +158,7 @@ LOOP:
 		memset(ModuleName, 0, USN_PAGE_SIZE);
 		printf("输入模块名(不区分大小写):");
 		scanf_s("%s", ModuleName, 0x1000);
-		QueryModule(pid, ModuleName,1);
+		QueryModule(pid, ModuleName, 1);
 		memset(ModuleName, 0, sizeof(ModuleName));
 		VirtualFree(ModuleName, USN_PAGE_SIZE, MEM_RELEASE);
 		break;
@@ -232,11 +233,44 @@ LOOP:
 		memset(ModuleName, 0, USN_PAGE_SIZE);
 		printf("输入模块名(严格区分大小写):");
 		scanf_s("%s", ModuleName, 0x1000);
-		QueryModule(pid, ModuleName,2);
+		QueryModule(pid, ModuleName, 2);
 		memset(ModuleName, 0, sizeof(ModuleName));
 		VirtualFree(ModuleName, USN_PAGE_SIZE, MEM_RELEASE);
 		break;
 	}
+	case 15: {
+		printf("输入要注入的进程id：\n");
+		scanf_s("%d", &pid);
+		PCHAR dllFilePath = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(dllFilePath, 0, USN_PAGE_SIZE);
+		printf("输入dll文件路径(严格区分大小写):");
+		scanf_s("%s", dllFilePath, 0x1000);
+		InjectX64DLL(pid, dllFilePath);
+		VirtualFree(dllFilePath, USN_PAGE_SIZE, MEM_RELEASE);
+		break;
+	}
+	case 16: {
+		printf("输入进程id：\n");
+		scanf_s("%d", &pid);
+		printf("请输入地址：\n");
+		scanf_s("%llx", &Address);
+		printf("请输入读取长度：\n");
+		scanf_s("%d", &uDataSize);
+		void CALL_MAIN_THREAD(pid, Address, uDataSize);
+		break;
+	}
+	case 17: {
+		printf("输入要注入的进程id：\n");
+		scanf_s("%d", &pid);
+		PCHAR dllFilePath = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(dllFilePath, 0, USN_PAGE_SIZE);
+		printf("输入dll文件路径(严格区分大小写):");
+		scanf_s("%s", dllFilePath, 0x1000);
+		WriteX64DLL(pid, dllFilePath);
+		VirtualFree(dllFilePath, USN_PAGE_SIZE, MEM_RELEASE); 
+		break;
+	}
+
 	case 88:
 		goto EXITSYS;
 		break;

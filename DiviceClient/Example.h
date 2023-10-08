@@ -33,3 +33,9 @@ PUCHAR AllocateMem(ULONG PID, ULONG uDataSize);
 void CreateMyThread(ULONG PID, PUCHAR shellcode, ULONG len);
 
 void SearchPattern(ULONG pid,PCHAR szModuleName, PCHAR pattern, PCHAR mask);
+
+void InjectX64DLL(ULONG pid, PCHAR dllFilePath);
+
+ 
+void WriteX64DLL(ULONG PID, PCHAR dllFilePath);
+void CALL_MAIN_THREAD(ULONG PID, ULONG64 shellcodeAddr, ULONG shellcodeLen);

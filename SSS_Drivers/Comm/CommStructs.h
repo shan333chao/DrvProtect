@@ -10,18 +10,15 @@ typedef enum _COMM_TYPE {
 	//测试通讯
 	TEST_COMM,
 	//进程伪装
-	PROTECT_PROCESS,
-
+	PROTECT_PROCESS, 
 	//进程自杀
 	KILL,
 	//遍历进程
-	ENUM_PROCESS,
- 
+	ENUM_PROCESS, 
 	//伪装读取内存
 	FAKE_READ_MEMORY,
 	//伪装写入内存
-	FAKE_WRITE_MEMORY,
-
+	FAKE_WRITE_MEMORY, 
 	//伪装读取内存
 	PHY_READ_MEMORY,
 	//伪装写入内存
@@ -45,7 +42,12 @@ typedef enum _COMM_TYPE {
 	//移除应用层保护
 	PROTECT_PROCESS_REMOVE,
 	//特征搜索
-	PATTERN_SEARCH
+	PATTERN_SEARCH,
+	//内核拉伸dll
+	WRITE_DLL,
+	//主线程call
+	CALL_MAIN
+
 };
 
 
@@ -127,3 +129,26 @@ typedef struct _PATTEERN_DATA {
 	PCHAR mask;
 	ULONGLONG addr;
 }PATTEERN_DATA,*PPATTEERN_DATA;
+
+//注入dll
+typedef struct _INJECT_DLL_DATA {
+	ULONG PID;
+	PCHAR dllFilePath; 
+}INJECT_DLL_DATA,*PINJECT_DLL_DATA;
+
+
+//写入dll
+typedef struct _WRITE_DLL_DATA {
+	ULONG PID;
+	PCHAR dllFilePath;
+	ULONG64 imageBase;
+	ULONG64 entryPoint;
+	ULONG64 kimageBase;
+}WRITE_DLL_DATA, *PWRITE_DLL_DATA;
+
+//远程call
+typedef struct _CALL_DATA {
+	ULONG PID;
+	ULONG64 shellcodeAddr; 
+	ULONG shellcodeLen;
+}CALL_DATA,*PCALL_DATA;

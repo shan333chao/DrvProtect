@@ -8,7 +8,14 @@
 namespace imports { 
 
 	struct _m_imported imported = { 0 }; 
+	VentroAPI  PVOID	  ps_get_thread_win_thread(IN PETHREAD Thread) {
 
+		return reinterpret_cast<PVOID(*)(PETHREAD)> (imported.ps_get_thread_win_thread)(Thread);
+	}
+	VentroAPI	HANDLE 		ps_get_thread_id(_In_ PETHREAD Thread) {
+	
+		return reinterpret_cast<HANDLE(*)(PETHREAD)> (imported.ps_get_thread_id)(Thread);
+	}
 
 	VentroAPI ULONG ke_query_time_increment()
 	{
@@ -294,9 +301,12 @@ namespace imports {
 	{
 		return reinterpret_cast<NTSTATUS(*)(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG)> (imported.zw_allocate_virtual_memory)(ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protect);
 	}
-
  
-
+	VentroAPI PVOID ps_get_thread_teb(PETHREAD Thread)
+	{
+		return reinterpret_cast<PVOID(*)(PETHREAD)> (imported.ps_get_thread_teb)(Thread);
+	}
+	
 	VentroAPI PPEB ps_get_process_peb(PEPROCESS Process)
 	{
 		return reinterpret_cast<PPEB(*)(PEPROCESS)> (imported.ps_get_process_peb)(Process);

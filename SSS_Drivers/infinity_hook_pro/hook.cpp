@@ -234,7 +234,7 @@ namespace k_hook
 		while (m_routine_status)
 		{
 			// 线程常用休眠
-			k_utils::sleep(4000);
+			Utils::sleep(4000);
 
 			// GetCpuClock还是一个函数指针
 			if (m_build_number <= 18363)

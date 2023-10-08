@@ -392,7 +392,7 @@ void ProtectProcessR3(ULONG pid, BOOLEAN isProcect)
 	else
 	{
 		status_code = DriverComm(PROTECT_PROCESS_REMOVE, &process, sizeof(RW_MEM_DATA));
-	} 
+	}
 }
 
 //-------------------保护进程-------------
@@ -452,7 +452,7 @@ void ProtectWindow(ULONG32 hwnd)
 	printf("保护成功\n");
 }
 
-void QueryModule(ULONG pid, PCHAR szModuleName,UCHAR type)
+void QueryModule(ULONG pid, PCHAR szModuleName, UCHAR type)
 {
 	QUERY_MODULE_DATA moduleData = { 0 };
 	moduleData.PID = pid;
@@ -550,22 +550,22 @@ void SearchPattern(ULONG pid, PCHAR szModuleName, PCHAR pattern, PCHAR mask)
 	char byte_str[3];
 	byte_str[2] = '\0';  // 作为字符串结尾的 null 字符
 
-	for (int i = 0; i < len*4; i += 4) {
+	for (int i = 0; i < len * 4; i += 4) {
 		byte_str[0] = pattern[i + 2];
 		byte_str[1] = pattern[i + 3];
 		unsigned char byte = (unsigned char)strtoul(byte_str, NULL, 16);
-		upattern[i / 4] = byte; 
+		upattern[i / 4] = byte;
 	}
 
 	printf("------------------ \r\n ");
 
-	
+
 	for (int i = 0; i < len; i++) {
-		unsigned char byte  = (unsigned char)upattern[i];
+		unsigned char byte = (unsigned char)upattern[i];
 		upattern[i] = byte;
 		printf("%02X ", upattern[i]);
 	}
-	printf("------------------ \r\n " );
+	printf("------------------ \r\n ");
 	patternData.pattern = upattern;
 	patternData.pcModuleName = szModuleName;
 	patternData.addr = 0;
@@ -578,5 +578,69 @@ void SearchPattern(ULONG pid, PCHAR szModuleName, PCHAR pattern, PCHAR mask)
 	printf("SearchPattern 成功\n");
 	printf("特征地址： %p \r\n", patternData.addr);
 	getchar();
+
+}
+
+void InjectX64DLL(ULONG pid, PCHAR dllFilePath) {
+	char prefix[] = "\\??\\";
+	int totalLen = sizeof(prefix) + strlen(dllFilePath) * sizeof(char);
+	PCHAR dosPath = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+	strcat(dosPath, prefix);
+	strcat(dosPath, dllFilePath);
+	INJECT_DLL_DATA injectDLL = { 0 };
+	injectDLL.PID = pid;
+	injectDLL.dllFilePath = dosPath;
+	DWORD status_code = DriverComm(INJECT_DLL, &injectDLL, sizeof(INJECT_DLL_DATA));
+	if (status_code > 0)
+	{
+		printf("注入出错 错误码 %08x\n", status_code);
+		return;
+	}
+}
+
+void WriteX64DLL(ULONG PID, PCHAR dllFilePath)
+{
+	char prefix[] = "\\??\\";
+	int totalLen = sizeof(prefix) + strlen(dllFilePath) * sizeof(char);
+	PCHAR dosPath = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+	strcat(dosPath, prefix);
+	strcat(dosPath, dllFilePath);
+	WRITE_DLL_DATA writeDll = { 0 };
+	writeDll.PID = PID;
+	writeDll.dllFilePath = dosPath;
+	writeDll.entryPoint = 0;
+	writeDll.imageBase = 0;
+	writeDll.kimageBase = 0;
+
+	DWORD status_code = DriverComm(WRITE_DLL, &writeDll, sizeof(WRITE_DLL_DATA));
+	VirtualFree(dosPath, USN_PAGE_SIZE, MEM_RELEASE);
+	if (status_code > 0)
+	{
+		printf("写入DLL 出错 %08x\n", status_code);
+		return;
+	}
+	printf("写入DLL 成功 ");
+	printf("entryPoint %p \r\n", writeDll.entryPoint);
+	printf("imageBase %p \r\n", writeDll.imageBase);
+	printf("kimageBase %p \r\n", writeDll.kimageBase);
+
+}
+
+
+void CALL_MAIN_THREAD(ULONG PID, ULONG64 shellcodeAddr, ULONG shellcodeLen) {
+
+	CALL_DATA callData = { 0 };
+	callData.PID = PID;
+	callData.shellcodeAddr = shellcodeAddr;
+	callData.shellcodeLen = shellcodeLen;
+	DWORD status_code = DriverComm(CALL_MAIN, &callData, sizeof(WRITE_DLL_DATA));
+	if (status_code > 0)
+	{
+		printf("写入DLL 出错 %08x\n", status_code);
+		return;
+	}
+	printf("写入DLL 成功 ");
+
+
 
 }

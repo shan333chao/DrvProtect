@@ -92,6 +92,18 @@ struct _m_imported
 	uintptr_t ps_initial_system_process;
 	uintptr_t ps_get_process_exit_process_called;
 
+ 
+	uintptr_t ps_get_thread_teb;
+
+	uintptr_t io_create_file_ex;
+ 
+	uintptr_t ob_close_handle;
+	uintptr_t ob_reference_object_by_handle_with_tag;
+	uintptr_t io_get_related_device_object;
+	uintptr_t io_get_device_attachment_base_ref;
+	uintptr_t	ps_get_thread_id;
+	uintptr_t ps_get_thread_win_thread;
+
 };
 namespace imports {
 
@@ -100,9 +112,15 @@ namespace imports {
 
 	extern struct _m_imported imported;
 
+	VentroAPI  PVOID	  ps_get_thread_win_thread(IN PETHREAD Thread);
+
+	VentroAPI NTSTATUS ob_close_handle(HANDLE Handle, KPROCESSOR_MODE PreviousMode);
+	VentroAPI NTSTATUS 	 io_create_file_ex(_Out_ PHANDLE FileHandle, _In_  ACCESS_MASK DesiredAccess, _In_  POBJECT_ATTRIBUTES ObjectAttributes, _Out_ PIO_STATUS_BLOCK IoStatusBlock, _In_opt_ PLARGE_INTEGER AllocationSize, _In_  ULONG FileAttributes, _In_  ULONG ShareAccess, _In_  ULONG Disposition, _In_  ULONG CreateOptions, _In_opt_ PVOID EaBuffer, _In_  ULONG EaLength, _In_  CREATE_FILE_TYPE CreateFileType, _In_opt_ PVOID InternalParameters, _In_  ULONG Options, _In_opt_ PIO_DRIVER_CREATE_CONTEXT DriverContext);
+
+	VentroAPI	HANDLE 		ps_get_thread_id(			_In_ PETHREAD Thread		);
 	VentroAPI ULONG	ke_query_time_increment(VOID);
 
-
+	VentroAPI PVOID ps_get_thread_teb(PETHREAD Thread);
 
 	VentroAPI PEPROCESS ps_initial_system_process();
 
