@@ -227,7 +227,6 @@ namespace patternSearch {
 		ULONGLONG dos_header = (ULONGLONG)dumped_module;
 		ULONGLONG nt_header = (ULONGLONG) * (ULONG*)(dos_header + 0x03C) + dos_header;
 		USHORT  machine = *(USHORT*)(nt_header + 0x4);
-
 		ULONGLONG section_header = machine == 0x8664 ?
 			nt_header + 0x0108 :
 			nt_header + 0x00F8;

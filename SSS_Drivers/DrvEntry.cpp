@@ -205,14 +205,12 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case PROTECT_PROCESS_ADD: {
-		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData;
-
+		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData; 
 		status = fuck_process::RemoveProcessProtect(PROCESS_DATA->PID, TRUE);
 		break;
 	}
 	case PROTECT_PROCESS_REMOVE: {
-		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData;
-
+		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData; 
 		status = fuck_process::RemoveProcessProtect(PROCESS_DATA->PID, FALSE);
 		break;
 	}
@@ -222,7 +220,12 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = PATTERN->addr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
-
+	case MODULE_EXPORT: {
+		PMODULE_EXPORT_DATA EXPORT_DATA=(PMODULE_EXPORT_DATA)pCommData->InData;
+		EXPORT_DATA->FuncAddr=process_info::GetProcessModuleExport(EXPORT_DATA->PID, EXPORT_DATA->ModuleName, EXPORT_DATA->ExportFuncName); 
+		status = EXPORT_DATA->FuncAddr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+		break; 
+	}
 	}
 	return status;
 }

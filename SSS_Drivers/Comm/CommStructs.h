@@ -46,7 +46,9 @@ typedef enum _COMM_TYPE {
 	//内核拉伸dll
 	WRITE_DLL,
 	//主线程call
-	CALL_MAIN
+	CALL_MAIN,
+	//获取远程模块导出函数地址
+	MODULE_EXPORT
 
 };
 
@@ -152,3 +154,11 @@ typedef struct _CALL_DATA {
 	ULONG64 shellcodeAddr; 
 	ULONG shellcodeLen;
 }CALL_DATA,*PCALL_DATA;
+
+
+typedef struct _MODULE_EXPORT_DATA {
+	ULONG PID;
+	PCHAR ModuleName;
+	PCHAR ExportFuncName; 
+	ULONG64 FuncAddr;
+}MODULE_EXPORT_DATA, * PMODULE_EXPORT_DATA;

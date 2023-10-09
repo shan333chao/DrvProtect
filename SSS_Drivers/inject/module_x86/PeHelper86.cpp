@@ -1,17 +1,20 @@
-#include "PeHelper64.h"
+#include "PeHelper86.h"
 #include "../../PatternSearch/PatternSearch.h"
 #define MAX(a,b) (a>b?a:b)
 typedef unsigned short      WORD;
 typedef unsigned long       DWORD;
 typedef unsigned char       BYTE;
-#ifdef _WIN64
+//#ifdef _WIN32
+//
+//typedef ULONGLONG	QDWORD;
+//typedef PULONGLONG	PQDWORD;
+//#else
+//typedef DWORD	QDWORD;
+//typedef PDWORD	PQDWORD;
+//#endif
+typedef ULONG	QDWORD;
+typedef PULONG	PQDWORD;
 
-typedef ULONGLONG	QDWORD;
-typedef PULONGLONG	PQDWORD;
-#else
-typedef DWORD	QDWORD;
-typedef PDWORD	PQDWORD;
-#endif
 
 typedef WORD* PWORD;
 typedef DWORD* PDWORD;
@@ -20,7 +23,7 @@ typedef int		 BOOL;
 typedef INT_PTR(FAR _stdcall* FARPROC)();
 
 
-namespace pehelper64 {
+namespace pehelper86 {
 	// 计算对齐后大小
 	static DWORD AlignedSize(DWORD dwOrigin, DWORD dwAlignment)
 	{
@@ -36,12 +39,14 @@ namespace pehelper64 {
 	{
 		int i = 0;
 		char* pRet = NULL;
+
+
 		PIMAGE_DOS_HEADER pImageDosHeader = NULL;
-		PIMAGE_NT_HEADERS pImageNtHeader = NULL;
+		PIMAGE_NT_HEADERS32 pImageNtHeader = NULL;
 		PIMAGE_EXPORT_DIRECTORY pImageExportDirectory = NULL;
 
 		pImageDosHeader = (PIMAGE_DOS_HEADER)hModule;
-		pImageNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)hModule + pImageDosHeader->e_lfanew);
+		pImageNtHeader = (PIMAGE_NT_HEADERS32)((ULONG_PTR)hModule + pImageDosHeader->e_lfanew);
 		pImageExportDirectory = (PIMAGE_EXPORT_DIRECTORY)((ULONG_PTR)hModule + pImageNtHeader->OptionalHeader.DataDirectory
 			[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);
 
@@ -96,7 +101,7 @@ namespace pehelper64 {
 		strcpy(pTempFuction, p + 1);
 		strcat(pTempDll, ".dll");
 		PVOID h = NULL;
-
+		
 		ULONG moduleSize = 0;
 		h = (PVOID)patternSearch::get_module(pEprocess, pTempDll, &moduleSize);
 		if (h == NULL)
@@ -110,7 +115,7 @@ namespace pehelper64 {
 	BOOL DoRelocation(ULONG_PTR lpMemModule, PUCHAR virtualBase)
 	{
 		PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)lpMemModule;
-		PIMAGE_NT_HEADERS lpNtHeader = (PIMAGE_NT_HEADERS)(lpMemModule + lpDosHeader->e_lfanew);
+		PIMAGE_NT_HEADERS32 lpNtHeader = (PIMAGE_NT_HEADERS32)(lpMemModule + lpDosHeader->e_lfanew);
 		QDWORD dwDelta = (QDWORD)(lpMemModule - lpNtHeader->OptionalHeader.ImageBase);
 
 		if (0 == dwDelta || 0 == lpNtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size) {
@@ -134,7 +139,7 @@ namespace pehelper64 {
 					PQDWORD lpAddress = (PQDWORD)(lpMemModule + lpBaseRelocation->VirtualAddress + (wRelocationValue & 4095));
 					*lpAddress = (ULONG_PTR)virtualBase + (*lpAddress - lpMemModule) + dwDelta;
 					index++;
-
+					
 				}
 				else if (IMAGE_REL_BASED_HIGHLOW == wRelocationType && sizeof(PDWORD) == sizeof(PQDWORD))
 				{
@@ -158,7 +163,7 @@ namespace pehelper64 {
 	static BOOL FillRavAddress(ULONG_PTR lpMemModule, PVOID virtualBase, PEPROCESS pEprocess)
 	{
 		PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)lpMemModule;
-		PIMAGE_NT_HEADERS lpNtHeader = (PIMAGE_NT_HEADERS)(lpMemModule + lpDosHeader->e_lfanew);
+		PIMAGE_NT_HEADERS32 lpNtHeader = (PIMAGE_NT_HEADERS32)(lpMemModule + lpDosHeader->e_lfanew);
 
 		if (0 == lpNtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size) {
 			return TRUE;
@@ -200,7 +205,6 @@ namespace pehelper64 {
 
 	//获取映像大小
 	DWORD GetImageSize(PUCHAR fileBuffer) {
-
 		DWORD dwSizeOfImage = 0;
 		ULONGLONG dos_header = (ULONGLONG)fileBuffer;
 		ULONGLONG nt_header = (ULONGLONG) * (ULONG*)(dos_header + 0x03C) + dos_header;
@@ -240,32 +244,29 @@ namespace pehelper64 {
 						lpNtHeader->OptionalHeader.SectionAlignment));
 			}
 		}
-		// PE头
-
-
 		return dwSizeOfImage;
 	}
 
 	/*清空PE头*/
 	VOID CleanPeHeader(PUCHAR base) {
 		PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)base;
-		PIMAGE_NT_HEADERS nt = (PIMAGE_NT_HEADERS)(dos->e_lfanew + base);
+		PIMAGE_NT_HEADERS32 nt = (PIMAGE_NT_HEADERS32)(dos->e_lfanew + base);
 		Utils::kmemset(base, 0, nt->OptionalHeader.SizeOfHeaders);
 		Logf("清空PE头!");
 	}
 
 	//远程PE拉伸
-	BOOLEAN PELoaderDLL(PUCHAR fileBuffer, PUCHAR virtualBase, ULONG_PTR lpMemModule, PVOID* entrypoint, PEPROCESS pEprocess) {
+	BOOLEAN PELoaderDLL(PUCHAR fileBuffer, PUCHAR virtualBase, ULONG_PTR lpMemModule,   PVOID* entrypoint, PEPROCESS pEprocess) {
 		// PE头
-		PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)fileBuffer;
-		PIMAGE_NT_HEADERS lpNtHeader = (PIMAGE_NT_HEADERS)(fileBuffer + lpDosHeader->e_lfanew);
+		PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)fileBuffer; 
+		PIMAGE_NT_HEADERS32 lpNtHeader = (PIMAGE_NT_HEADERS32)(fileBuffer + lpDosHeader->e_lfanew);
 
 		//// 计算映像大小
-		WORD wOptionalHeaderOffset = lpNtHeader->FileHeader.SizeOfOptionalHeader - sizeof(IMAGE_OPTIONAL_HEADER);
-		PIMAGE_SECTION_HEADER lpSectionHeader = (PIMAGE_SECTION_HEADER)(fileBuffer + lpDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) + wOptionalHeaderOffset);
+		WORD wOptionalHeaderOffset = lpNtHeader->FileHeader.SizeOfOptionalHeader - sizeof(IMAGE_OPTIONAL_HEADER32);
+		PIMAGE_SECTION_HEADER lpSectionHeader = (PIMAGE_SECTION_HEADER)(fileBuffer + lpDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS32) + wOptionalHeaderOffset);
 
 		// 复制section 数据
-		Utils::kmemcpy((PVOID)lpMemModule, fileBuffer, lpDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) + wOptionalHeaderOffset + lpNtHeader->FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER));
+		Utils::kmemcpy((PVOID)lpMemModule, fileBuffer, lpDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS32) + wOptionalHeaderOffset + lpNtHeader->FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER));
 		for (WORD i = 0; i < lpNtHeader->FileHeader.NumberOfSections; i++)
 		{
 			if (0 != lpSectionHeader[i].SizeOfRawData && 0 != lpSectionHeader[i].VirtualAddress) {

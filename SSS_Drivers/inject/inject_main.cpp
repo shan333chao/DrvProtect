@@ -1,6 +1,7 @@
 #include "inject_main.h"
 #include "eip_execute.h"
 #include "./module_x64/PeHelper64.h"
+#include "./module_x86/PeHelper86.h"
 #include "../../Memmory/Memory.h"
 typedef void (*LoopthreadCallback)(PETHREAD thread);
 namespace inject_main {
@@ -24,13 +25,13 @@ namespace inject_main {
 		{
 			ptempthreadobj = (PETHREAD)((PUCHAR)plistflink - 0x2f8);
 
-			HANDLE threadId =  imports::ps_get_thread_id(ptempthreadobj);
+			HANDLE threadId = imports::ps_get_thread_id(ptempthreadobj);
 
 			func(ptempthreadobj);
 
 			Logf("%d 线程ID: %d ", i++, threadId);
 
-	 
+
 
 		}
 
@@ -46,7 +47,19 @@ namespace inject_main {
 		//进程申请内存 
 		imports::ke_stack_attach_process(pEprocess, &KAPC);
 		PVOID entrypoint = NULL;
-		pehelper64::PELoaderDLL((PUCHAR)filebufeer, (PUCHAR)virtualbase, kernelImageBase, &entrypoint, pEprocess);
+		ULONGLONG dos_header = (ULONGLONG)filebufeer;
+		ULONGLONG nt_header = (ULONGLONG) * (ULONG*)(dos_header + 0x03C) + dos_header;
+		USHORT  machine = *(USHORT*)(nt_header + 0x4);
+		DbgBreakPoint();
+		PVOID peb32 = imports::ps_get_process_wow64_process(pEprocess);
+		if (peb32 && machine != 0x8664)
+		{
+			pehelper86::PELoaderDLL((PUCHAR)filebufeer, (PUCHAR)virtualbase, kernelImageBase, &entrypoint, pEprocess);
+		}
+	    if (machine == 0x8664 && !peb32)
+		{
+			pehelper64::PELoaderDLL((PUCHAR)filebufeer, (PUCHAR)virtualbase, kernelImageBase, &entrypoint, pEprocess);
+		}
 		Logf("DLL ModuleBase:%p  entrypoint：%p", virtualbase, entrypoint);
 		imports::ke_unstack_detach_process(&KAPC);
 		*entry = entrypoint;
@@ -166,7 +179,7 @@ namespace inject_main {
 		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(targetPid));
 		if (!eprocess)
 		{
-			Log("进程未找到 \r\n");
+			Logf("进程未找到 \r\n");
 			return STATUS_INVALID_PARAMETER_2;
 		}
 		PVOID filebuffer = NULL;
@@ -174,12 +187,12 @@ namespace inject_main {
 		NTSTATUS status = ReadFile(dllPath, &filebuffer, &filesize);
 		if (!NT_SUCCESS(status))
 		{
-			imports::ex_free_pool_with_tag(filebuffer,0);
-			Log("读取文件失败 \r\n");
+			imports::ex_free_pool_with_tag(filebuffer, 0);
+			Logf("读取文件失败 \r\n");
 			return STATUS_INVALID_PARAMETER_1;
 		}
 		injectDll(eprocess, filebuffer, filesize);
-		imports::ex_free_pool_with_tag(filebuffer,0);
+		imports::ex_free_pool_with_tag(filebuffer, 0);
 	}
 
 
@@ -188,14 +201,14 @@ namespace inject_main {
 		NTSTATUS status = STATUS_UNSUCCESSFUL;
 		if (!strlen_imp(dllPath))
 		{
-			Log(" 文件为空 \r\n");
+			Logf(" 文件为空 \r\n");
 			status = STATUS_INVALID_PARAMETER_1;
 			return status;
 		}
 		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(targetPid));
 		if (!eprocess)
 		{
-			Log("进程未找到 \r\n");
+			Logf("进程未找到 \r\n");
 			return STATUS_INVALID_PARAMETER_2;
 		}
 		PVOID filebuffer = NULL;
@@ -214,6 +227,7 @@ namespace inject_main {
 		if (!NT_SUCCESS(allocatePeStatus))
 		{
 			Logf("进程申请内存申请失败");
+			imports::ex_free_pool_with_tag(filebuffer, 0);
 			return status;
 		}
 		Logf("远程申请Pe内存成功！r3: %p  r0: %p", virtualbase, kernelAddr);
@@ -221,8 +235,9 @@ namespace inject_main {
 		PVOID entrypoint = NULL;
 		RemoteLoadPeData(eprocess, filebuffer, filesize, &entrypoint, (PVOID)virtualbase, kernelAddr);
 		Logf("entrypoint %p moduleBase %p", entrypoint, virtualbase);
-		if (entrypoint)
+		if (!entrypoint)
 		{
+			imports::ex_free_pool_with_tag(filebuffer, 0);
 			status = STATUS_UNSUCCESSFUL;
 			return status;
 		}
@@ -230,16 +245,17 @@ namespace inject_main {
 		*PEkernelImageBase = kernelAddr;
 		*entry = (ULONG64)entrypoint;
 		status = STATUS_SUCCESS;
+		imports::ex_free_pool_with_tag(filebuffer, 0);
 		return status;
 
 	}
-	NTSTATUS KernelCall(ULONG targetPid, ULONG64 entryPoint,ULONG shellcodeLen)
+	NTSTATUS KernelCall(ULONG targetPid, ULONG64 entryPoint, ULONG shellcodeLen)
 	{
 		NTSTATUS status = STATUS_UNSUCCESSFUL;
-		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(targetPid)); 
+		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(targetPid));
 		if (!eprocess)
 		{
-			Log("进程未找到 \r\n");
+			Logf("进程未找到 \r\n");
 			return STATUS_INVALID_PARAMETER_2;
 		}
 		BOOLEAN ret = eip_execute::EipExcuteShellcode(eprocess, entryPoint, 1, shellcodeLen);

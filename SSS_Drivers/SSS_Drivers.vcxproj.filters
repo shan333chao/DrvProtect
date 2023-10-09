@@ -136,6 +136,9 @@
     <ClCompile Include="inject\eip_execute.cpp">
       <Filter>Inject</Filter>
     </ClCompile>
+    <ClCompile Include="inject\module_x86\PeHelper86.cpp">
+      <Filter>Inject\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools\imports.h">
@@ -233,6 +236,9 @@
     </ClInclude>
     <ClInclude Include="inject\eip_execute.h">
       <Filter>Inject</Filter>
+    </ClInclude>
+    <ClInclude Include="inject\module_x86\PeHelper86.h">
+      <Filter>Inject\x86</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

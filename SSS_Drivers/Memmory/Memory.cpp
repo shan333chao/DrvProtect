@@ -281,8 +281,8 @@ namespace memory {
 
 		return status;
 	}
-	NTSTATUS  CreateMemory(PEPROCESS pTargetEprocess, ULONG_PTR uSize, PULONG64 retAddress, PULONG64 kernelAllocAddr, PMDL pmdl  )
-	{ 
+	NTSTATUS  CreateMemory(PEPROCESS pTargetEprocess, ULONG_PTR uSize, PULONG64 retAddress, PULONG64 kernelAllocAddr, PMDL pmdl)
+	{
 		NTSTATUS								status = STATUS_UNSUCCESSFUL;
 		KAPC_STATE								kapc_state = { 0 };
 		PVOID									BaseAddr = NULL;
@@ -316,39 +316,39 @@ namespace memory {
 				imports::ex_free_pool_with_tag(BaseAddr, 0);
 				imports::ke_unstack_detach_process(&kapc_state);
 				return STATUS_UNSUCCESSFUL;
-			} 
+			}
 		}
-		__except(EXCEPTION_EXECUTE_HANDLER){
+		__except (EXCEPTION_EXECUTE_HANDLER) {
 			imports::io_free_mdl(pMdl);
 			imports::ex_free_pool_with_tag(BaseAddr, 0);
 			imports::ke_unstack_detach_process(&kapc_state);
 			return STATUS_UNSUCCESSFUL;
 		}
 
-		
+
 		//写入内存
 		Utils::kmemset(MappAddr, 0, uSize);
 		ChangePageAttributeExecute((ULONG64)MappAddr, uSize);
 		*retAddress = (ULONG64)MappAddr;
 		*kernelAllocAddr = (ULONG64)BaseAddr;
-		Utils::kmemcpy(pmdl, pMdl, sizeof(MDL)); 
+		Utils::kmemcpy(pmdl, pMdl, sizeof(MDL));
 		//取消进程挂靠
-		imports::ke_unstack_detach_process(&kapc_state); 
+		imports::ke_unstack_detach_process(&kapc_state);
 		status = *retAddress > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		return status;
 	}
 
-	void FreeMemory(PEPROCESS eprocess,ULONGLONG mapLockAddr, PVOID kernelAddr, PMDL pmdl) {
+	void FreeMemory(PEPROCESS eprocess, ULONGLONG mapLockAddr, PVOID kernelAddr, PMDL pmdl) {
 		KAPC_STATE								kapc_state = { 0 };
 		if (imports::ps_get_process_exit_process_called(eprocess))
 		{
 			return;
 		}
 		//挂靠目标进程
-		imports::ke_stack_attach_process(eprocess, &kapc_state); 
-		MmUnmapLockedPages((PVOID)mapLockAddr,pmdl);
+		imports::ke_stack_attach_process(eprocess, &kapc_state);
+		MmUnmapLockedPages((PVOID)mapLockAddr, pmdl);
 		imports::ex_free_pool_with_tag(kernelAddr, 0);
-		imports::io_free_mdl(pmdl);
+		//imports::io_free_mdl(pmdl);
 
 		//取消进程挂靠
 		imports::ke_unstack_detach_process(&kapc_state);
@@ -370,13 +370,14 @@ namespace memory {
 		KAPC_STATE								kapc_state = { 0 };
 		PVOID									BaseAddr = NULL;
 		PVOID									MappAddr = NULL;
-		MDL								Mdl = {0};
+		MDL								Mdl = { 0 };
 		ULONG64		kernelAllocateAddr = 0;
+		ULONG64		r3_addr = 0;
 		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
 		if (!pTargetEprocess) return STATUS_INVALID_PARAMETER_1;
-		return CreateMemory(pTargetEprocess, uSize, retAddress,&kernelAllocateAddr, &Mdl);
-
-
+		status = CreateMemory(pTargetEprocess, uSize, &r3_addr, &kernelAllocateAddr, &Mdl);
+		*retAddress = r3_addr;
+		return status;
 	}
 
 

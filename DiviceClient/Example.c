@@ -644,3 +644,22 @@ void CALL_MAIN_THREAD(ULONG PID, ULONG64 shellcodeAddr, ULONG shellcodeLen) {
 
 
 }
+
+
+void GetModuleExportAddr(ULONG pid, PCHAR ModuleName, PCHAR ExportFuncName) {
+ 
+	ULONG64 FuncAddr;
+	MODULE_EXPORT_DATA expoetData = { 0 };
+	expoetData.PID = pid;
+	expoetData.ModuleName = ModuleName;
+	expoetData.ExportFuncName = ExportFuncName;
+	expoetData.FuncAddr = 0;
+	DWORD status_code = DriverComm(MODULE_EXPORT, &expoetData, sizeof(MODULE_EXPORT_DATA));
+	if (status_code > 0)
+	{
+		printf("读取导出表方法 出错 %08x\n", status_code);
+		return;
+	}
+	printf("函数 %s ->  %s  :  0x%p \r\n", ModuleName, ExportFuncName, expoetData.FuncAddr);
+ 
+}

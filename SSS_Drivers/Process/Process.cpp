@@ -30,10 +30,28 @@ namespace process_info {
 		else {
 			moduleBase = GetX64ProcessModule(pTargetEprocess, &moduleNameMem, &moduleSize);
 		}
-		*pModuleSize = moduleSize; 
+		*pModuleSize = moduleSize;
 		imports::rtl_free_unicode_string(&moduleNameMem);
 		status = STATUS_SUCCESS;
 		return moduleBase;
+	}
+	ULONG_PTR GetProcessModuleExport(ULONG pid, PCHAR pcModuleName, PCHAR funcName)
+	{
+		ULONG pModuleSize = 0;
+		ULONG64 moduleBase = 0;
+		ULONG64 funcAddr = 0;
+		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(pid));
+		if (!eprocess)
+		{
+			return 0;
+		}
+		moduleBase = patternSearch::get_module(eprocess, pcModuleName, &pModuleSize);
+		if (!moduleBase)
+		{
+			return 0;
+		}
+		funcAddr = patternSearch::get_module_export(eprocess, moduleBase, funcName);
+		return funcAddr;
 	}
 	ULONG_PTR GetX86ProcessModule(PEPROCESS	pTargetEprocess, PUNICODE_STRING szModuleName, PULONG pModuleSize) {
 

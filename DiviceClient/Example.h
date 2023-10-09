@@ -39,3 +39,4 @@ void InjectX64DLL(ULONG pid, PCHAR dllFilePath);
  
 void WriteX64DLL(ULONG PID, PCHAR dllFilePath);
 void CALL_MAIN_THREAD(ULONG PID, ULONG64 shellcodeAddr, ULONG shellcodeLen);
+void GetModuleExportAddr(ULONG pid, PCHAR ModuleName, PCHAR ExportFuncName);

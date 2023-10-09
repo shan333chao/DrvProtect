@@ -162,6 +162,7 @@
     <ClCompile Include="inject\eip_execute.cpp" />
     <ClCompile Include="inject\inject_main.cpp" />
     <ClCompile Include="inject\module_x64\PeHelper64.cpp" />
+    <ClCompile Include="inject\module_x86\PeHelper86.cpp" />
     <ClCompile Include="Memmory\Memory.cpp" />
     <ClCompile Include="Memmory\MiMemory.cpp" />
     <ClCompile Include="Memmory\PMemory.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="inject\eip_execute.h" />
     <ClInclude Include="inject\inject_main.h" />
     <ClInclude Include="inject\module_x64\PeHelper64.h" />
+    <ClInclude Include="inject\module_x86\PeHelper86.h" />
     <ClInclude Include="Memmory\Memory.h" />
     <ClInclude Include="Memmory\MiMemory.h" />
     <ClInclude Include="Memmory\PMemory.h" />

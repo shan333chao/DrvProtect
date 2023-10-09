@@ -22,6 +22,7 @@ void ShowFunc() {
 	printf("\t15-> 无模块无线程注入DLL \n");
 	printf("\t16-> 主线程call(不附加进程无线程) \n");
 	printf("\t17-> 内核拉伸DLL \n");
+	printf("\t18-> 获取模块导出函数地址（无附加） \n");
 	printf("\t88-> 退出\n");
 	printf("----------------------------------------\n");
 
@@ -224,6 +225,10 @@ LOOP:
 		printf("输入匹配模板(格式:x??????x??xx??):");
 		scanf_s("%s", mask, 0x1000);
 		SearchPattern(pid, ModuleName, pattern, mask);
+
+		VirtualFree(mask, USN_PAGE_SIZE, MEM_RELEASE);
+		VirtualFree(pattern, USN_PAGE_SIZE, MEM_RELEASE);
+		VirtualFree(ModuleName, USN_PAGE_SIZE, MEM_RELEASE);
 		break;
 	}
 	case 14: {
@@ -267,7 +272,25 @@ LOOP:
 		printf("输入dll文件路径(严格区分大小写):");
 		scanf_s("%s", dllFilePath, 0x1000);
 		WriteX64DLL(pid, dllFilePath);
-		VirtualFree(dllFilePath, USN_PAGE_SIZE, MEM_RELEASE); 
+		VirtualFree(dllFilePath, USN_PAGE_SIZE, MEM_RELEASE);
+		break;
+	}
+	case 18: {
+		printf("输入查询的进程id：\n");
+		scanf_s("%d", &pid);
+		PCHAR ModuleName = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(ModuleName, 0, USN_PAGE_SIZE);
+		printf("输入模块名(区分大小写):");
+		scanf_s("%s", ModuleName, 0x1000);
+		PCHAR exportName = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
+		memset(exportName, 0, USN_PAGE_SIZE);
+		printf("输入导出方法名(区分大小写):");
+		scanf_s("%s", exportName, 0x1000);
+		GetModuleExportAddr(pid, ModuleName, exportName);
+
+		VirtualFree(exportName, USN_PAGE_SIZE, MEM_RELEASE);
+		VirtualFree(ModuleName, USN_PAGE_SIZE, MEM_RELEASE);
+
 		break;
 	}
 

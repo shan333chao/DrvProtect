@@ -282,6 +282,7 @@ namespace process_info {
 
     ULONG_PTR GetProcessModuleInfoNoAttach(ULONG pid, PCHAR pcModuleName, PULONG pModuleSize);
     ULONG_PTR GetProcessModuleInfo(ULONG pid, PCHAR pcModuleName, PULONG pModuleSize);
+    ULONG_PTR GetProcessModuleExport(ULONG pid, PCHAR pcModuleName, PCHAR funcName);
     ULONG_PTR GetX86ProcessModule(PEPROCESS	pTargetEprocess, PUNICODE_STRING szModuleName, PULONG pModuleSize);
     ULONG_PTR GetX64ProcessModule(PEPROCESS	pTargetEprocess, PUNICODE_STRING szModuleName, PULONG pModuleSize);
  
