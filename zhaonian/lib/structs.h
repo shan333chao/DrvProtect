@@ -6,17 +6,14 @@ typedef enum _COMM_TYPE {
 	TEST_COMM,
 	//进程伪装
 	PROTECT_PROCESS,
-
 	//进程自杀
 	KILL,
 	//遍历进程
 	ENUM_PROCESS,
-
 	//伪装读取内存
 	FAKE_READ_MEMORY,
 	//伪装写入内存
 	FAKE_WRITE_MEMORY,
-
 	//伪装读取内存
 	PHY_READ_MEMORY,
 	//伪装写入内存
@@ -39,11 +36,17 @@ typedef enum _COMM_TYPE {
 	PROTECT_PROCESS_ADD,
 	//移除应用层保护
 	PROTECT_PROCESS_REMOVE,
+	//特征搜索
+	PATTERN_SEARCH,
+	//内核拉伸dll
+	WRITE_DLL,
+	//主线程call
+	CALL_MAIN,
+	//获取远程模块导出函数地址
+	MODULE_EXPORT
+
 };
-//保护进程
-typedef struct _PROTECT_PROCESS_DATA {
-	ULONG		PID;
-}PROTECT_PROCESS_DATA, * PPROTECT_PROCESS_DATA;
+
 
 typedef struct  _COMM_DATA {
 	ULONG64			ID;
@@ -56,15 +59,16 @@ typedef struct  _COMM_DATA {
 
 //测试通讯
 typedef struct _TEST_DATA {
-
 	ULONG uTest;
 	PVOID regCode;
 	ULONG size;
 	ULONGLONG time;
-
 }TEST_DATA, * PTEST_TATA;
 
-
+//保护进程
+typedef struct _PROTECT_PROCESS_DATA {
+	ULONG		PID;
+}PROTECT_PROCESS_DATA, * PPROTECT_PROCESS_DATA;
 
 //伪装进程并保进程主窗口
 typedef struct _FAKE_PROCESS_DATA {
@@ -111,4 +115,45 @@ typedef struct _QUERY_MODULE_DATA {
 	PCHAR pcModuleName;
 	ULONG_PTR pModuleBase;
 	PULONG pModuleSize;
+	USHORT type;
 }QUERY_MODULE_DATA, * PQUERY_MODULE_DATA;
+
+//特征搜索
+typedef struct _PATTEERN_DATA {
+	ULONG PID;
+	PCHAR pcModuleName;
+	PCHAR pattern;
+	PCHAR mask;
+	ULONGLONG addr;
+}PATTEERN_DATA, * PPATTEERN_DATA;
+
+//注入dll
+typedef struct _INJECT_DLL_DATA {
+	ULONG PID;
+	PCHAR dllFilePath;
+}INJECT_DLL_DATA, * PINJECT_DLL_DATA;
+
+
+//写入dll
+typedef struct _WRITE_DLL_DATA {
+	ULONG PID;
+	PCHAR dllFilePath;
+	ULONG64 imageBase;
+	ULONG64 entryPoint;
+	ULONG64 kimageBase;
+}WRITE_DLL_DATA, * PWRITE_DLL_DATA;
+
+//远程call
+typedef struct _CALL_DATA {
+	ULONG PID;
+	ULONG64 shellcodeAddr;
+	ULONG shellcodeLen;
+}CALL_DATA, * PCALL_DATA;
+
+//获取模块导出函数
+typedef struct _MODULE_EXPORT_DATA {
+	ULONG PID;
+	PCHAR ModuleName;
+	PCHAR ExportFuncName;
+	ULONG64 FuncAddr;
+}MODULE_EXPORT_DATA, * PMODULE_EXPORT_DATA;

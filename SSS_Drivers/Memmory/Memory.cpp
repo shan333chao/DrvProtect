@@ -297,20 +297,27 @@ namespace memory {
 			imports::ke_unstack_detach_process(&kapc_state);
 			return STATUS_UNSUCCESSFUL;
 		}
-
+		
 		Utils::kmemset(BaseAddr, 0, uSize);
+		*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
 		///创建pMdl
 		pMdl = imports::io_allocate_mdl(BaseAddr, uSize, FALSE, NULL, NULL);
+		*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
 		if (!pMdl) {
 			imports::ex_free_pool_with_tag(BaseAddr, 0);
 			imports::ke_unstack_detach_process(&kapc_state);
 			return STATUS_UNSUCCESSFUL;
 		}
+		*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
 		//构建非分页物理页
 		imports::mm_build_mdl_for_non_paged_pool(pMdl);
+		*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
 		__try {
+		
 			//MDL指向的物理页映射值虚拟地址
+			*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
 			MappAddr = imports::mm_map_locked_pages_specify_cache(pMdl, UserMode, MmCached, NULL, NULL, NormalPagePriority);
+			*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
 			if (!MappAddr) {
 				imports::io_free_mdl(pMdl);
 				imports::ex_free_pool_with_tag(BaseAddr, 0);
@@ -338,6 +345,7 @@ namespace memory {
 		return status;
 	}
 
+ 
 	void FreeMemory(PEPROCESS eprocess, ULONGLONG mapLockAddr, PVOID kernelAddr, PMDL pmdl) {
 		KAPC_STATE								kapc_state = { 0 };
 		if (imports::ps_get_process_exit_process_called(eprocess))
@@ -473,5 +481,51 @@ namespace memory {
 			}
 		}
 	}
+	//NTSTATUS map_physical_memory(uint64_t address, SIZE_T size, PVOID* mappedAddress)
+	//{
+	//	PHYSICAL_ADDRESS physicalAddress;
+	//	physicalAddress.QuadPart = address;
 
+	//	OBJECT_ATTRIBUTES objectAttributes;
+	//	InitializeObjectAttributes(&objectAttributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+	//	HANDLE sectionHandle;
+	//	NTSTATUS status = ZwCreateSection(&sectionHandle, SECTION_MAP_READ | SECTION_MAP_WRITE, &objectAttributes, NULL, PAGE_READWRITE, SEC_COMMIT, NULL);
+	//	if (!NT_SUCCESS(status))
+	//	{
+	//		return status;
+	//	}
+
+	//	LARGE_INTEGER sectionOffset;
+	//	sectionOffset.QuadPart = 0;
+
+	//	SIZE_T viewSize = size;
+	//	*mappedAddress = NULL;
+	//	status = ZwMapViewOfSection(sectionHandle, ZwCurrentProcess(), mappedAddress, 0, viewSize, &sectionOffset, &viewSize, ViewShare, 0, PAGE_READWRITE);
+	//	ZwClose(sectionHandle);
+
+	//	return status;
+	//}
+
+	//NTSTATUS write_physical_address(uint64_t address, PVOID buffer, SIZE_T size, SIZE_T* written)
+	//{
+	//	if (!address)
+	//		return STATUS_UNSUCCESSFUL;
+
+	//	PVOID pmapped_mem = NULL;
+
+	//	NTSTATUS status = map_physical_memory(address, size, &pmapped_mem);
+	//	if (!NT_SUCCESS(status))
+	//		return status;
+
+	//	Log("mapped physical memory -> address 0x%x, size %zu", address, size);
+
+	//	memcpy(pmapped_mem, buffer, size);
+
+	//	*written = size;
+
+	//	ZwUnmapViewOfSection(ZwCurrentProcess(), pmapped_mem);
+
+	//	return STATUS_SUCCESS;
+	//}
 }

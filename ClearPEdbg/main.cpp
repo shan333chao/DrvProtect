@@ -6,6 +6,18 @@
 #include <Windows.h>
 #include "aes.h"
 #include <time.h>
+#include <random>
+#pragma warning(disable:4996)
+void GetCurrentTimeStr(char* timestrBuffer) {
+	time_t currentTime;
+	struct tm localTime;
+	// 获取当前时间
+	time(&currentTime);
+	// 转换为本地时间
+	localtime_s(&localTime, &currentTime);
+	// 格式化时间为字符串
+	strftime(timestrBuffer, 20, "%Y-%m-%d %H:%M:%S", &localTime);
+}
 void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
 	HANDLE hFile;
 	DWORD dwBytesWritten = 0;
@@ -39,8 +51,8 @@ void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
 	printf("[*] %s file created.\n", filename);
 }
 DWORD rav2Fov(char* pFileBuffer, DWORD dwRav) {
-	PIMAGE_DOS_HEADER pDosHeader = pFileBuffer;
-	PIMAGE_NT_HEADERS pNTHeader = pFileBuffer + pDosHeader->e_lfanew;
+	PIMAGE_DOS_HEADER pDosHeader =(PIMAGE_DOS_HEADER) pFileBuffer;
+	PIMAGE_NT_HEADERS pNTHeader = (PIMAGE_NT_HEADERS)((PCHAR)pFileBuffer + pDosHeader->e_lfanew);
 	PIMAGE_FILE_HEADER pFileHeader = (PIMAGE_FILE_HEADER)((PCHAR)pNTHeader + 4);
 	PIMAGE_OPTIONAL_HEADER pOptionalHeader = (PIMAGE_OPTIONAL_HEADER)((PCHAR)pFileHeader + IMAGE_SIZEOF_FILE_HEADER);
 	PIMAGE_SECTION_HEADER pSectionHeader = (PIMAGE_SECTION_HEADER)((PCHAR)pOptionalHeader + pFileHeader->SizeOfOptionalHeader);
@@ -59,6 +71,40 @@ DWORD rav2Fov(char* pFileBuffer, DWORD dwRav) {
 			return dwRav - pSectionHeader[i].VirtualAddress + pSectionHeader[i].PointerToRawData;
 		}
 	}
+}
+void write_header_file(unsigned char* pFileData, long lFileSize ) {
+ 
+    FILE*	pfile = NULL;
+	//写出文件
+	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\zhaonian\\driver_shellcode.h", "w");
+	if (!pfile)
+	{
+		printf("写出文件失败");
+		return ;
+	}
+	CHAR pSzOutData[0x100] = { 0 };
+	//文件生成时间
+	char formattedTime[22] = { 0 };
+	//填写文件数据 
+	GetCurrentTimeStr(formattedTime);
+	sprintf(pSzOutData, "//%s\r\n#pragma once\r\n", formattedTime);
+	fputs(pSzOutData, pfile);
+	sprintf(pSzOutData,"#define FILE_LEN %d \r\n", lFileSize);
+	fputs(pSzOutData, pfile);
+	sprintf(pSzOutData, "unsigned char fileData[FILE_LEN]={", lFileSize);
+	fputs(pSzOutData, pfile);
+	for (size_t i = 0; i < lFileSize; i++)
+	{
+		//换行输出
+		if (i % 16 == 0)
+		{
+			fputs("\r\n", pfile);
+		}
+		sprintf(pSzOutData,  "0x%02x, ", pFileData[i]);
+		fputs(pSzOutData, pfile);
+	}
+	fputs("\r\n};\r\n", pfile);
+	fclose(pfile);
 }
 void removeDebug() {
 
@@ -84,7 +130,7 @@ void removeDebug() {
 	if (!pfile)
 	{
 		printf("fopen_s file failed 1");
-		return 0;
+		return ;
 	}
 
 	//获取文件长度
@@ -92,7 +138,7 @@ void removeDebug() {
 	lFileSize = ftell(pfile);
 	fseek(pfile, 0, SEEK_SET);
 	//获取文件数据
-	pFileData = malloc(lFileSize);
+	pFileData = (PUCHAR)malloc(lFileSize);
 	if (!pFileData)
 	{
 		fclose(pfile);
@@ -110,7 +156,7 @@ void removeDebug() {
 
 	//删除调试信息
 	DWORD _PE_DEBUG =  pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress ;
-	DWORD addr= rav2Fov(pFileData, _PE_DEBUG);
+	DWORD addr= rav2Fov((PCHAR)pFileData, _PE_DEBUG);
 	ULONG dbgDirCount = pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size / sizeof(IMAGE_DEBUG_DIRECTORY);
 	PIMAGE_DEBUG_DIRECTORY pDEBUG = (PIMAGE_DEBUG_DIRECTORY)(addr + pFileData);
 	for (size_t i = 0; i < dbgDirCount; i++)
@@ -130,11 +176,15 @@ void removeDebug() {
 	struct AES_ctx ctx = {0};
 	unsigned char key[] = "\xde\xad\xbe\xef\xca\xfe\xba\xbe\xde\xad\xbe\xef\xca\xfe\xba\xbe";
 	unsigned char iv[] = "\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff";
-	srand(time(NULL));
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	// 创建均匀分布对象，指定随机数范围
+	std::uniform_int_distribution<> dis(1, 0xff);
 	for (size_t i = 0; i < sizeof(key); i++)
 	{
-		key[i] = rand() % 0x100;
-		iv[i] = rand() % 0x100;
+		int randomIndex = dis(gen);
+		key[i] = dis(gen);
+		iv[i] = dis(gen);
 	}
 	AES_init_ctx_iv(&ctx, key, iv);
 	AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)pFileData, lFileSize);
@@ -145,16 +195,15 @@ void removeDebug() {
 	memcpy(prebuff+4, key, 17);
 	memcpy(prebuff + 4+17, iv, 17);
 	int encryptSize = lFileSize + sizeof(prebuff);
-	PCHAR encryptData = malloc(encryptSize);
+	PCHAR encryptData =(PCHAR) malloc(encryptSize);
 	memset(encryptData, 0, encryptSize);
 	memcpy(encryptData, prebuff, sizeof(prebuff));
 	memcpy(encryptData + sizeof(prebuff), pFileData, lFileSize);
 
 	char nencryptfileName[20] = "encrypt.png";
-	writeFile(nencryptfileName, encryptData, encryptSize);
+	writeFile(nencryptfileName,(PUCHAR) encryptData, encryptSize);
 
-
-
+	write_header_file((PUCHAR)encryptData, encryptSize);
 	free(encryptData);
 	free(pFileData);
 

@@ -19,6 +19,9 @@
     <Filter Include="ntp_client">
       <UniqueIdentifier>{c45ab171-8098-4835-a882-465e71380250}</UniqueIdentifier>
     </Filter>
+    <Filter Include="inject">
+      <UniqueIdentifier>{6c7e87be-1928-480d-842f-f78bdd55e2cb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -33,6 +36,9 @@
     <ClCompile Include="aes.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="inject.c">
+      <Filter>inject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Comm\CommR3.h">
@@ -43,6 +49,9 @@
     </ClInclude>
     <ClInclude Include="aes.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="inject.h">
+      <Filter>inject</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

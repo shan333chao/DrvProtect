@@ -133,7 +133,7 @@ namespace eip_execute {
 		//挑选第一个线程
 		PETHREAD thread = GetFirstThread(process);
 
-		PVOID peb32 = imports::ps_get_process_peb(process);
+		PVOID peb32 = imports::ps_get_process_wow64_process(process);
 		//挂起线程
 		KeSuspendThread(thread);
 
@@ -156,25 +156,23 @@ namespace eip_execute {
 			*/
 			UCHAR shellcode[] = {
 
-				0x60,					 //pushad
-				0x9c,					 //pushfd
-				0x83,0xEC,0x1C,			 //sub esp 0x1c
-				0x68,0x00,0x00,0x00,0x00,0x00,//push lpReserved
-				0x68,0x00,0x00,0x00,0x00,0x00,//push PROCESS_ATTACH
-				0x68,0x00,0x00,0x00,0x00,0x00,//push hModule
-				0xb8,0x00,0x00,0x00,0x00,0x00,//mov eax,entryaddr
-				0xff,0xd0,				 //call eax 
-				0x83,0xc4,0x1c,			 //add esp 0x1c
-				0x9d,					 //popfd
-				0x64,					 //popad
-				0xe9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00  //jmp Rip 
+				0x9C,                           // pushfd   push flags
+				0x60,                           // pushad   push registers
+				0x68, 0x00, 0x00, 0x00, 0x00,   // push     nullptr (0x0)
+				0x68, 0x01, 0x00, 0x00, 0x00,   // push     DLL_PROCESS_ATTACH (0x1)
+				0x68, 0x00, 0x00, 0x00, 0x00,   // push     0x00000000
+				0xB8, 0x00, 0x00, 0x00, 0x00,   // mov      eax 0x00000000
+				0xFF, 0xD0,	                    // call     eax
+				0x61,                           // popad    pop registers	
+				0x9D,                           // popfd    pop flags
+				0xe9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 //jmp Rip 
 			};
 			
 			shellcodeLength = sizeof(shellcode);
 			//填入参数
-			*(PULONG32)(shellcode + 6) = (ULONG32)entrypoint;  //push lpReserved
-			*(PULONG32)(shellcode + 11) = DLL_PROCESS_ATTACH;  //push PROCESS_ATTACH
-			*(PULONG32)(shellcode + 16) = (ULONG32)R3_modulebase;      //push hModule
+ 
+		 
+			*(PULONG32)(shellcode + 13) = (ULONG32)R3_modulebase;      //push hModule
 
 			*(PULONG32)(shellcode + 18) = (ULONG32)entrypoint ;//mov eax,entryaddr
 			*(PULONG64)(shellcode + shellcodeLength - 8) = context.Rip;

@@ -51,6 +51,7 @@
     <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>WDM</DriverType>
+    <Driver_SpectreMitigation>Spectre</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <TargetVersion>Windows10</TargetVersion>
@@ -151,6 +152,11 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
@@ -184,6 +190,7 @@
   <ItemGroup>
     <ClInclude Include="Comm\Comm.h" />
     <ClInclude Include="Comm\CommStructs.h" />
+    <ClInclude Include="ERROR_CODE.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="infinity_hook_pro\hde\hde64.h" />
     <ClInclude Include="infinity_hook_pro\hde\pstdint.h" />

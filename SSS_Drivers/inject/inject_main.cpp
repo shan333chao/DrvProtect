@@ -48,15 +48,20 @@ namespace inject_main {
 		imports::ke_stack_attach_process(pEprocess, &KAPC);
 		PVOID entrypoint = NULL;
 		ULONGLONG dos_header = (ULONGLONG)filebufeer;
+		USHORT imageMagic = *(PUSHORT)dos_header;
+		if (imageMagic != 0x5a4d)
+		{
+			return;
+		}
 		ULONGLONG nt_header = (ULONGLONG) * (ULONG*)(dos_header + 0x03C) + dos_header;
 		USHORT  machine = *(USHORT*)(nt_header + 0x4);
-		DbgBreakPoint();
+
 		PVOID peb32 = imports::ps_get_process_wow64_process(pEprocess);
-		if (peb32 && machine != 0x8664)
+		if (machine != 0x8664 && peb32)
 		{
 			pehelper86::PELoaderDLL((PUCHAR)filebufeer, (PUCHAR)virtualbase, kernelImageBase, &entrypoint, pEprocess);
 		}
-	    if (machine == 0x8664 && !peb32)
+		if (machine == 0x8664 && !peb32)
 		{
 			pehelper64::PELoaderDLL((PUCHAR)filebufeer, (PUCHAR)virtualbase, kernelImageBase, &entrypoint, pEprocess);
 		}

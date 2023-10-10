@@ -23,3 +23,8 @@ del C:\DriverCodes\HideDriver\NickolasZhao\x64\Debug\SSS_Drivers.*
 
 C:\ProgramFiles\DSigntool\CSignTool.exe sign /r dandan /f C:\DriverCodes\HideDriver\NickolasZhao\x64\Debug\ProxyDrv.sys /ac /kp /s
 
+
+
+cd "C:\DriverCodes\HideDriver\NickolasZhao\x64\Debug\"
+
+ClearPEdbg.exe

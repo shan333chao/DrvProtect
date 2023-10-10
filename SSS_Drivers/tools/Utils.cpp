@@ -240,7 +240,7 @@ unsigned long long  Utils::find_pattern_image(unsigned long long addr, const cha
 }
 VOID Utils::InitApis() {
 
-
+	imports::imported.kd_entered_debugger= GetNtFuncExportName(skCrypt("KdEnteredDebugger"));
 	imports::imported.ps_get_thread_win_thread = GetNtFuncExportName(skCrypt("PsGetThreadWin32Thread"));
 	imports::imported.ps_get_thread_id = GetNtFuncExportName(skCrypt("PsGetThreadId"));
 	imports::imported.ps_get_thread_teb = GetNtFuncExportName(skCrypt("PsGetThreadTeb"));

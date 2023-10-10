@@ -95,7 +95,7 @@ namespace patternSearch {
 // it's mimimal port of Windows GetModuleHandleA to external. structure offsets are just fixed for both x86/x64.
 //
 
-	ULONGLONG get_module(PEPROCESS process, PCSTR dll_name,PULONG moduleSize)
+	ULONGLONG get_module(PEPROCESS process, PCSTR dll_name, PULONG moduleSize)
 	{
 
 
@@ -177,7 +177,7 @@ namespace patternSearch {
 		ULONGLONG a0;
 		ULONG a1[4]{};
 		char a2[260]{};
-
+		//NT HEADER
 		a0 = base + read_i16(process, base + 0x3C);
 		if (a0 == base)
 		{
@@ -186,7 +186,7 @@ namespace patternSearch {
 
 		USHORT  machine = read_i16(process, a0 + 0x4);
 		ULONG wow64_offset = machine == 0x8664 ? 0x88 : 0x78;
-
+		//定位导出表地址
 		a0 = base + (ULONGLONG)read_i32(process, a0 + wow64_offset);
 		if (a0 == base)
 		{
@@ -196,19 +196,28 @@ namespace patternSearch {
 		int name_length = (int)strlen_imp(export_name);
 		if (name_length > 259)
 			name_length = 259;
-
+		//0x18  NumberOfNames
 		MiMemory::MiReadProcessMemory(process, (PVOID)(a0 + 0x18), &a1, sizeof(a1));
 		while (a1[0]--)
 		{
+			 //a[0] NumberOfNames
+			// a[1] AddressOfFunctions
+			// a[2] AddressOfNames
+			// a[3] AddressOfNameOrdinals
+			//读取导出名称的地址
 			a0 = (ULONGLONG)read_i32(process, base + a1[2] + ((ULONGLONG)a1[0] * 4));
 			if (a0)
 			{
+				//读取导出名称
 				MiMemory::MiReadProcessMemory(process, (PVOID)(base + a0), &a2, name_length);
 				a2[name_length] = 0;
 
 				if (!strcmpi_imp(a2, export_name))
 				{
+					DbgBreakPoint();
+					//通过AddressOfNameOrdinals  NumberOfNames*2  获取名字在导出表中的序号
 					ULONG tmp = read_i16(process, base + a1[3] + ((ULONGLONG)a1[0] * 2)) * 4;
+					//通过导出序号  在AddressOfNameOrdinals 找到函数偏移
 					ULONG tmp2 = read_i32(process, base + a1[1] + tmp);
 					return (base + tmp2);
 				}
@@ -318,7 +327,45 @@ namespace patternSearch {
 
 		return (PVOID)ret;
 	}
+	BOOLEAN  IsAddressInModule(PEPROCESS process, ULONGLONG base, UCHAR module_type, ULONG64 exportAddr)
+	{
+		ULONGLONG nt_header; 
+		if (base == 0)
+		{
+			return 0;
+		} 
+		nt_header = (ULONGLONG)read_i32(process, base + 0x03C) + base;
+		if (nt_header == base)
+		{
+			return 0;
+		}
 
+		USHORT  machine = read_i16(process, nt_header + 0x4);
+
+		ULONGLONG section_header = machine == 0x8664 ?
+			nt_header + 0x0108 :
+			nt_header + 0x00F8;
+
+
+		USHORT NumberOfSections = read_i16(process, nt_header + 0x06);
+
+		for (USHORT i = 0; i < NumberOfSections; i++) {
+			ULONGLONG section = section_header + ((ULONGLONG)i * 40);
+			if (module_type == VM_MODULE_CODESECTIONSONLY)
+			{
+				ULONG section_characteristics = read_i32(process, section + 0x24);
+				if (!(section_characteristics & 0x00000020))
+					continue;
+			}
+			ULONGLONG virtual_address = base + (ULONGLONG)read_i32(process, section + 0x0C);
+			ULONG virtual_size = read_i32(process, section + 0x08);
+			if (exportAddr > virtual_address && exportAddr < (virtual_address + virtual_size))
+			{
+				return TRUE;
+			} 
+		} 
+		return  FALSE;
+	}
 	void  free_module(PVOID dumped_module)
 	{
 		ULONGLONG a0 = (ULONGLONG)dumped_module;
@@ -366,7 +413,7 @@ namespace patternSearch {
 
 		ULONGLONG moduleBase = 0;
 		ULONG moduleSize = 0;
-		moduleBase = get_module(eprocess, dllName,&moduleSize);
+		moduleBase = get_module(eprocess, dllName, &moduleSize);
 		if (!moduleBase)
 		{
 			return 0;

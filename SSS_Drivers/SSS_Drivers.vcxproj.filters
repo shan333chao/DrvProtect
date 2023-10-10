@@ -240,6 +240,9 @@
     <ClInclude Include="inject\module_x86\PeHelper86.h">
       <Filter>Inject\x86</Filter>
     </ClInclude>
+    <ClInclude Include="ERROR_CODE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

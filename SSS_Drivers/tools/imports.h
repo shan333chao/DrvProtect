@@ -103,6 +103,8 @@ struct _m_imported
 	uintptr_t io_get_device_attachment_base_ref;
 	uintptr_t	ps_get_thread_id;
 	uintptr_t ps_get_thread_win_thread;
+	uintptr_t kd_entered_debugger;
+	
 
 };
 namespace imports {

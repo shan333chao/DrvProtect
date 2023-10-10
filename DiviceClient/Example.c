@@ -542,7 +542,7 @@ void SearchPattern(ULONG pid, PCHAR szModuleName, PCHAR pattern, PCHAR mask)
 	PATTEERN_DATA patternData = { 0 };
 	patternData.PID = pid;
 	patternData.mask = mask;
-	char* testPattern = "\x48\x83\xEC\x50\x48\x89\xD6\x48\x8B\x05\x36\x1C\x18\x00\x48\x31";
+ 
 	int len = strlen(mask);
 
 	UCHAR upattern[0x100] = { 0 };
@@ -639,10 +639,7 @@ void CALL_MAIN_THREAD(ULONG PID, ULONG64 shellcodeAddr, ULONG shellcodeLen) {
 		printf("写入DLL 出错 %08x\n", status_code);
 		return;
 	}
-	printf("写入DLL 成功 ");
-
-
-
+	printf("写入DLL 成功 "); 
 }
 
 

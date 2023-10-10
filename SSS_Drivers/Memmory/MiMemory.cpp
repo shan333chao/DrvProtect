@@ -340,20 +340,25 @@ namespace MiMemory {
 	NTSTATUS MiReadProcessMemory(IN PEPROCESS process, IN PVOID address, OUT PVOID buffer, IN SIZE_T readSize)
 	{
 
-		NTSTATUS         Status;
+		NTSTATUS         Status=STATUS_UNSUCCESSFUL;
 		if (process == 0)
 		{
 			Status = STATUS_PROCESS_IS_TERMINATING;
 			return Status;
 		}
-
+		PEX_RUNDOWN_REF rundownRef = (PEX_RUNDOWN_REF)GetProcessRundownProtect(process);
+		if (ExAcquireRundownProtection(rundownRef) == FALSE)
+		{
+			Log("[-] Process already terminating.");
+			return Status;
+		}
 		ULONGLONG cr3 = *(ULONGLONG*)((ULONGLONG)process + 0x28);
 		if (cr3 == 0)
 		{
 			Status = STATUS_ACCESS_VIOLATION;
 			return Status;
 		}
-
+		BOOLEAN isCopyed = FALSE;
 		ULONGLONG total_size = readSize;
 		ULONGLONG offset = 0;
 		ULONGLONG bytes_read = 0;
@@ -364,7 +369,12 @@ namespace MiMemory {
 			physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
 			if (!physical_address)
 			{
-				Utils::self_safe_copy(process, (PVOID)((ULONGLONG)address + offset), 0x1000);
+				if (!isCopyed)
+				{
+					Utils::self_safe_copy(process, (PVOID)((ULONGLONG)address + offset), readSize);
+					isCopyed = TRUE;
+				}
+
 				physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
 			}
 
@@ -390,7 +400,7 @@ namespace MiMemory {
 			total_size -= bytes_read;
 			offset += bytes_read;
 		}
-
+		ExReleaseRundownProtection(rundownRef);
 		Status = STATUS_SUCCESS;
 		return Status;
 	}

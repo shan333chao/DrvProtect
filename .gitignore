@@ -62,4 +62,6 @@ dkms.conf
 */MyDriver.h
 */Memmory/mm_vad.cpp
 */Memmory/mm_vad.h
+zhaonian/driver_shellcode.h
+*/Debug
 
