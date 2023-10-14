@@ -195,20 +195,13 @@ namespace fuck_process {
 		char empty[0x500] = { 0 };
 		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_peb_ldr_addr, &mask_table_entry, sizeof(LDR_DATA_TABLE_ENTRY));
 		char nameTemp[0x200] = { 0 };
-
-		ULONG64 buffer_addr = patternSearch::read_i32(SourceEprocess, source_peb_ldr_addr + 0x28);
-
-		MiMemory::MiReadProcessMemory(SourceEprocess, (PVOID)buffer_addr, nameTemp, source_table_entry.FullDllName.MaximumLength);
-		ULONG64 mask_buffer = patternSearch::read_i32(MaskEprocess, mask_peb_ldr_addr + 0x28);
-		ULONG64 FullDllName_addr = mask_buffer;
+		MiMemory::MiReadProcessMemory(SourceEprocess, (PVOID)source_table_entry.FullDllName.Buffer, nameTemp, source_table_entry.FullDllName.MaximumLength);
 		//先清空自己
-		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, empty, mask_table_entry.FullDllName.MaximumLength);
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_table_entry.FullDllName.Buffer, empty, mask_table_entry.FullDllName.MaximumLength);
 		//写入复制数据
-		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, nameTemp, source_table_entry.FullDllName.MaximumLength);
-
-		ULONG64 BaseDllName_addr = patternSearch::read_i32(SourceEprocess, source_peb_ldr_addr + 0x30);
-		USHORT nameOffset = BaseDllName_addr - buffer_addr;
-		patternSearch::write_i64(MaskEprocess, mask_peb_ldr_addr + 0x30, mask_buffer + nameOffset);
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_table_entry.FullDllName.Buffer, nameTemp, source_table_entry.FullDllName.Length);
+		USHORT nameOffset = mask_table_entry.BaseDllName.Buffer - mask_table_entry.FullDllName.Buffer;
+		patternSearch::write_i64(MaskEprocess, mask_peb_ldr_addr + 0x30, mask_table_entry.FullDllName.Buffer + nameOffset);
 
 
 		ULONG WindowTitle_MaximumLength = mask_paramaters.WindowTitle.MaximumLength;
@@ -237,11 +230,10 @@ namespace fuck_process {
 		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_paramater_addr, &mask_paramaters, sizeof(RTL_USER_PROCESS_PARAMETERS));
 
 		//WindowTitle
-		mask_buffer = patternSearch::read_i32(MaskEprocess, mask_paramater_addr + 0x74);
-		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, empty, WindowTitle_MaximumLength);
-		patternSearch::write_i32(MaskEprocess, mask_paramater_addr + 0x74, FullDllName_addr);
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_paramaters.WindowTitle.Buffer, empty, WindowTitle_MaximumLength);
+		patternSearch::write_i32(MaskEprocess, mask_paramater_addr + 0x74, mask_table_entry.FullDllName.Buffer);
 		//CommandLine
-		patternSearch::write_i32(MaskEprocess, mask_paramater_addr + 0x44, FullDllName_addr);
+		patternSearch::write_i32(MaskEprocess, mask_paramater_addr + 0x44, mask_table_entry.FullDllName.Buffer);
 
 
 
@@ -326,12 +318,15 @@ namespace fuck_process {
 				}
 				POBJECT_NAME_INFORMATION pSourceNameInfo = (POBJECT_NAME_INFORMATION) * (PULONG_PTR)((PUCHAR)SourceEprocess + AuditOffset);
 				POBJECT_NAME_INFORMATION pMaskNameInfo = (POBJECT_NAME_INFORMATION) * (PULONG_PTR)((PUCHAR)MaskEprocess + AuditOffset);
-
-				Utils::kmemcpy(szNameTemp, pSourceNameInfo->Name.Buffer, pSourceNameInfo->Name.Length);
-				pMaskNameInfo->Name.Buffer = (PWCH)szNameTemp;
+				Utils::kmemset(pMaskNameInfo->Name.Buffer, 0, pMaskNameInfo->Name.MaximumLength);
+				Utils::kmemcpy(pMaskNameInfo->Name.Buffer, pSourceNameInfo->Name.Buffer, pSourceNameInfo->Name.Length);
+			 
 				pMaskNameInfo->Name.MaximumLength = pSourceNameInfo->Name.MaximumLength;
 				pMaskNameInfo->Name.Length = pSourceNameInfo->Name.Length;
-				szNameTemp += pSourceNameInfo->Name.MaximumLength;
+
+				//szNameTemp += pSourceNameInfo->Name.MaximumLength;
+				//RtlCopyUnicodeString(&pMaskNameInfo->Name, &pSourceNameInfo->Name);
+
 
 			}
 
@@ -351,12 +346,12 @@ namespace fuck_process {
 					imports::obf_dereference_object(MaskFile);
 					break;
 				}
-
-				Utils::kmemcpy(szNameTemp, SourceFile->FileName.Buffer, SourceFile->FileName.Length);
-				MaskFile->FileName.Buffer = (PWCH)szNameTemp;
+				Utils::kmemset(MaskFile->FileName.Buffer,0, MaskFile->FileName.MaximumLength);
+				Utils::kmemcpy(MaskFile->FileName.Buffer, SourceFile->FileName.Buffer, SourceFile->FileName.Length);
+				//MaskFile->FileName.Buffer = (PWCH)szNameTemp;
 				MaskFile->FileName.MaximumLength = SourceFile->FileName.MaximumLength;
 				MaskFile->FileName.Length = SourceFile->FileName.Length;
-				szNameTemp += SourceFile->FileName.MaximumLength;
+			 
 
 				//修改文件路径2
 				ULONG_PTR MaskFsContext2 = (ULONG_PTR)MaskFile->FsContext2;
@@ -366,12 +361,9 @@ namespace fuck_process {
 					PUNICODE_STRING SourceContextName = (PUNICODE_STRING)(SourceFsContext2 + 0x10);
 					Utils::kmemcpy(szNameTemp, SourceContextName->Buffer, SourceContextName->Length);
 					PUNICODE_STRING MaskContextName = (PUNICODE_STRING)(MaskFsContext2 + 0x10);
-
 					MaskContextName->Buffer = (PWCH)szNameTemp;
 					MaskContextName->MaximumLength = SourceContextName->MaximumLength;
 					MaskContextName->Length = SourceContextName->Length;
-
-					szNameTemp += SourceContextName->MaximumLength;
 
 					MaskFile->DeviceObject = SourceFile->DeviceObject;
 					MaskFile->Vpb = SourceFile->Vpb;
