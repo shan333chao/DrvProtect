@@ -68,6 +68,7 @@ namespace memory {
     void FreeMemory(PEPROCESS eprocess, ULONGLONG mapLockAddr, PVOID kernelAddr, PMDL pmdl);
     VOID ChangePageAttributeExecute(ULONG64 uAddress, ULONG64 uSize);
  
+    NTSTATUS ChangeProcessPagtAddrExe(ULONG PID,ULONG64 Address,ULONG size);
 
 
 }

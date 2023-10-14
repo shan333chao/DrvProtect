@@ -89,13 +89,13 @@ EXTERN_C void clear_unloaded_driver()
 }
 EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
-#if DEBUG_MODE == 0
+
+#ifndef _DEBUG_MODE
 	if (pCommData->Type > 0)
 	{
 		if (!ProtectRoute::ValidateReg())
 		{
-			pCommData->status = status;
-			return status;
+			return STATUS_TEST_COMM_UNREG_OR_EXPIRED;
 		}
 	}
 #endif // DEBUG_MODE == 0
@@ -112,6 +112,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case INJECT_DLL: {
+		DbgBreakPoint();
 		PINJECT_DLL_DATA data = (PINJECT_DLL_DATA)pCommData->InData;
 		status = inject_main::inject_x64DLL(data->dllFilePath, data->PID);
 		break;
@@ -122,6 +123,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case WRITE_DLL: {
+		DbgBreakPoint();
 		PWRITE_DLL_DATA dllDATA = (PWRITE_DLL_DATA)pCommData->InData;
 		status = inject_main::WriteDLLx64_dll(dllDATA->dllFilePath, dllDATA->PID, &dllDATA->entryPoint, &dllDATA->imageBase, &dllDATA->kimageBase);
 		break;
@@ -205,12 +207,12 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case PROTECT_PROCESS_ADD: {
-		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData; 
+		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData;
 		status = fuck_process::RemoveProcessProtect(PROCESS_DATA->PID, TRUE);
 		break;
 	}
 	case PROTECT_PROCESS_REMOVE: {
-		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData; 
+		PPROTECT_PROCESS_DATA  PROCESS_DATA = (PPROTECT_PROCESS_DATA)pCommData->InData;
 		status = fuck_process::RemoveProcessProtect(PROCESS_DATA->PID, FALSE);
 		break;
 	}
@@ -220,11 +222,21 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = PATTERN->addr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
-	case MODULE_EXPORT: {
-		PMODULE_EXPORT_DATA EXPORT_DATA=(PMODULE_EXPORT_DATA)pCommData->InData;
-		EXPORT_DATA->FuncAddr=process_info::GetProcessModuleExport(EXPORT_DATA->PID, EXPORT_DATA->ModuleName, EXPORT_DATA->ExportFuncName); 
+	case MODULE_NAME_EXPORT: {
+		PMODULE_EXPORT_DATA EXPORT_DATA = (PMODULE_EXPORT_DATA)pCommData->InData;
+		EXPORT_DATA->FuncAddr = process_info::GetProcessModuleExport(EXPORT_DATA->PID, EXPORT_DATA->ModuleName, EXPORT_DATA->ExportFuncName);
 		status = EXPORT_DATA->FuncAddr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-		break; 
+		break;
+	}
+	case MODULE_BASE_EXPORT: {
+		PMODULE_BASE_EXPORT_DATA EXPORT_DATA = (PMODULE_BASE_EXPORT_DATA)pCommData->InData;
+		EXPORT_DATA->FuncAddr = process_info::GetProcessModuleExport2(EXPORT_DATA->PID, EXPORT_DATA->ModuleBase, EXPORT_DATA->ExportFuncName);
+		status = EXPORT_DATA->FuncAddr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+
+	}
+	case MEMORY_ATTRIBUTE: {
+		PCHANGE_ATTRIBUTE_DATA MEM_DATA = (PCHANGE_ATTRIBUTE_DATA)pCommData->InData;
+		status = memory::ChangeProcessPagtAddrExe(MEM_DATA->PID, MEM_DATA->Address, MEM_DATA->uSize);
 	}
 	}
 	return status;
@@ -234,7 +246,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 
 
 
-#if DEBUG_MODE
+#ifdef _DEBUG_MODE
 EXTERN_C VOID DriverUnload(PDRIVER_OBJECT pDriver) {
 	UNREFERENCED_PARAMETER(pDriver);
 	ProtectRoute::RemoveProtectWindow();

@@ -5,7 +5,7 @@
 
 namespace patternSearch {
 
-
+	
 	UCHAR read_i8(PEPROCESS process, ULONGLONG address)
 	{
 		UCHAR result = 0;
@@ -122,26 +122,28 @@ namespace patternSearch {
 		{
 			return 0;
 		}
-
+		//读取ldr
 		a1 = read_ptr(process, peb + a0[1]);
 		if (a1 == 0)
 		{
 			return 0;
 		}
-
+		//[+0x020] InMemoryOrderModuleList [Type: _LIST_ENTRY]
 		a1 = read_ptr(process, a1 + a0[2]);
 		if (a1 == 0)
 		{
 			return 0;
 		}
-
+		//InMemoryOrderModuleList.FLink
 		a2 = read_ptr(process, a1 + a0[0]);
 
+
 		while (a1 != a2) {
+			//读取unicodcodeString  maxlength
 			ULONGLONG a4 = read_ptr(process, a1 + a0[3]);
 			if (a4 != 0)
 			{
-
+				//读取字符串内容
 				MiMemory::MiReadProcessMemory(process, (PVOID)a4, a3, sizeof(a3));
 				if (dll_name == 0)
 					return read_ptr(process, a1 + a0[4]);
@@ -156,6 +158,7 @@ namespace patternSearch {
 				if (strcmpi_imp((PCSTR)final_name, dll_name) == 0)
 				{
 					*moduleSize = read_ptr(process, a1 + a0[5]);
+					//读取imageBase
 					return read_ptr(process, a1 + a0[4]);
 				}
 			}

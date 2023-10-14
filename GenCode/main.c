@@ -18,9 +18,9 @@
  
 
 typedef struct _REG_VALID {
-	ULONGLONG TIMESPAN;
-	int DAYS;
-	ULONGLONG CTIME;
+	ULONG TIMESPAN;
+	ULONG CTIME;
+	ULONG64 MACHINE;
 }REG_VALID,*PREG_VALID;
  
  
@@ -28,20 +28,17 @@ typedef struct _REG_VALID {
 int main(int argc, char* argv[])
 {
  
-	ULONG a = 2;
-	ULONG b = 5;
-	ULONG c = a - b;
-	printf("Timestamp: %d \n", c);
-	unsigned long long milliseconds = time(NULL);
-	printf("Timestamp: %llu\n", milliseconds);
+  
+	unsigned long milliseconds = time(NULL);
+	printf("当前时间: %llu\n", milliseconds);
 
- 
+	int days = 30;
 	REG_VALID reg = { 0 };
 	reg.CTIME = milliseconds;
-	reg.DAYS = 1;
-	reg.TIMESPAN = milliseconds + reg.DAYS *  60 * 60 * 24;
 
-	printf("Timestamp: %llu\n", reg.TIMESPAN); 
+	reg.TIMESPAN = milliseconds + days *  60 * 60 * 24;
+	reg.MACHINE = 0;
+	printf("有效时间: %llu\n", reg.TIMESPAN); 
 
 
 	struct AES_ctx ctx = { 0 };
@@ -55,10 +52,14 @@ int main(int argc, char* argv[])
 	}
 	AES_init_ctx_iv(&ctx, key, iv);
 	AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)&reg, sizeof(REG_VALID));
-	PUCHAR encryptCode = malloc(sizeof(key)*2+ sizeof(REG_VALID));
+	PUCHAR encryptCode = malloc(sizeof(key)*2+ sizeof(REG_VALID)+0xf);
+	memset(encryptCode, 0, sizeof(key) * 2 + sizeof(REG_VALID)+0xf);
 	memcpy(encryptCode, key,sizeof(key));
 	memcpy(encryptCode+ sizeof(key), &reg, sizeof(REG_VALID));
 	memcpy(encryptCode + sizeof(key) + sizeof(reg), iv, sizeof(iv));
+	printf("注册码key长度 %d \r\n", sizeof(key) * 2);
+	printf("注册码reg长度 %d \r\n", sizeof(reg));
+	printf("注册码长度 %d \r\n", sizeof(key) * 2 + sizeof(reg));
 	for (size_t i = 0; i < sizeof(key)*2+ sizeof(reg); i++)
 	{
 		printf("%02x", encryptCode[i]);

@@ -1,6 +1,6 @@
 #pragma once
 #include "FakeProcess.h"
-
+#include "../PatternSearch/PatternSearch.h"
 
 
 
@@ -15,8 +15,239 @@ namespace fuck_process {
 		dest->Length = source->Length;
 	}
 
+	void GET_PEB_DATA(PEPROCESS pEprocess, BOOLEAN IS_WOW64,PVOID  LDR_DATA, PVOID PARAMETERS,PVOID  TABLE_ENTRY,PULONG64 pPeb_ldr_addr,PULONG64 pParamater) {
+	 
+		ULONG peb_offset[20] = { 0 }; 
+		UCHAR  idx_len = 0;
+		UCHAR idx_peb_ImageBaseAddress = 1;
+		UCHAR idx_peb_ldr = 2;
+		UCHAR idx_peb_ProcessParameters = 3;
+		ULONG PEB_LDR_DATA_SIZE = 4;
+		ULONG LDR_DATA_TABLE_ENTRY_SIZE = 5;
+		ULONG RTL_USER_PROCESS_PARAMETERS_SIZE =6; 
+		ULONGLONG(*read_ptr)(PEPROCESS process, ULONGLONG address) = 0;
+		ULONG64 PEB = 0;
+		if (IS_WOW64)
+		{ 
+			PEB =(ULONG64) imports::ps_get_process_wow64_process(pEprocess);
+			*(ULONGLONG*)&read_ptr = (ULONGLONG)patternSearch::read_i32;
+				peb_offset[idx_peb_ImageBaseAddress] = 0x8,
+				peb_offset[idx_peb_ldr] = 0xc,
+				peb_offset[idx_peb_ProcessParameters] = 0x10;
+				peb_offset[PEB_LDR_DATA_SIZE] = sizeof(PEB_LDR_DATA32);
+				peb_offset[LDR_DATA_TABLE_ENTRY_SIZE] = sizeof(LDR_DATA_TABLE_ENTRY32);
+				peb_offset[RTL_USER_PROCESS_PARAMETERS_SIZE] = sizeof(RTL_USER_PROCESS_PARAMETERS32);
+		}
+		else
+		{
+			PEB = (ULONG64)imports::ps_get_process_peb(pEprocess);
+			*(ULONGLONG*)&read_ptr = (ULONGLONG)patternSearch::read_i64;
+				peb_offset[idx_len] = 0x8,
+				peb_offset[idx_peb_ImageBaseAddress] = 0x10,
+				peb_offset[idx_peb_ldr] = 0x18,
+				peb_offset[idx_peb_ProcessParameters] = 0x20;
+				peb_offset[PEB_LDR_DATA_SIZE] = sizeof(PEB_LDR_DATA64);
+				peb_offset[LDR_DATA_TABLE_ENTRY_SIZE] = sizeof(LDR_DATA_TABLE_ENTRY);
+				peb_offset[RTL_USER_PROCESS_PARAMETERS_SIZE] = sizeof(RTL_USER_PROCESS_PARAMETERS);
+				
+		} 
+		ULONG64 ImageBaseAddress= read_ptr(pEprocess, PEB + peb_offset[idx_peb_ImageBaseAddress]);
+		ULONG64 peb_ldr_addr= read_ptr(pEprocess, PEB + peb_offset[idx_peb_ldr]);
+
+		MiMemory::MiReadProcessMemory(pEprocess, (PVOID)peb_ldr_addr, LDR_DATA, peb_offset[PEB_LDR_DATA_SIZE]);
+
+		ULONG64 peb_ldr_Module_First = 0;
+		if (IS_WOW64)
+		{
+			peb_ldr_Module_First= ((PPEB_LDR_DATA32)LDR_DATA)->InLoadOrderModuleList.Flink;
+		}
+		else
+		{
+			peb_ldr_Module_First = ((PPEB_LDR_DATA64)LDR_DATA)->InLoadOrderModuleList.Flink;
+		}
+		//   +0x010 InLoadOrderModuleList : _LIST_ENTRY [ 0x00000200`4d8726d0 - 0x00000200`51ee0de0 ]
+		*pPeb_ldr_addr = peb_ldr_Module_First;
+	
+		ULONG64 buffer_addr = patternSearch::read_i64(pEprocess, peb_ldr_Module_First + 0x50);
+
+		MiMemory::MiReadProcessMemory(pEprocess, (PVOID)peb_ldr_Module_First, TABLE_ENTRY, peb_offset[LDR_DATA_TABLE_ENTRY_SIZE]);
+
+		ULONG64 peb_Parameters = read_ptr(pEprocess, PEB + peb_offset[idx_peb_ProcessParameters]);
+		*pParamater = peb_Parameters;
+		MiMemory::MiReadProcessMemory(pEprocess, (PVOID)peb_Parameters, PARAMETERS, peb_offset[RTL_USER_PROCESS_PARAMETERS_SIZE]);
+	}
+
+	VOID FAKE_PEB(PEPROCESS MaskEprocess,PEPROCESS SourceEprocess) {
+		
+		ULONG64 mask_paramater_addr = 0;
+		ULONG64 mask_peb_ldr_addr = 0;
+		PEB_LDR_DATA64 mask_peb_data = { 0 };
+		LDR_DATA_TABLE_ENTRY mask_table_entry = { 0 };
+		RTL_USER_PROCESS_PARAMETERS mask_paramaters = { 0 };
+		GET_PEB_DATA(MaskEprocess, FALSE, &mask_peb_data, &mask_paramaters, &mask_table_entry,&mask_peb_ldr_addr,&mask_paramater_addr);
 
 
+
+		ULONG64 source_paramater_addr = 0;
+		ULONG64 source_peb_ldr_addr = 0;
+		PEB_LDR_DATA64 source_peb_data = { 0 };
+		LDR_DATA_TABLE_ENTRY source_table_entry = { 0 };
+		RTL_USER_PROCESS_PARAMETERS source_paramaters = { 0 };
+		GET_PEB_DATA(SourceEprocess, FALSE, &source_peb_data, &source_paramaters, &source_table_entry,&source_peb_ldr_addr,&source_paramater_addr);
+		//DllBase
+ 
+		mask_table_entry.BaseDllName.Length = source_table_entry.BaseDllName.Length;
+		mask_table_entry.BaseDllName.MaximumLength = source_table_entry.BaseDllName.MaximumLength;
+		mask_table_entry.OriginalBase = source_table_entry.OriginalBase;
+		mask_table_entry.BaseNameHashValue = source_table_entry.BaseNameHashValue;
+		mask_table_entry.EntryPoint = source_table_entry.EntryPoint;
+		mask_table_entry.DllBase = source_table_entry.DllBase;
+		mask_table_entry.SizeOfImage = source_table_entry.SizeOfImage;
+		mask_table_entry.FullDllName.Length = source_table_entry.FullDllName.Length;
+		mask_table_entry.FullDllName.MaximumLength = source_table_entry.FullDllName.MaximumLength;
+		mask_table_entry.LoadTime = source_table_entry.LoadTime;
+		char empty[0x200] = { 0 };
+		MiMemory::MiWriteProcessMemory(MaskEprocess,(PVOID)mask_peb_ldr_addr, &mask_table_entry, sizeof(LDR_DATA_TABLE_ENTRY));
+		char nameTemp[0x200] = { 0 };
+
+		ULONG64 buffer_addr = patternSearch::read_i64(SourceEprocess, source_peb_ldr_addr + 0x50);
+
+		MiMemory::MiReadProcessMemory(SourceEprocess, (PVOID)buffer_addr, nameTemp, source_table_entry.FullDllName.MaximumLength);
+		ULONG64 mask_buffer= patternSearch::read_i64(MaskEprocess, mask_peb_ldr_addr + 0x50);
+		ULONG64 FullDllName_addr = mask_buffer;
+		//先清空自己
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, empty, mask_table_entry.FullDllName.MaximumLength);
+		//写入复制数据
+		MiMemory::MiWriteProcessMemory(MaskEprocess,(PVOID)mask_buffer, nameTemp, source_table_entry.FullDllName.MaximumLength);
+
+		ULONG64 BaseDllName_addr=  patternSearch::read_i64(SourceEprocess, source_peb_ldr_addr + 0x60); 
+		USHORT nameOffset = BaseDllName_addr - buffer_addr;
+		patternSearch::write_i64(MaskEprocess, mask_peb_ldr_addr + 0x60, mask_buffer + nameOffset);
+
+
+		ULONG WindowTitle_MaximumLength = mask_paramaters.WindowTitle.MaximumLength;
+		MiMemory::MiWriteProcessMemory(MaskEprocess, mask_paramaters.CurrentDirectory.DosPath.Buffer, empty, mask_paramaters.CurrentDirectory.DosPath.MaximumLength);
+		mask_paramaters.CommandLine.Length = source_table_entry.FullDllName.Length;
+		mask_paramaters.CommandLine.MaximumLength = source_table_entry.FullDllName.MaximumLength;
+
+	 
+
+
+		mask_paramaters.WindowTitle.Length = source_table_entry.FullDllName.Length;
+		mask_paramaters.WindowTitle.MaximumLength = source_table_entry.FullDllName.MaximumLength;
+
+
+		mask_paramaters.ImagePathName.Length = source_paramaters.ImagePathName.Length;
+		mask_paramaters.ImagePathName.MaximumLength = source_paramaters.ImagePathName.MaximumLength;
+		mask_paramaters.DllPath.Length = source_paramaters.DllPath.Length;
+		mask_paramaters.DllPath.MaximumLength = source_paramaters.DllPath.MaximumLength;
+		mask_paramaters.MaximumLength = source_paramaters.MaximumLength;
+		mask_paramaters.Length = source_paramaters.Length;
+		mask_paramaters.ProcessGroupId = source_paramaters.ProcessGroupId;
+		mask_paramaters.EnvironmentSize = source_paramaters.EnvironmentSize;
+		mask_paramaters.CurrentDirectory.DosPath.Length = source_paramaters.CurrentDirectory.DosPath.Length;
+		mask_paramaters.CurrentDirectory.DosPath.MaximumLength = source_paramaters.CurrentDirectory.DosPath.MaximumLength;
+
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_paramater_addr, &mask_paramaters, sizeof(RTL_USER_PROCESS_PARAMETERS));
+
+		//WindowTitle
+		mask_buffer = patternSearch::read_i64(MaskEprocess, mask_paramater_addr + 0xB8);
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, empty, WindowTitle_MaximumLength);
+		patternSearch::write_i64(MaskEprocess, mask_paramater_addr + 0xB8, FullDllName_addr);
+		patternSearch::write_i64(MaskEprocess, mask_paramater_addr + 0x78, FullDllName_addr);
+
+
+
+
+
+ 
+	
+
+ 
+	}
+	VOID FAKE_PEB32(PEPROCESS MaskEprocess, PEPROCESS SourceEprocess) {
+		if (!imports::ps_get_process_wow64_process(MaskEprocess)||!imports::ps_get_process_wow64_process(SourceEprocess))
+		{
+			return;
+		}
+		ULONG64 source_paramater_addr = 0;
+		ULONG64 source_peb_ldr_addr = 0;
+		PEB_LDR_DATA32 source_peb_data = { 0 };
+		LDR_DATA_TABLE_ENTRY32 source_table_entry = { 0 };
+		RTL_USER_PROCESS_PARAMETERS32 source_paramaters = { 0 };
+		GET_PEB_DATA(SourceEprocess, TRUE, &source_peb_data, &source_paramaters, &source_table_entry, &source_peb_ldr_addr, &source_paramater_addr);
+
+		ULONG64 mask_paramater_addr = 0;
+		ULONG64 mask_peb_ldr_addr = 0;
+		PEB_LDR_DATA32 mask_peb_data = { 0 };
+		LDR_DATA_TABLE_ENTRY32 mask_table_entry = { 0 };
+		RTL_USER_PROCESS_PARAMETERS32 mask_paramaters = { 0 };
+		GET_PEB_DATA(MaskEprocess, TRUE, &mask_peb_data, &mask_paramaters, &mask_table_entry, &source_peb_ldr_addr, &source_paramater_addr);
+
+
+		mask_table_entry.BaseDllName.Length = source_table_entry.BaseDllName.Length;
+		mask_table_entry.BaseDllName.MaximumLength = source_table_entry.BaseDllName.MaximumLength;
+		mask_table_entry.EntryPoint = source_table_entry.EntryPoint;
+		mask_table_entry.DllBase = source_table_entry.DllBase;
+		mask_table_entry.SizeOfImage = source_table_entry.SizeOfImage;
+		mask_table_entry.FullDllName.Length = source_table_entry.FullDllName.Length;
+		mask_table_entry.FullDllName.MaximumLength = source_table_entry.FullDllName.MaximumLength;
+		char empty[0x500] = { 0 };
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_peb_ldr_addr, &mask_table_entry, sizeof(LDR_DATA_TABLE_ENTRY));
+		char nameTemp[0x200] = { 0 };
+
+		ULONG64 buffer_addr = patternSearch::read_i32(SourceEprocess, source_peb_ldr_addr + 0x28);
+
+		MiMemory::MiReadProcessMemory(SourceEprocess, (PVOID)buffer_addr, nameTemp, source_table_entry.FullDllName.MaximumLength);
+		ULONG64 mask_buffer = patternSearch::read_i32(MaskEprocess, mask_peb_ldr_addr + 0x28);
+		ULONG64 FullDllName_addr = mask_buffer;
+		//先清空自己
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, empty, mask_table_entry.FullDllName.MaximumLength);
+		//写入复制数据
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, nameTemp, source_table_entry.FullDllName.MaximumLength);
+
+		ULONG64 BaseDllName_addr = patternSearch::read_i32(SourceEprocess, source_peb_ldr_addr + 0x30);
+		USHORT nameOffset = BaseDllName_addr - buffer_addr;
+		patternSearch::write_i64(MaskEprocess, mask_peb_ldr_addr + 0x30, mask_buffer + nameOffset);
+
+
+		ULONG WindowTitle_MaximumLength = mask_paramaters.WindowTitle.MaximumLength;
+		MiMemory::MiWriteProcessMemory(MaskEprocess,(PVOID)mask_paramaters.CurrentDirectory.DosPath.Buffer, empty, mask_paramaters.CurrentDirectory.DosPath.MaximumLength);
+		mask_paramaters.CommandLine.Length = source_table_entry.FullDllName.Length;
+		mask_paramaters.CommandLine.MaximumLength = source_table_entry.FullDllName.MaximumLength;
+
+
+
+
+		mask_paramaters.WindowTitle.Length = source_table_entry.FullDllName.Length;
+		mask_paramaters.WindowTitle.MaximumLength = source_table_entry.FullDllName.MaximumLength;
+
+
+		mask_paramaters.ImagePathName.Length = source_paramaters.ImagePathName.Length;
+		mask_paramaters.ImagePathName.MaximumLength = source_paramaters.ImagePathName.MaximumLength;
+		mask_paramaters.DllPath.Length = source_paramaters.DllPath.Length;
+		mask_paramaters.DllPath.MaximumLength = source_paramaters.DllPath.MaximumLength;
+		mask_paramaters.MaximumLength = source_paramaters.MaximumLength;
+		mask_paramaters.Length = source_paramaters.Length;
+		mask_paramaters.ProcessGroupId = source_paramaters.ProcessGroupId;
+		mask_paramaters.EnvironmentSize = source_paramaters.EnvironmentSize;
+		mask_paramaters.CurrentDirectory.DosPath.Length = source_paramaters.CurrentDirectory.DosPath.Length;
+		mask_paramaters.CurrentDirectory.DosPath.MaximumLength = source_paramaters.CurrentDirectory.DosPath.MaximumLength;
+
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_paramater_addr, &mask_paramaters, sizeof(RTL_USER_PROCESS_PARAMETERS));
+
+		//WindowTitle
+		mask_buffer = patternSearch::read_i32(MaskEprocess, mask_paramater_addr + 0x74);
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, empty, WindowTitle_MaximumLength);
+		patternSearch::write_i32(MaskEprocess, mask_paramater_addr + 0x74, FullDllName_addr);
+		//CommandLine
+		patternSearch::write_i32(MaskEprocess, mask_paramater_addr + 0x44, FullDllName_addr);
+
+
+
+
+	
+	}
 	NTSTATUS FakeProcess(ULONG_PTR pid, ULONG_PTR fakePid)
 	{
 		NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -27,38 +258,18 @@ namespace fuck_process {
 		}
 		PEPROCESS MaskEprocess = NULL;
 		PEPROCESS SourceEprocess = NULL;
-		UNICODE_STRING			ImagePathName = { 0 };
-		UNICODE_STRING			CommandLine = { 0 };
-		UNICODE_STRING			WindowTitle = { 0 };
-		UNICODE_STRING			BaseDllName = { 0 };
-		UNICODE_STRING			FullDllName = { 0 };
-		UNICODE_STRING			DosPath = { 0 };
-		UNICODE_STRING			SourceEnvironment = { 0 };
+ 
+		//要伪装的进程
+		MaskEprocess = Utils::lookup_process_by_id((HANDLE)pid);
+		if (!MaskEprocess) return status;
 
+
+		//被伪装的目标进程
+		SourceEprocess = Utils::lookup_process_by_id((HANDLE)fakePid);
+		if (!SourceEprocess) return status;
+	 
 		while (1)
 		{
-
-
-
-			//要伪装的进程
-			MaskEprocess = Utils::lookup_process_by_id((HANDLE)pid);
-			if (!MaskEprocess) return status;
- 
-
-			//被伪装的目标进程
-			SourceEprocess = Utils::lookup_process_by_id((HANDLE)fakePid);  
-			if (!SourceEprocess) return status;
- 
-			//PPEB32 isMask32Bit = PsGetProcessWow64Process(MaskEprocess);
-			//PPEB32 isSource32Bit = PsGetProcessWow64Process(SourceEprocess);
-
-			//if ((!isMask32Bit) != (!isSource32Bit))
-			//{
-			//	status = STATUS_UNSUCCESSFUL;
-			//	break;
-			//}
-
-
 			PUCHAR nameBuffer = (PUCHAR)imports::ex_allocate_pool(NonPagedPool, USN_PAGE_SIZE);
 			PUCHAR szNameTemp = nameBuffer;
 			Utils::kmemset(nameBuffer, 0, USN_PAGE_SIZE);
@@ -73,22 +284,22 @@ namespace fuck_process {
 				Utils::kmemcpy(szMaskImageName, szSourceImageName, 15);
 			}
 
-			//修改Eprocess.ImagePathHash
-			{
+			////修改Eprocess.ImagePathHash
+			//{
 
-				ULONG ImagePathHashOffset = imageNameOffset + 0x4c;
-				ULONG SourceImagePathHash = *(PULONG)((PUCHAR)SourceEprocess + ImagePathHashOffset);
+			//	ULONG ImagePathHashOffset = imageNameOffset + 0x4c;
+			//	ULONG SourceImagePathHash = *(PULONG)((PUCHAR)SourceEprocess + ImagePathHashOffset);
 
-				*(PULONG)((PUCHAR)MaskEprocess + ImagePathHashOffset) = SourceImagePathHash;
-			}
+			//	*(PULONG)((PUCHAR)MaskEprocess + ImagePathHashOffset) = SourceImagePathHash;
+			//}
 
-			//修改Eprocess.BaseAddressOffset
-			{
-				ULONG SectionBaseAddressOffset = *(PULONG)(imports::imported.ps_get_process_section_base_address + 3);
-				ULONG SourceBaseAddress = *(PULONG)((PUCHAR)SourceEprocess + SectionBaseAddressOffset);
-				*(PULONG)((PUCHAR)MaskEprocess + SectionBaseAddressOffset) = SourceBaseAddress;
+			////修改Eprocess.BaseAddressOffset
+			//{
+			//	ULONG SectionBaseAddressOffset = *(PULONG)(imports::imported.ps_get_process_section_base_address + 3);
+			//	ULONG SourceBaseAddress = *(PULONG)((PUCHAR)SourceEprocess + SectionBaseAddressOffset);
+			//	*(PULONG)((PUCHAR)MaskEprocess + SectionBaseAddressOffset) = SourceBaseAddress;
 
-			}
+			//}
 
 			//+0x468 SeAuditProcessCreationInfo : _SE_AUDIT_PROCESS_CREATION_INFO
 			{
@@ -191,11 +402,7 @@ namespace fuck_process {
 				ULONG parentPid = *(PULONG_PTR)((PUCHAR)SourceEprocess + ParentIdOffset);
 				*(PULONG_PTR)((PUCHAR)MaskEprocess + ParentIdOffset) = parentPid;
 			}
-			//EPROCESS   PsIsProtectedProcess
-			{
-				ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess"), 2);
-				*(PULONG_PTR)((PUCHAR)MaskEprocess + isProtectOffset) = 0xff;
-			}
+
 
 			//EPROCESS   PsGetProcessCreateTimeQuadPart 
 			{
@@ -233,361 +440,20 @@ namespace fuck_process {
 				imports::obf_dereference_object((PVOID)MaskToken);
 				imports::obf_dereference_object((PVOID)SourceToken);
 			}
+			
 
 
-
-			PPEB64					MaskPeb = NULL;
-			PPEB32					MaskPeb32 = NULL;
-			PPEB64					SourcePeb = NULL;
-			ULONG64					DllBase = 0;
-			ULONG64					EntryPoint = 0;
-			ULONG					SizeOfImage = 0;
-			ULONG_PTR				PEB_IMAGEBASE = 0;
-			SIZE_T					memSize = 0;
-			KAPC_STATE				MaskAPC = { 0 };
-			KAPC_STATE				SourceAPC = { 0 };
-			MaskPeb = (PPEB64)imports::ps_get_process_peb(MaskEprocess);
-			MaskPeb32 = (PPEB32)imports::ps_get_process_wow64_process(MaskEprocess);
-			SourcePeb = (PPEB64)imports::ps_get_process_peb(SourceEprocess);
-
-			//EPROCESS PEB  PEB->ProcessParameters    PEB->LDR
-			{
-				if (!MaskPeb || !SourcePeb)
-				{
-					break;
-				}
-				//复制原始进程特征
-				imports::ke_stack_attach_process(SourceEprocess, &SourceAPC);
-				status = imports::mm_copy_virtual_memory(SourceEprocess, SourcePeb, SourceEprocess, SourcePeb, 4, UserMode, &memSize);
-				if (!NT_SUCCESS(status))
-				{
-					imports::ke_unstack_detach_process(&SourceAPC);
-					break;
-				}
-				status = imports::mm_copy_virtual_memory(SourceEprocess, SourcePeb->ProcessParameters, SourceEprocess, SourcePeb->ProcessParameters, 4, UserMode, &memSize);
-				if (!NT_SUCCESS(status))
-				{
-					imports::ke_unstack_detach_process(&SourceAPC);
-					break;
-				}
-				status = imports::mm_copy_virtual_memory(SourceEprocess, SourcePeb->Ldr, SourceEprocess, SourcePeb->Ldr, 4, UserMode, &memSize);
-				if (!NT_SUCCESS(status))
-				{
-					imports::ke_unstack_detach_process(&SourceAPC);
-					break;
-				}
-
-				if (SourcePeb->ProcessParameters->ImagePathName.Length)
-				{
-					UNICODE_STRING_COPY_ALLOCATE(&ImagePathName, &SourcePeb->ProcessParameters->ImagePathName);
-				}
-				if (SourcePeb->ProcessParameters->CommandLine.Length)
-				{
-					UNICODE_STRING_COPY_ALLOCATE(&CommandLine, &SourcePeb->ProcessParameters->CommandLine);
-				}
-				if (SourcePeb->ProcessParameters->WindowTitle.Length)
-				{
-					UNICODE_STRING_COPY_ALLOCATE(&WindowTitle, &SourcePeb->ProcessParameters->WindowTitle);
-				}
-				if (SourcePeb->ProcessParameters->EnvironmentSize)
-				{
-					SourceEnvironment.MaximumLength = SourcePeb->ProcessParameters->EnvironmentSize + 8;
-					SourceEnvironment.Length = SourcePeb->ProcessParameters->EnvironmentSize;
-					SourceEnvironment.Buffer = (PWCH)imports::ex_allocate_pool(NonPagedPool, SourceEnvironment.MaximumLength);
-					memset(SourceEnvironment.Buffer, 0, SourceEnvironment.MaximumLength);
-					Utils::kmemcpy(SourceEnvironment.Buffer, SourcePeb->ProcessParameters->Environment, SourceEnvironment.Length);
-				}
-				if (SourcePeb->ProcessParameters->CurrentDirectory.DosPath.Length)
-				{
-					UNICODE_STRING_COPY_ALLOCATE(&DosPath, &SourcePeb->ProcessParameters->CurrentDirectory.DosPath);
-				}
-				//获取LADR
-				PLDR_DATA_TABLE_ENTRY pLDR = (PLDR_DATA_TABLE_ENTRY)SourcePeb->Ldr->InLoadOrderModuleList.Flink;
-				if (pLDR->BaseDllName.Length)
-				{
-					UNICODE_STRING_COPY_ALLOCATE(&BaseDllName, &pLDR->BaseDllName);
-
-				}
-				if (pLDR->FullDllName.Length)
-				{
-					UNICODE_STRING_COPY_ALLOCATE(&FullDllName, &pLDR->FullDllName);
-				}
-				PEB_IMAGEBASE = SourcePeb->ImageBaseAddress;
-				SizeOfImage = pLDR->SizeOfImage;
-				EntryPoint = (ULONG64)pLDR->EntryPoint;
-				DllBase = pLDR->DllBase;
-				imports::ke_unstack_detach_process(&SourceAPC);
-				{
-
-					///---------------------------------------开始伪装-------------------------------------------------/// 
-					//挂靠伪装进程
-					imports::ke_stack_attach_process(MaskEprocess, &MaskAPC);
-					status = imports::mm_copy_virtual_memory(MaskEprocess, MaskPeb, MaskEprocess, MaskPeb, 4, UserMode, &memSize);
-					if (!NT_SUCCESS(status))
-					{
-						imports::ke_unstack_detach_process(&MaskAPC);
-						break;
-					}
-					status = imports::mm_copy_virtual_memory(MaskEprocess, MaskPeb->ProcessParameters, MaskEprocess, MaskPeb->ProcessParameters, 4, UserMode, &memSize);
-					if (!NT_SUCCESS(status))
-					{
-						imports::ke_unstack_detach_process(&MaskAPC);
-						break;
-					}
-					status = imports::mm_copy_virtual_memory(MaskEprocess, MaskPeb, MaskEprocess, MaskPeb, 4, UserMode, &memSize);
-					if (!NT_SUCCESS(status))
-					{
-						imports::ke_unstack_detach_process(&MaskAPC);
-						break;
-					}
-					status = imports::mm_copy_virtual_memory(MaskEprocess, MaskPeb->Ldr, MaskEprocess, MaskPeb->Ldr, 4, UserMode, &memSize);
-					if (!NT_SUCCESS(status))
-					{
-						imports::ke_unstack_detach_process(&MaskAPC);
-						break;
-					}
-
-
-					PUCHAR szBuffer = NULL;
-
-					SIZE_T AllocateSize = PAGE_SIZE * 2;
-					//R3环境需要申请空间
-					status = imports::zw_allocate_virtual_memory(NtCurrentProcess(), (PVOID*)&szBuffer, 0, &AllocateSize, MEM_COMMIT, PAGE_READWRITE);
-					if (!NT_SUCCESS(status))
-					{
-						imports::ke_unstack_detach_process(&MaskAPC);
-						break;
-					}
-					PUCHAR szTemp = szBuffer;
-					if (ImagePathName.Length)
-					{
-						Utils::kmemcpy(szTemp, ImagePathName.Buffer, ImagePathName.Length);
-						MaskPeb->ProcessParameters->ImagePathName.Buffer = (PWCH)szTemp;
-						MaskPeb->ProcessParameters->ImagePathName.Length = ImagePathName.Length;
-						MaskPeb->ProcessParameters->ImagePathName.MaximumLength = ImagePathName.MaximumLength;
-						szTemp += ImagePathName.MaximumLength;
-						imports::ex_free_pool_with_tag(ImagePathName.Buffer, 0);
-					}
-					if (CommandLine.Length)
-					{
-
-						Utils::kmemcpy(szTemp, CommandLine.Buffer, CommandLine.Length);
-						MaskPeb->ProcessParameters->CommandLine.Buffer = (PWCH)szTemp;
-						MaskPeb->ProcessParameters->CommandLine.Length = CommandLine.Length;
-						MaskPeb->ProcessParameters->CommandLine.MaximumLength = CommandLine.MaximumLength;
-						szTemp += CommandLine.MaximumLength;
-						imports::ex_free_pool_with_tag(CommandLine.Buffer, 0);
-					}
-					else {
-						szTemp += 8;
-						MaskPeb->ProcessParameters->CommandLine.Buffer = (PWCH)szTemp;
-						MaskPeb->ProcessParameters->CommandLine.Length = 0;
-						MaskPeb->ProcessParameters->CommandLine.MaximumLength = 0;
-					}
-					if (WindowTitle.Length)
-					{
-
-						Utils::kmemcpy(szTemp, WindowTitle.Buffer, WindowTitle.Length);
-
-						MaskPeb->ProcessParameters->WindowTitle.Buffer = (PWCH)szTemp;
-						MaskPeb->ProcessParameters->WindowTitle.Length = WindowTitle.Length;
-						MaskPeb->ProcessParameters->WindowTitle.MaximumLength = WindowTitle.MaximumLength;
-						szTemp += WindowTitle.MaximumLength;
-						imports::ex_free_pool_with_tag(WindowTitle.Buffer, 0);
-					}
-					else {
-						szTemp += 8;
-						MaskPeb->ProcessParameters->WindowTitle.Buffer = (PWCH)szTemp;
-						MaskPeb->ProcessParameters->WindowTitle.Length = 0;
-						MaskPeb->ProcessParameters->WindowTitle.MaximumLength = 0;
-					}
-					if (DosPath.Length)
-					{
-						Utils::kmemcpy(szTemp, DosPath.Buffer, DosPath.Length);
-						MaskPeb->ProcessParameters->CurrentDirectory.DosPath.Buffer = (PWCH)szTemp;
-						MaskPeb->ProcessParameters->CurrentDirectory.DosPath.Length = DosPath.Length;
-						MaskPeb->ProcessParameters->CurrentDirectory.DosPath.MaximumLength = DosPath.MaximumLength;
-						szTemp += DosPath.MaximumLength;
-
-						imports::ex_free_pool_with_tag(DosPath.Buffer, 0);
-					}
-					if (SourceEnvironment.Length)
-					{
-						Utils::kmemcpy(szTemp, SourceEnvironment.Buffer, SourceEnvironment.Length);
-						MaskPeb->ProcessParameters->Environment = (PWCH)szTemp;
-						MaskPeb->ProcessParameters->EnvironmentSize = SourceEnvironment.Length;
-						szTemp += SourceEnvironment.MaximumLength;
-						imports::ex_free_pool_with_tag(SourceEnvironment.Buffer, 0);
-
-					}
-
-
-
-					//////处理LDR/////
-					PLDR_DATA_TABLE_ENTRY MaskPLDR64 = (PLDR_DATA_TABLE_ENTRY)(MaskPeb->Ldr->InLoadOrderModuleList.Flink);
-					if (BaseDllName.Buffer)
-					{
-						Utils::kmemcpy(szTemp, BaseDllName.Buffer, BaseDllName.Length);
-						MaskPLDR64->BaseDllName.Buffer = (PWCH)szTemp;
-						MaskPLDR64->BaseDllName.Length = BaseDllName.Length;
-						MaskPLDR64->BaseDllName.MaximumLength = BaseDllName.MaximumLength;
-						szTemp += BaseDllName.MaximumLength;
-						imports::ex_free_pool_with_tag(BaseDllName.Buffer, 0);
-
-					}
-					if (FullDllName.Buffer)
-					{
-						Utils::kmemcpy(szTemp, FullDllName.Buffer, FullDllName.Length);
-						MaskPLDR64->FullDllName.Length = FullDllName.Length;
-						MaskPLDR64->FullDllName.MaximumLength = FullDllName.MaximumLength;
-						MaskPLDR64->FullDllName.Buffer = (PWCH)szTemp;
-						szTemp += FullDllName.MaximumLength;
-						imports::ex_free_pool_with_tag(FullDllName.Buffer, 0);
-
-					}
-					MaskPeb->ImageBaseAddress = PEB_IMAGEBASE;
-					MaskPLDR64->SizeOfImage = SizeOfImage;
-					MaskPLDR64->EntryPoint = (PVOID)EntryPoint;
-					MaskPLDR64->DllBase = DllBase;
-
-
-					if (MaskPeb32)
-					{
-						NTSTATUS status = imports::mm_copy_virtual_memory(MaskEprocess, MaskPeb32, MaskEprocess, MaskPeb32, 4, UserMode, &memSize);
-						if (!NT_SUCCESS(status))
-						{
-							imports::ke_unstack_detach_process(&MaskAPC);
-							break;
-						}
-						if (MaskPeb32->ProcessParameters)
-						{
-							PRTL_USER_PROCESS_PARAMETERS32  pProcessParamater = (PRTL_USER_PROCESS_PARAMETERS32)MaskPeb32->ProcessParameters;
-							imports::mm_copy_virtual_memory(MaskEprocess, pProcessParamater, MaskEprocess, pProcessParamater, 4, UserMode, &memSize);
-
-							if (MaskPeb->ProcessParameters->ImagePathName.Length)
-							{
-
-								Utils::kmemcpy(szTemp, MaskPeb->ProcessParameters->ImagePathName.Buffer, MaskPeb->ProcessParameters->ImagePathName.Length);
-								pProcessParamater->ImagePathName.Buffer = (ULONG)szTemp;
-								pProcessParamater->ImagePathName.Length = MaskPeb->ProcessParameters->ImagePathName.Length;
-								pProcessParamater->ImagePathName.MaximumLength = MaskPeb->ProcessParameters->ImagePathName.MaximumLength;
-								szTemp += MaskPeb->ProcessParameters->ImagePathName.MaximumLength;
-							}
-							if (MaskPeb->ProcessParameters->CommandLine.Length)
-							{
-
-								Utils::kmemcpy(szTemp, MaskPeb->ProcessParameters->CommandLine.Buffer, MaskPeb->ProcessParameters->CommandLine.Length);
-								pProcessParamater->CommandLine.Buffer = (ULONG)szTemp;
-								pProcessParamater->CommandLine.Length = MaskPeb->ProcessParameters->CommandLine.Length;
-								pProcessParamater->CommandLine.MaximumLength = MaskPeb->ProcessParameters->CommandLine.MaximumLength;
-								szTemp += MaskPeb->ProcessParameters->CommandLine.MaximumLength;
-							}
-							else {
-								szTemp += 4;
-								pProcessParamater->CommandLine.Buffer = (ULONG)szTemp;
-								pProcessParamater->CommandLine.Length = 0;
-								pProcessParamater->CommandLine.MaximumLength = 0;
-							}
-							if (MaskPeb->ProcessParameters->WindowTitle.Length)
-							{
-
-								Utils::kmemcpy(szTemp, MaskPeb->ProcessParameters->WindowTitle.Buffer, MaskPeb->ProcessParameters->WindowTitle.Length);
-								pProcessParamater->WindowTitle.Buffer = (ULONG)szTemp;
-								pProcessParamater->WindowTitle.Length = MaskPeb->ProcessParameters->WindowTitle.Length;
-								pProcessParamater->WindowTitle.MaximumLength = MaskPeb->ProcessParameters->WindowTitle.MaximumLength;
-								szTemp += MaskPeb->ProcessParameters->WindowTitle.MaximumLength;
-							}
-							else {
-								szTemp += 4;
-								pProcessParamater->WindowTitle.Buffer = (ULONG)szTemp;
-								pProcessParamater->WindowTitle.Length = 0;
-								pProcessParamater->WindowTitle.MaximumLength = 0;
-							}
-							if (MaskPeb->ProcessParameters->CurrentDirectory.DosPath.Length)
-							{
-								Utils::kmemcpy(szTemp, MaskPeb->ProcessParameters->CurrentDirectory.DosPath.Buffer, MaskPeb->ProcessParameters->CurrentDirectory.DosPath.Length);
-								pProcessParamater->CurrentDirectory.DosPath.Buffer = (ULONG)szTemp;
-								pProcessParamater->CurrentDirectory.DosPath.Length = MaskPeb->ProcessParameters->CurrentDirectory.DosPath.Length;
-								pProcessParamater->CurrentDirectory.DosPath.MaximumLength = MaskPeb->ProcessParameters->CurrentDirectory.DosPath.MaximumLength;
-								szTemp += MaskPeb->ProcessParameters->CurrentDirectory.DosPath.MaximumLength;
-							}
-							Utils::kmemset((PVOID)pProcessParamater->Environment, 0, pProcessParamater->EnvironmentSize);
-							Utils::kmemcpy((PVOID)pProcessParamater->Environment, MaskPeb->ProcessParameters->Environment, MaskPeb->ProcessParameters->EnvironmentSize);
-							//复制环境变量
-							//pProcessParamater->Environment = MaskPeb->ProcessParameters->Environment;
-							pProcessParamater->EnvironmentSize = MaskPeb->ProcessParameters->EnvironmentSize;
-
-						}
-						status = imports::mm_copy_virtual_memory(MaskEprocess, (PVOID)MaskPeb32->Ldr, MaskEprocess, (PVOID)MaskPeb32->Ldr, 4, UserMode, &memSize);
-						if (!NT_SUCCESS(status))
-						{
-							imports::ke_unstack_detach_process(&MaskAPC);
-							break;;
-						}
-						PPEB_LDR_DATA32  pLdr32 = (PPEB_LDR_DATA32)MaskPeb32->Ldr;
-						status = imports::mm_copy_virtual_memory(MaskEprocess, pLdr32, MaskEprocess, pLdr32, 4, UserMode, &memSize);
-						if (!NT_SUCCESS(status))
-						{
-							imports::ke_unstack_detach_process(&MaskAPC);
-							break;;
-						}
-						PLDR_DATA_TABLE_ENTRY32 MaskLDR32 = (PLDR_DATA_TABLE_ENTRY32)(pLdr32->InLoadOrderModuleList.Flink);
-
-						if (MaskPLDR64->BaseDllName.Length)
-						{
-							Utils::kmemcpy(szTemp, (PVOID)MaskPLDR64->BaseDllName.Buffer, MaskPLDR64->BaseDllName.Length);
-							MaskLDR32->BaseDllName.Buffer = (ULONG)szTemp;
-							MaskLDR32->BaseDllName.Length = MaskPLDR64->BaseDllName.Length;
-							MaskLDR32->BaseDllName.MaximumLength = MaskPLDR64->BaseDllName.MaximumLength;
-							szTemp += MaskPLDR64->BaseDllName.MaximumLength;
-						}
-						if (MaskPLDR64->FullDllName.Length)
-						{
-							Utils::kmemcpy(szTemp, MaskPLDR64->FullDllName.Buffer, MaskPLDR64->FullDllName.Length);
-							MaskLDR32->FullDllName.Buffer = (ULONG)szTemp;
-							MaskLDR32->FullDllName.Length = MaskPLDR64->FullDllName.Length;
-							MaskLDR32->FullDllName.MaximumLength = MaskPLDR64->FullDllName.MaximumLength;
-							szTemp += MaskPLDR64->FullDllName.MaximumLength;
-						}
-						MaskPeb32->ImageBaseAddress = PEB_IMAGEBASE;
-						MaskLDR32->SizeOfImage = MaskPLDR64->SizeOfImage;
-						MaskLDR32->EntryPoint = (ULONG)MaskPLDR64->EntryPoint;
-						MaskLDR32->DllBase = MaskPLDR64->DllBase;
-					}
-					imports::ke_unstack_detach_process(&MaskAPC);
-				}
-			}
+			FAKE_PEB(MaskEprocess, SourceEprocess);
+ 
+			FAKE_PEB32(MaskEprocess, SourceEprocess);
+ 
 			break;
 		}
-		if (!NT_SUCCESS(status))
-		{
-			if (ImagePathName.Buffer)
-			{
-				imports::ex_free_pool_with_tag(ImagePathName.Buffer, 0);
-			}
-			if (CommandLine.Buffer)
-			{
-				imports::ex_free_pool_with_tag(CommandLine.Buffer, 0);
-			}
-			if (WindowTitle.Buffer)
-			{
-				imports::ex_free_pool_with_tag(WindowTitle.Buffer, 0);
-			}
-			if (BaseDllName.Buffer)
-			{
-				imports::ex_free_pool_with_tag(BaseDllName.Buffer, 0);
-			}
-			if (FullDllName.Buffer)
-			{
-				imports::ex_free_pool_with_tag(FullDllName.Buffer, 0);
-			}
-			if (SourceEnvironment.Buffer)
-			{
-				imports::ex_free_pool_with_tag(SourceEnvironment.Buffer, 0);
-			}
-		}
- 
-
+		//EPROCESS   PsIsProtectedProcess
+//{
+//	ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess"), 2);
+//	*(PULONG_PTR)((PUCHAR)MaskEprocess + isProtectOffset) = 0xff;
+//} 
 		return STATUS_SUCCESS;
 
 	}

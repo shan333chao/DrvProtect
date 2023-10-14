@@ -96,7 +96,7 @@ namespace ProtectWindow {
 		Log("hwnd %08x msg %08x \r\n", hWnd, Msg);
 		if (Msg == WM_GETTEXT)
 		{
-	 
+
 			ULONG hwnddd = 0;
 			memcpy(&hwnddd, (PVOID)hWnd, 4);
 			HANDLE handle = ULongToHandle(hwnddd);
@@ -879,6 +879,8 @@ namespace ProtectWindow {
 		{
 			if (pCommData->ID == COMM_ID)
 			{
+				Utils::safe_copy(data, data, sizeof(COMM_DATA));
+				//MiMemory::MiReadProcessMemory(IoGetCurrentProcess(), data, data, sizeof(COMM_DATA));
 				pCommData->status = g_CommCallBack(pCommData);
 				return  TRUE;
 			}
@@ -1066,8 +1068,8 @@ namespace ProtectWindow {
 	POBJECT_NAME_INFORMATION QueryFileDosName(ULONG pid) {
 		POBJECT_NAME_INFORMATION ObjectName = (POBJECT_NAME_INFORMATION)imports::ex_allocate_pool(NonPagedPool, 0x300);
 		PEPROCESS pEprocess;
-		PVOID pFileHandle; 
-		pEprocess = Utils::lookup_process_by_id(UlongToHandle(pid)); 
+		PVOID pFileHandle;
+		pEprocess = Utils::lookup_process_by_id(UlongToHandle(pid));
 		if (!pEprocess)
 		{
 			return NULL;
@@ -1106,18 +1108,19 @@ namespace ProtectWindow {
 			return  FALSE;
 		}
 		ULONG tick = MyGetTickCount() - lastStartTick;
-		ULONG overtime = reg.TIMESPAN - (tick + reg.CTIME);
+		ULONG overtime = reg.EXPIRED_TIME - (tick + reg.CTIME);
 		Log("%d \r\n", overtime);
 		return overtime > 0;
 	}
-	ULONG SetReg(PVOID regCode, ULONG size, ULONGLONG time) {
-		if (size != sizeof(REG_VALID) + 34)
+	ULONG SetReg(PVOID regCode, ULONG size, ULONG posttime) {
+		if (size != (sizeof(REG_VALID) + 34))
 		{
-			return 0x100001;
+			return STATUS_TEST_COMM_REG_INVALID;
 		}
-		if (time < 1695740582)
+ 
+		if (posttime < 1695740582)
 		{
-			return 0x100002;
+			return STATUS_TEST_COMM_REG_INVALID;
 		}
 		unsigned char key[17] = { 0 };
 		unsigned char iv[17] = { 0 };
@@ -1127,17 +1130,16 @@ namespace ProtectWindow {
 		struct AES_ctx ctx = { 0 };
 		AES_init_ctx_iv(&ctx, key, iv);
 		AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)((PUCHAR)regCode + 17), datalen);
-		PREG_VALID pRegData = (PREG_VALID)((PUCHAR)regCode + 17);
-		if (pRegData->TIMESPAN > time)
+		PREG_VALID pRegData = (PREG_VALID)((PUCHAR)regCode + 17); 
+		if (pRegData->EXPIRED_TIME > posttime)
 		{
-			reg.CTIME = pRegData->CTIME;
-			reg.DAYS = pRegData->DAYS;
-			reg.TIMESPAN = pRegData->TIMESPAN;
+			reg.CTIME = posttime;
+			reg.EXPIRED_TIME = pRegData->EXPIRED_TIME;
 			lastStartTick = MyGetTickCount();
-			return 0x100000;
+			return STATUS_TEST_COMM_SUCCESS;
 		}
 		else {
-			return 0x100003;
+			return STATUS_TEST_COMM_REG_EXPIRED;
 		}
 
 	}

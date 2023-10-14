@@ -1,6 +1,8 @@
 #pragma once
 #include "Process.h"
 #include "../PatternSearch/PatternSearch.h"
+#include "../ERROR_CODE.h"
+
 namespace process_info {
 
 
@@ -43,15 +45,29 @@ namespace process_info {
 		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(pid));
 		if (!eprocess)
 		{
-			return 0;
+			return STATUS_COMMON_PARAM_1;
 		}
 		moduleBase = patternSearch::get_module(eprocess, pcModuleName, &pModuleSize);
 		if (!moduleBase)
 		{
-			return 0;
+			return STATUS_MODULE_EXPORT_MODULE_BASE_ERROR;
 		}
 		funcAddr = patternSearch::get_module_export(eprocess, moduleBase, funcName);
 		return funcAddr;
+	}
+
+	ULONG_PTR GetProcessModuleExport2(ULONG pid, ULONGLONG moduleBase, PCHAR funcName)
+	{
+		if (!moduleBase)
+		{
+			return STATUS_MODULE_EXPORT_MODULE_BASE_ERROR;
+		}
+		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(pid));
+		if (!eprocess)
+		{
+			return STATUS_COMMON_PARAM_1;
+		}
+		return   patternSearch::get_module_export(eprocess, moduleBase, funcName);;
 	}
 	ULONG_PTR GetX86ProcessModule(PEPROCESS	pTargetEprocess, PUNICODE_STRING szModuleName, PULONG pModuleSize) {
 
@@ -154,5 +170,6 @@ namespace process_info {
 		}
 		return patternSearch::get_module(eprocess, pcModuleName, pModuleSize);
 	}
+
 
 }

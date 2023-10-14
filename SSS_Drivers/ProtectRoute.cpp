@@ -71,7 +71,7 @@ VOID ProtectRoute::SetCommHook(CommCallBack callBackFun)
 
 }
 
-ULONG ProtectRoute::SetValidate(PVOID regCode, ULONG size, ULONGLONG time)
+ULONG ProtectRoute::SetValidate(PVOID regCode, ULONG size, ULONG time)
 {
 
 	return	ProtectWindow::SetReg(regCode,   size, time);

@@ -28,3 +28,5 @@ C:\ProgramFiles\DSigntool\CSignTool.exe sign /r dandan /f C:\DriverCodes\HideDri
 cd "C:\DriverCodes\HideDriver\NickolasZhao\x64\Debug\"
 
 ClearPEdbg.exe
+
+pause

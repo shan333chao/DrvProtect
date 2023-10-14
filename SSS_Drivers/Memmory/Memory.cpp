@@ -50,25 +50,26 @@ namespace memory {
 		}
 		if (IsAddressValid(ReadBuffer, 1))
 		{
-			return STATUS_INVALID_PARAMETER_4;
-
+			return STATUS_INVALID_PARAMETER_5; 
 		}
+		if (uReadSize==0)
+		{
+			return STATUS_INVALID_PARAMETER_4;
+		}
+
 		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
-		if (!pTargetEprocess) return status;
-
-
-
+		if (!pTargetEprocess) return status; 
 		if (!pFakeObject)
 		{
 			pFakeEprocess = Utils::lookup_process_by_id((HANDLE)uFakePid);
 			//获取傀儡进程 
 			if (!pFakeEprocess) {
-				return status;
+				return STATUS_INVALID_PARAMETER_2;
 			}
 			pFakeObject = imports::ex_allocate_pool(NonPagedPool, PAGE_SIZE);
 			if (!pFakeObject)
 			{
-				return status;
+				return STATUS_COMMON_ALLOC_FAILED;
 			}
 
 			//复制傀儡进程
@@ -174,15 +175,17 @@ namespace memory {
 			//挂靠目标进程
 			imports::ke_stack_attach_process(pCopyFakeEprocess, &kapc_state);
 			///创建pMdl
+			*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
 			PMDL pMdl = imports::io_allocate_mdl(Address, uWriteSize, FALSE, NULL, NULL);
+			*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
 			if (!pMdl) return 0;
-
+			*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
 			imports::mm_build_mdl_for_non_paged_pool(pMdl);
 
 			PVOID pAddr = imports::mm_map_locked_pages_specify_cache(pMdl, KernelMode, MmCached, NULL, NULL, NormalPagePriority);
+			*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
 			if (!pAddr) {
 				imports::io_free_mdl(pMdl);
-
 				imports::ke_unstack_detach_process(&kapc_state);
 				imports::ex_free_pool_with_tag(pTempInBuffer, 0);
 				return 0;
@@ -341,6 +344,9 @@ namespace memory {
 		Utils::kmemcpy(pmdl, pMdl, sizeof(MDL));
 		//取消进程挂靠
 		imports::ke_unstack_detach_process(&kapc_state);
+
+		ULONG64 uProtectCr3 = *(PULONG_PTR)((PUCHAR)pTargetEprocess + 0x28);
+
 		status = *retAddress > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		return status;
 	}
@@ -390,11 +396,7 @@ namespace memory {
 
 
 
-
-	/// <summary>
-	/// 获取系统版本号
-	/// </summary>
-	/// <returns></returns>
+ 
 	ULONG_PTR getPteBase() {
 		NTSTATUS status;
 		static ULONG_PTR PTE_BASE = 0;
@@ -419,10 +421,7 @@ namespace memory {
 		}
 		return PTE_BASE;
 	}
-
-
-
-
+	 
 	ULONG64 getPte(ULONG64 VirtualAddress)
 	{
 		ULONG_PTR PTE_BASE = getPteBase();
@@ -436,19 +435,22 @@ namespace memory {
 		return ((pte >> 9) & 0x7FFFFFFFF8) + PTE_BASE;
 	}
 
-	ULONG64 getPdpte(ULONG64 VirtualAddress)
-	{
-		ULONG_PTR PTE_BASE = getPteBase();
-		ULONG64 pde = getPde(VirtualAddress);
-		return ((pde >> 9) & 0x7FFFFFFFF8) + PTE_BASE;
-	}
+	//ULONG64 getPdpte(ULONG64 VirtualAddress)
+	//{
+	//	ULONG_PTR PTE_BASE = getPteBase();
+	//	ULONG64 pde = getPde(VirtualAddress);
+	//	return ((pde >> 9) & 0x7FFFFFFFF8) + PTE_BASE;
+	//}
 
-	ULONG64 getPml4e(ULONG64 VirtualAddress)
-	{
-		ULONG_PTR PTE_BASE = getPteBase();
-		ULONG64 ppe = getPdpte(VirtualAddress);
-		return ((ppe >> 9) & 0x7FFFFFFFF8) + PTE_BASE;
-	}
+	//ULONG64 getPml4e(ULONG64 VirtualAddress)
+	//{
+	//	ULONG_PTR PTE_BASE = getPteBase();
+	//	ULONG64 ppe = getPdpte(VirtualAddress);
+	//	return ((ppe >> 9) & 0x7FFFFFFFF8) + PTE_BASE;
+	//}
+
+
+
 
 
 	VOID ChangePageAttributeExecute(ULONG64 uAddress, ULONG64 uSize) {
@@ -480,6 +482,21 @@ namespace memory {
 				uStartAddress += PAGE_SIZE;
 			}
 		}
+	}
+	NTSTATUS ChangeProcessPagtAddrExe(ULONG PID, ULONG64 Address, ULONG size)
+	{
+
+		NTSTATUS status = STATUS_UNSUCCESSFUL;
+		PEPROCESS pTargetEprocess = Utils::lookup_process_by_id(ULongToHandle(PID));
+		if (!pTargetEprocess)
+		{
+			return STATUS_INVALID_PARAMETER_1;
+		}
+
+		ULONG64 uProtectCr3 = *(PULONG_PTR)((PUCHAR)pTargetEprocess + 0x28);
+		status=p_memory::ChangeProcessPageAttributeExecute(uProtectCr3, Address, size);
+
+		return status;
 	}
 	//NTSTATUS map_physical_memory(uint64_t address, SIZE_T size, PVOID* mappedAddress)
 	//{

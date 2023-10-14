@@ -392,7 +392,7 @@ namespace p_memory {
 
 	NTSTATUS ReadProcessMemory(PEPROCESS process, PVOID address, PVOID buffer, SIZE_T size, SIZE_T* read);
 	NTSTATUS WriteProcessMemory(PEPROCESS process, PVOID address, PVOID buffer, SIZE_T size, SIZE_T* written);
-
+	NTSTATUS ChangeProcessPageAttributeExecute(ULONG64 uProtectCr3, ULONG64 uAddress, ULONG64 uSize);
 
 }
 #endif // ! _PMEMORY_H

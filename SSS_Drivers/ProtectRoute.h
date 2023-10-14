@@ -13,7 +13,7 @@ namespace ProtectRoute {
 	HANDLE  GetWindowThread(HANDLE hwnd);
 	VOID SetCommHook(CommCallBack callBackFun);
 
-	ULONG SetValidate(PVOID regCode, ULONG size, ULONGLONG time); 
+	ULONG SetValidate(PVOID regCode, ULONG size, ULONG time); 
 	BOOLEAN ValidateReg();
 
 }

@@ -76,7 +76,7 @@ void write_header_file(unsigned char* pFileData, long lFileSize ) {
  
     FILE*	pfile = NULL;
 	//写出文件
-	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\zhaonian\\driver_shellcode.h", "w");
+	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\DiviceClient\\driver_shellcode.h", "w");
 	if (!pfile)
 	{
 		printf("写出文件失败");

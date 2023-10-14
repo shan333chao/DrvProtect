@@ -4,7 +4,7 @@
 #else
 #include <ntifs.h>
 #endif 
-#define COMM_ID 0xFEAAC
+#define COMM_ID 0x1CFE
 #define SYMBOL_NAME "\\??\\Nul"
 typedef enum _COMM_TYPE {
 	//测试通讯
@@ -48,16 +48,20 @@ typedef enum _COMM_TYPE {
 	//主线程call
 	CALL_MAIN,
 	//获取远程模块导出函数地址
-	MODULE_EXPORT
+	MODULE_NAME_EXPORT,
+	//通过模块基址查找导出函数
+	MODULE_BASE_EXPORT,
+	//修改内存属性
+	MEMORY_ATTRIBUTE
 
 };
 
 
-typedef struct  _COMM_DATA {
-	ULONG64			ID;
-	ULONG64			Type;
+typedef struct  _COMM_DATA { 
+	USHORT			ID;
+	UCHAR			InDataLen;
+	UCHAR			Type; 
 	ULONG64			InData;
-	ULONG64			InDataLen;
 	NTSTATUS status;
 }COMM_DATA, * PCOMM_DATA;
 
@@ -66,8 +70,8 @@ typedef struct  _COMM_DATA {
 typedef struct _TEST_DATA { 
 	ULONG uTest;
 	PVOID regCode;
-	ULONG size;
-	ULONGLONG time; 
+	UCHAR size;
+	ULONG time;
 }TEST_DATA, * PTEST_TATA;
 
 //保护进程
@@ -106,6 +110,14 @@ typedef struct _CREATE_MEM_DATA {
 	ULONG_PTR	uSize;
 	PULONG64	pVAddress;
 }CREATE_MEM_DATA, * PCREATE_MEM_DATA;
+
+//修改内存属性为可执行
+typedef struct _CHANGE_ATTRIBUTE_DATA {
+	ULONG	PID;
+	ULONG	uSize;
+	ULONG64	Address;
+}CHANGE_ATTRIBUTE_DATA, * PCHANGE_ATTRIBUTE_DATA;
+
 
 //创建线程
 typedef struct _CREATE_THREAD_DATA {
@@ -162,3 +174,11 @@ typedef struct _MODULE_EXPORT_DATA {
 	PCHAR ExportFuncName; 
 	ULONG64 FuncAddr;
 }MODULE_EXPORT_DATA, * PMODULE_EXPORT_DATA;
+
+
+typedef struct _MODULE_BASE_EXPORT_DATA {
+	ULONG PID;
+	ULONG64 ModuleBase;
+	PCHAR ExportFuncName;
+	ULONG64 FuncAddr;
+}MODULE_BASE_EXPORT_DATA, * PMODULE_BASE_EXPORT_DATA;

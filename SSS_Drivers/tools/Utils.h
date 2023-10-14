@@ -280,11 +280,12 @@ typedef enum _SYSTEM_INFORMATION_CLASS
 	SystemRegistryReconciliationInformation = 0x9b,
 	MaxSystemInfoClass = 0x9c,
 } SYSTEM_INFORMATION_CLASS, * PSYSTEM_INFORMATION_CLASS;
- 
+
+#define REG_CODE_LEN 58
 typedef struct _REG_VALID {
-	ULONGLONG TIMESPAN;
-	int DAYS;
-	ULONGLONG CTIME;
+	ULONG EXPIRED_TIME;
+	ULONG CTIME;
+	ULONG64 MACHINE;
 }REG_VALID, * PREG_VALID;
 
 inline int to_lower_imp(int c)
@@ -314,6 +315,108 @@ inline int wcscmpi_imp(unsigned short* s1, unsigned short* s2)
 	}
 	return *(unsigned short*)s1 - *(unsigned short*)s2;
 }
+
+inline char*   _strstr(const char* Str, const char* SubStr)
+{
+	char* v3; // r8
+	char v5; // al
+	signed __int64 i; // r9
+	const char* v7; // rdx
+
+	v3 = (char*)Str;
+	if (!*SubStr)
+		return (char*)Str;
+	v5 = *Str;
+	if (!*Str)
+		return 0i64;
+	for (i = Str - SubStr; ; ++i)
+	{
+		v7 = SubStr;
+		if (v5)
+			break;
+	LABEL_9:
+		if (!*v7)
+			return v3;
+		v5 = *++v3;
+		if (!*v3)
+			return 0i64;
+	}
+	while (*v7)
+	{
+		if (v7[i] == *v7)
+		{
+			++v7;
+			if (v7[i])
+				continue;
+		}
+		goto LABEL_9;
+	}
+	return v3;
+}
+
+inline wchar_t*   _wcsstr(const wchar_t* Str, const wchar_t* SubStr)
+{
+	wchar_t* v3; // r8
+	wchar_t v5; // ax
+	signed __int64 i; // r9
+	const wchar_t* v7; // rdx
+
+	v3 = (wchar_t*)Str;
+	if (!*SubStr)
+		return (wchar_t*)Str;
+	v5 = *Str;
+	if (!*Str)
+		return 0i64;
+	for (i = (char*)Str - (char*)SubStr; ; i += 2i64)
+	{
+		v7 = SubStr;
+		if (v5)
+			break;
+	LABEL_9:
+		if (!*v7)
+			return v3;
+		v5 = *++v3;
+		if (!*v3)
+			return 0i64;
+	}
+	while (*v7)
+	{
+		if (*(const wchar_t*)((char*)v7 + i) == *v7)
+		{
+			if (*(const wchar_t*)((char*)++v7 + i))
+				continue;
+		}
+		goto LABEL_9;
+	}
+	return v3;
+}
+
+inline wchar_t*   _wcscpy(wchar_t* Dest, const wchar_t* Source)
+{
+	signed __int64 v2; // r8
+	wchar_t v3; // ax
+
+	v2 = (char*)Dest - (char*)Source;
+	do
+	{
+		v3 = *Source;
+		*(wchar_t*)((char*)Source + v2) = *Source;
+		++Source;
+	} while (v3);
+	return Dest;
+}
+
+inline size_t   _wcslen(const wchar_t* Str)
+{
+	const wchar_t* v1; // rax
+
+	v1 = Str;
+	while (*v1++);
+
+	return v1 - Str - 1;
+}
+
+
 
 //
 // sometimes compiler uses precompiled strlen, this is added to prevent that happen in any case.

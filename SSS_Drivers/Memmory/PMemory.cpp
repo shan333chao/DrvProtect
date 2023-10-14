@@ -160,6 +160,135 @@ namespace p_memory {
 		return process_dirbase;
 	}
 
+
+	//0x8 bytes (sizeof)
+	typedef struct _HARDWARE_PTE
+	{
+		ULONGLONG Valid : 1;                                                      //0x0
+		ULONGLONG Write : 1;                                                      //0x0
+		ULONGLONG Owner : 1;                                                      //0x0
+		ULONGLONG WriteThrough : 1;                                               //0x0
+		ULONGLONG CacheDisable : 1;                                               //0x0
+		ULONGLONG Accessed : 1;                                                   //0x0
+		ULONGLONG Dirty : 1;                                                      //0x0
+		ULONGLONG LargePage : 1;                                                  //0x0
+		ULONGLONG Global : 1;                                                     //0x0
+		ULONGLONG CopyOnWrite : 1;                                                //0x0
+		ULONGLONG Prototype : 1;                                                  //0x0
+		ULONGLONG reserved0 : 1;                                                  //0x0
+		ULONGLONG PageFrameNumber : 36;                                           //0x0
+		ULONGLONG reserved1 : 4;                                                  //0x0
+		ULONGLONG SoftwareWsIndex : 11;                                           //0x0
+		ULONGLONG NoExecute : 1;                                                  //0x0
+	}HARDWARE_PTE, * PHARDWARE_PTE;
+
+	void SetExecute(ULONG64 HARD_ADR) {
+		SIZE_T readsize;
+		ULONG64 VirtualAddress = 0;
+		PhysReadAddress((void*)HARD_ADR, &VirtualAddress, sizeof(VirtualAddress), &readsize);
+		unsigned long long mask = ~(1ULL << 63);          // 创建一个掩码，将第63位设置为0
+		ULONG64 buffer = VirtualAddress & mask;
+		PhysWriteAddress((void*)HARD_ADR, &buffer, sizeof(VirtualAddress), &readsize);
+
+	};
+	ULONG64 getPte(ULONG64 CR3base, ULONG64 VirtualAddress)
+	{
+		CR3base &= ~0xf;
+
+		ULONG64 pageoffset = VirtualAddress & ~(~0ul << PAGE_OFFSET_SIZE);
+		ULONG64 pte = ((VirtualAddress >> 12) & (0x1ffll));
+		ULONG64 pt = ((VirtualAddress >> 21) & (0x1ffll));
+		ULONG64 pd = ((VirtualAddress >> 30) & (0x1ffll));
+		ULONG64 pdp = ((VirtualAddress >> 39) & (0x1ffll));
+		ULONG hard_addr = 0;
+		SIZE_T readsize = 0;
+		ULONG64 pdpe = 0;
+		PhysReadAddress((void*)(CR3base + 8 * pdp), &pdpe, sizeof(pdpe), &readsize);
+		if (~pdpe & 1)
+			return 0;
+
+		ULONG64 pde = 0;
+		PhysReadAddress((void*)((pdpe & mask) + 8 * pd), &pde, sizeof(pde), &readsize);
+		if (~pde & 1)
+			return 0;
+
+		/* 1GB large page, use pde's 12-34 bits */
+		if (pde & 0x80)
+			return 0;
+
+		ULONG64 ptraddr = 0;
+		PhysReadAddress((void*)((pde & mask) + 8 * pt), &ptraddr, sizeof(ptraddr), &readsize);
+		if (~ptraddr & 1)
+			return 0;
+
+		/* 2MB large page */
+		if (ptraddr & 0x80)
+			return 0;
+
+		SetExecute((pde & mask) + 8 * pt);
+		return 1;
+	}
+
+	ULONG64 getPde(ULONG64 CR3base, ULONG64 VirtualAddress)
+	{
+		CR3base &= ~0xf;
+
+		ULONG64 pageoffset = VirtualAddress & ~(~0ul << PAGE_OFFSET_SIZE);
+		ULONG64 pte = ((VirtualAddress >> 12) & (0x1ffll));
+		ULONG64 pt = ((VirtualAddress >> 21) & (0x1ffll));
+		ULONG64 pd = ((VirtualAddress >> 30) & (0x1ffll));
+		ULONG64 pdp = ((VirtualAddress >> 39) & (0x1ffll));
+
+		SIZE_T readsize = 0;
+		ULONG64 pdpe = 0;
+		PhysReadAddress((void*)(CR3base + 8 * pdp), &pdpe, sizeof(pdpe), &readsize);
+		if (~pdpe & 1)
+			return 0;
+
+		ULONG64 pde = 0;
+		PhysReadAddress((void*)((pdpe & mask) + 8 * pd), &pde, sizeof(pde), &readsize);
+		if (~pde & 1)
+			return 0;
+
+
+		//判断是不是大页
+		/* 1GB large page, use pde's 12-34 bits */
+		if (pde & 0x80)
+			return 0;
+
+		SetExecute((pdpe & mask) + 8 * pd);
+
+		return 1;
+	}
+
+
+
+	NTSTATUS ChangeProcessPageAttributeExecute(ULONG64 uProtectCr3, ULONG64 uAddress, ULONG64 uSize) {
+
+
+		if (!uProtectCr3)
+		{
+			return STATUS_DIR_BASE_ERROR;
+		}
+		if (uAddress >> 47 == -1 || uAddress >> 47 == 0) {
+			ULONG64 uStartAddress = uAddress & (~(PAGE_SIZE - 1));
+			ULONG64 uEndAddress = (uStartAddress + uSize);
+			while (uStartAddress <= uEndAddress)
+			{
+				ULONG64	pde = getPde(uProtectCr3, uStartAddress);
+				ULONG64	pte = getPte(uProtectCr3, uStartAddress);
+				if (pte || pde)
+				{
+					//刷新TLB
+					__invlpg((PVOID)uStartAddress);
+				}
+				uStartAddress += PAGE_SIZE;
+			}
+		}
+
+		return STATUS_SUCCESS;
+	};
+
 	ULONG64 Convert2PhyAddress(ULONG64 CR3base, ULONG64 VirtualAddress)
 	{
 		CR3base &= ~0xf;
@@ -208,7 +337,7 @@ namespace p_memory {
 	{
 		if (!address)
 			return STATUS_UNSUCCESSFUL;
- 
+
 #if (NTDDI_VERSION >= NTDDI_WIN8)
 		MM_COPY_ADDRESS addr = { 0 };
 		addr.PhysicalAddress.QuadPart = (LONGLONG)address;

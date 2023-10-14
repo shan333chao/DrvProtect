@@ -1,8 +1,10 @@
 #include "Comm/CommR3.h"
 #include <stdio.h>
 #include "Example.h"
+ 
 #define _CRT_SECURE_NO_WARNINGS
 void ShowFunc() {
+	
 	printf("----------------------------------------\n");
 	printf("\t0->  测试通讯\n");
 	printf("\t1->  进程伪装\n");
@@ -23,6 +25,7 @@ void ShowFunc() {
 	printf("\t16-> 主线程call(不附加进程无线程) \n");
 	printf("\t17-> 内核拉伸DLL \n");
 	printf("\t18-> 获取模块导出函数地址（无附加） \n");
+	printf("\t19-> 修改内存属性（无附加无API） \n");
 	printf("\t88-> 退出\n");
 	printf("----------------------------------------\n");
 
@@ -78,10 +81,10 @@ LOOP:
 	{
 	case 0: {
 		printf("请输入卡密：\n");
+		printf("5096324d4c57130ba8a8688bbfa63c2deb2173f0723031c5c2b54096d40a1fa64ce81481b48f387bf2b671fbeed5e7620956\r\n");
 		char cardcode[0x1000] = { 0 };
-		scanf_s("%s", cardcode, 0x1000);
-		ULONG len = StringToBuff(cardcode, buffer);
-		TestComm(buffer, len);
+		scanf_s("%s", cardcode, 0x1000); 
+		TestComm(cardcode, 0);
 		break;
 	}
 	case 1: {
@@ -293,7 +296,17 @@ LOOP:
 
 		break;
 	}
-
+	case 19:
+	{
+		printf("输入进程id：\n");
+		scanf_s("%d", &pid);
+		printf("请输入内存地址：\n");
+		scanf_s("%llx", &Address);
+		printf("请输入修改长度：\n");
+		scanf_s("%d", &uDataSize);
+		CHANGE_MEMORY_ATTR(pid,  Address, uDataSize);
+		break;
+	}
 	case 88:
 		goto EXITSYS;
 		break;

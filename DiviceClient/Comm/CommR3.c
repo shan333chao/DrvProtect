@@ -1,9 +1,9 @@
 #include "CommR3.h"
 #include <stdio.h>
-
 #include <stdlib.h>
 #include <time.h>
-
+#include "../../SSS_Drivers/ERROR_CODE.h"
+#include "../log.h"
 static HANDLE   gDeviceHandle;
 static FNtUserGetWindowPlacement  g_NtUserGetWindowPlacement = 0;
 static FNtUserGetTitleBarInfo   g_NtUserGetTitleBarInfo = 0;
@@ -23,10 +23,10 @@ BOOLEAN DriverInit() {
 	if (gDeviceHandle == NULL || gDeviceHandle == INVALID_HANDLE_VALUE)
 	{
 		gDeviceHandle = NULL;
-		printf("CreateFileW error 0x%08x \r\n", GetLastError());
+		Logp("CreateFileW error 0x%08x \r\n", GetLastError());
 		return FALSE;
 	}
-	//printf("CreateFileW success 0x%p \r\n", &gDeviceHandle);
+	//Logp("CreateFileW success 0x%p \r\n", &gDeviceHandle);
 	return TRUE;
 }
 
@@ -50,7 +50,7 @@ BOOLEAN DeviceComm(ULONG type, PVOID inData, ULONG inSize) {
 		commData.ID = COMM_ID;
 		SIZE_T dwSize = 0;
 		BOOL res = DeviceIoControl(gDeviceHandle, NULL, &commData, sizeof(COMM_DATA), &commData, sizeof(COMM_DATA), &dwSize, NULL);
-		printf("通讯结果 %08x \n", commData.status);
+		Logp("通讯结果 %08x \n", commData.status);
 		return res ? commData.status : 1;
 	}
 	return FALSE;
@@ -68,13 +68,7 @@ BOOL DriverHookInit()
 
 
 
-
-BOOLEAN MyNtUserGetScrollBarInfo(HANDLE hWnd, LONG idObject, uintptr_t psbi)
-{
-
-
-	return g_NtUserGetScrollBarInfo(hWnd, idObject, psbi);
-}
+ 
 //hook通讯
 DWORD HookComm(ULONG type, PVOID inData, ULONG inSize)
 {
@@ -91,12 +85,18 @@ DWORD HookComm(ULONG type, PVOID inData, ULONG inSize)
 	commData.InDataLen = inSize;
 	commData.ID = COMM_ID;
 	SIZE_T dwSize = 0;
-	BOOL res = FALSE;
+	BOOL res = FALSE; 
 	switch (seed)
 	{
 
 	case 0: {
+#ifdef _x86
+		res = g_NtUserGetWindowPlacement((HANDLE)0x10010, (uintptr_t)(&commData));
+#else
 		res = g_NtUserGetPointerProprietaryId((uintptr_t)(&commData));
+#endif // _x86
+
+	
 		break;
 	}
 	case 1: {
@@ -114,6 +114,6 @@ DWORD HookComm(ULONG type, PVOID inData, ULONG inSize)
 	default:
 		break;
 	} 
-	printf("hook %d 通讯结果 %08x \n", seed, commData.status);
-	return res ? commData.status : 1;
+	Logp("hook %d 通讯结果 %08x \n", seed, commData.status);
+	return res ? commData.status : STATUS_OP_UNSUCCESS;
 }
