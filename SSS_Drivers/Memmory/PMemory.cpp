@@ -181,14 +181,21 @@ namespace p_memory {
 		ULONGLONG SoftwareWsIndex : 11;                                           //0x0
 		ULONGLONG NoExecute : 1;                                                  //0x0
 	}HARDWARE_PTE, * PHARDWARE_PTE;
-
+	//0x8 bytes (sizeof)
+	 
 	void SetExecute(ULONG64 HARD_ADR) {
 		SIZE_T readsize;
 		ULONG64 VirtualAddress = 0;
 		PhysReadAddress((void*)HARD_ADR, &VirtualAddress, sizeof(VirtualAddress), &readsize);
 		unsigned long long mask = ~(1ULL << 63);          // 创建一个掩码，将第63位设置为0
+		readsize=0;
+		DbgBreakPoint();
+		PHYSICAL_ADDRESS phyAddr = { 0 };
+		phyAddr.QuadPart = HARD_ADR;
+		PVOID addr=  MmGetVirtualForPhysical(phyAddr);
 		ULONG64 buffer = VirtualAddress & mask;
-		PhysWriteAddress((void*)HARD_ADR, &buffer, sizeof(VirtualAddress), &readsize);
+
+		PhysWriteAddress((void*)HARD_ADR, addr, sizeof(buffer), &readsize);
 
 	};
 	ULONG64 getPte(ULONG64 CR3base, ULONG64 VirtualAddress)
@@ -202,30 +209,36 @@ namespace p_memory {
 		ULONG64 pdp = ((VirtualAddress >> 39) & (0x1ffll));
 		ULONG hard_addr = 0;
 		SIZE_T readsize = 0;
-		ULONG64 pdpe = 0;
-		PhysReadAddress((void*)(CR3base + 8 * pdp), &pdpe, sizeof(pdpe), &readsize);
-		if (~pdpe & 1)
+		ULONG64 plm4 = 0;
+		PhysReadAddress((void*)(CR3base + 8 * pdp), &plm4, sizeof(plm4), &readsize);
+		if (~plm4 & 1)
 			return 0;
 
-		ULONG64 pde = 0;
-		PhysReadAddress((void*)((pdpe & mask) + 8 * pd), &pde, sizeof(pde), &readsize);
-		if (~pde & 1)
+		ULONG64 pdpt_addr = 0;
+		PhysReadAddress((void*)((plm4 & mask) + 8 * pd), &pdpt_addr, sizeof(pdpt_addr), &readsize);
+		if (~pdpt_addr & 1)
 			return 0;
 
 		/* 1GB large page, use pde's 12-34 bits */
-		if (pde & 0x80)
+		if (pdpt_addr & 0x80)
 			return 0;
 
-		ULONG64 ptraddr = 0;
-		PhysReadAddress((void*)((pde & mask) + 8 * pt), &ptraddr, sizeof(ptraddr), &readsize);
-		if (~ptraddr & 1)
+		ULONG64 pdaddr = 0;
+		PhysReadAddress((void*)((pdpt_addr & mask) + 8 * pt), &pdaddr, sizeof(pdaddr), &readsize);
+		if (~pdaddr & 1)
 			return 0;
 
 		/* 2MB large page */
-		if (ptraddr & 0x80)
+		if (pdaddr & 0x80)
 			return 0;
 
-		SetExecute((pde & mask) + 8 * pt);
+		SetExecute((pdpt_addr & mask) + 8 * pt);
+
+		ULONG64 pte_addr=0;
+		PhysReadAddress((void*)((pdaddr & mask) + 8 * pte), &pte_addr, sizeof(pte_addr), &readsize);
+
+		SetExecute((pdaddr & mask) + 8 * pte);
+
 		return 1;
 	}
 

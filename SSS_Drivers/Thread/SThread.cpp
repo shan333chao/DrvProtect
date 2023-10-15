@@ -23,12 +23,13 @@ namespace sthread {
 		{
 			return status;
 		}
-
-		imports::ke_stack_attach_process(pEprocess, &apcState);
+		Utils::AttachProcess(pEprocess);
+		//imports::ke_stack_attach_process(pEprocess, &apcState);
 		MODE oldMode = functions::SetThreadPrevious(KeGetCurrentThread(), KernelMode);
 		status = pNtCrteateThread(&hThread, THREAD_ALL_ACCESS, NULL, NtCurrentProcess(), ShellCodeAddr, Argument, NULL, NULL, NULL, NULL, NULL);
 		functions::SetThreadPrevious(KeGetCurrentThread(), oldMode);
-		imports::ke_unstack_detach_process(&apcState);
+		//imports::ke_unstack_detach_process(&apcState);
+		Utils::DetachProcess();
 		return status;
 
 

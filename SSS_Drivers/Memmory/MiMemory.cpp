@@ -60,7 +60,7 @@ namespace MiMemory {
 		__int64 v3; // rax
 		__int64 v5; // rax
 		__int64 v6; // rax
-
+	
 		v2 = read_i64(8 * ((va >> 39) & 0x1FF) + dir);
 		if (!v2)
 			return 0i64;
@@ -71,7 +71,7 @@ namespace MiMemory {
 		v3 = read_i64((v2 & 0xFFFFFFFFF000i64) + 8 * ((va >> 30) & 0x1FF));
 		if (!v3 || (v3 & 1) == 0)
 			return 0i64;
-
+		__invlpg((PVOID)va);
 		if ((v3 & 0x80u) != 0i64)
 			return (va & 0x3FFFFFFF) + (v3 & 0xFFFFFFFFF000i64);
 
@@ -110,7 +110,7 @@ namespace MiMemory {
 
 		MM_COPY_ADDRESS physical_address{};
 		physical_address.PhysicalAddress.QuadPart = (LONGLONG)address;
-
+		 
 		BOOLEAN v = imports::mm_copy_memory(MM_COPY_BUFFER, physical_address, length, MM_COPY_MEMORY_PHYSICAL, &length) == 0;
 		if (v)
 		{
@@ -366,17 +366,9 @@ namespace MiMemory {
 		ULONGLONG current_size;
 		while (total_size)
 		{
+	
 			physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
-			if (!physical_address)
-			{
-				if (!isCopyed)
-				{
-					Utils::self_safe_copy(process, (PVOID)((ULONGLONG)address + offset), readSize);
-					isCopyed = TRUE;
-				}
 
-				physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
-			}
 
 			if (!physical_address)
 			{
@@ -429,6 +421,7 @@ namespace MiMemory {
 		ULONGLONG current_size;
 
 		while (total_size) {
+
 			physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
 			if (!physical_address) {
 				if (total_size >= 0x1000)

@@ -452,7 +452,8 @@ inline char*  strchr_imp(const char* str, int character) {
 	return NULL;
 }
 namespace Utils {
-
+	void AttachProcess(PEPROCESS NewProcess);
+	void DetachProcess();
 	//EXTERN_C_START
 	PVOID GetFuncExportName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName);
 	USHORT GetServiceNoByName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName);

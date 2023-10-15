@@ -1035,7 +1035,8 @@ namespace ProtectWindow {
 		}
 		KAPC_STATE kApc = { 0 };
 
-		imports::ke_stack_attach_process(pEprocess, &kApc);
+		Utils::AttachProcess(pEprocess);
+		//imports::ke_stack_attach_process(pEprocess, &kApc);
 
 		g_NtUserGetWindowPlacement = (FNtUserGetWindowPlacement)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowPlacement"));
 		Log("g_NtUserGetWindowPlacement %p \r\n", g_NtUserGetWindowPlacement);
@@ -1050,7 +1051,8 @@ namespace ProtectWindow {
 		Log("g_NtUserGetPointerProprietaryId %p \r\n", g_NtUserGetPointerProprietaryId);
 
 
-		imports::ke_unstack_detach_process(&kApc);
+		//imports::ke_unstack_detach_process(&kApc);
+		Utils::DetachProcess();
 	}
 
 	NTSTATUS StartProtect()

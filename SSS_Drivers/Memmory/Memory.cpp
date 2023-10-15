@@ -50,15 +50,15 @@ namespace memory {
 		}
 		if (IsAddressValid(ReadBuffer, 1))
 		{
-			return STATUS_INVALID_PARAMETER_5; 
+			return STATUS_INVALID_PARAMETER_5;
 		}
-		if (uReadSize==0)
+		if (uReadSize == 0)
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
 
 		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
-		if (!pTargetEprocess) return status; 
+		if (!pTargetEprocess) return status;
 		if (!pFakeObject)
 		{
 			pFakeEprocess = Utils::lookup_process_by_id((HANDLE)uFakePid);
@@ -95,9 +95,9 @@ namespace memory {
 	{
 		PEPROCESS								pTargetEprocess = NULL;
 		NTSTATUS								status = STATUS_UNSUCCESSFUL;
-		static PEPROCESS						pFakeEprocess = NULL;
-		static PVOID							pFakeObject = NULL;
-		PEPROCESS								pCopyFakeEprocess = NULL;
+		//static PEPROCESS						pFakeEprocess = NULL;
+		//static PVOID							pFakeObject = NULL;
+		//PEPROCESS								pCopyFakeEprocess = NULL;
 		SIZE_T									NumberOfBytesCopied = NULL;
 		PVOID									pTempBuffer = NULL;
 		ULONG_PTR								uProtectCr3 = NULL;
@@ -110,95 +110,45 @@ namespace memory {
 		{
 			return STATUS_INVALID_PARAMETER_4;
 		}
-
 		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
 		if (!pTargetEprocess) return status;
-
-
-
-		if (!pFakeObject)
+	
+		PVOID pTempInBuffer = imports::ex_allocate_pool(NonPagedPool, uWriteSize);
+		if (!pTempInBuffer)
 		{
-			pFakeEprocess = Utils::lookup_process_by_id((HANDLE)uFakePid);
-			//获取傀儡进程 
-			if (!pFakeEprocess) {
-				return status;
-			}
-			pFakeObject = imports::ex_allocate_pool(NonPagedPool, PAGE_SIZE);
-			//复制傀儡进程
-			Utils::kmemset(pFakeObject, 0, PAGE_SIZE);
-			Utils::kmemcpy(pFakeObject, (PUCHAR)pFakeEprocess - 0x30, PAGE_SIZE);
+			return 0;
 		}
-		pCopyFakeEprocess = (PEPROCESS)((PUCHAR)pFakeObject + 0x30);
-		//替换页表地址 
-		uProtectCr3 = *(PULONG_PTR)((PUCHAR)pTargetEprocess + 0x28);
-		*(PULONG_PTR)((PUCHAR)pCopyFakeEprocess + 0x28) = uProtectCr3;
-		ULONG64 GotSize = 0;
+		Utils::kmemset(pTempInBuffer, 0, uWriteSize);
+		Utils::kmemcpy(pTempInBuffer, WriteBuffer, uWriteSize);
 
-
-		//第一次写入内存
-		status = imports::mm_copy_virtual_memory(imports::io_get_current_process(), WriteBuffer, pCopyFakeEprocess, Address, uWriteSize, KernelMode, &GotSize);
-
-		if (!NT_SUCCESS(status)) {
-			PVOID pTempAddress = Address;
-			SIZE_T size_t = uWriteSize;
-			ULONG uOldProtect = 0;
-			//挂靠目标进程 会被ETW捕获 需要特征定位NTProtectVirtualMemory
-			imports::ke_stack_attach_process(pCopyFakeEprocess, &kapc_state);
-			status = mNtProtectVirtualMemory(NtCurrentProcess(), &pTempAddress, &size_t, PAGE_EXECUTE_WRITECOPY, &uOldProtect);
-
-			//取消进程挂靠
-			imports::ke_unstack_detach_process(&kapc_state);
-			if (NT_SUCCESS(status))
-			{
-				status = imports::mm_copy_virtual_memory(imports::io_get_current_process(), WriteBuffer, pCopyFakeEprocess, Address, uWriteSize, KernelMode, &GotSize);
-			}
-			if (NT_SUCCESS(status)) {
-				//挂靠目标进程
-				imports::ke_stack_attach_process(pCopyFakeEprocess, &kapc_state);
-				///恢复内存属性
-				status = mNtProtectVirtualMemory(NtCurrentProcess(), &pTempAddress, &size_t, uOldProtect, &uOldProtect);
-				//取消进程挂靠
-				imports::ke_unstack_detach_process(&kapc_state);
-				return status;
-			}
-		}
-		if (!NT_SUCCESS(status)) {
-
-			PVOID pTempInBuffer = imports::ex_allocate_pool(NonPagedPool, uWriteSize);
-			if (!pTempInBuffer)
-			{
-				return 0;
-			}
-			Utils::kmemset(pTempInBuffer, 0, uWriteSize);
-			Utils::kmemcpy(pTempInBuffer, WriteBuffer, uWriteSize);
-
-			//挂靠目标进程
-			imports::ke_stack_attach_process(pCopyFakeEprocess, &kapc_state);
-			///创建pMdl
-			*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
-			PMDL pMdl = imports::io_allocate_mdl(Address, uWriteSize, FALSE, NULL, NULL);
-			*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
-			if (!pMdl) return 0;
-			*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
-			imports::mm_build_mdl_for_non_paged_pool(pMdl);
-
-			PVOID pAddr = imports::mm_map_locked_pages_specify_cache(pMdl, KernelMode, MmCached, NULL, NULL, NormalPagePriority);
-			*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
-			if (!pAddr) {
-				imports::io_free_mdl(pMdl);
-				imports::ke_unstack_detach_process(&kapc_state);
-				imports::ex_free_pool_with_tag(pTempInBuffer, 0);
-				return 0;
-			}
-			//写入内存
-			Utils::kmemcpy(pAddr, pTempInBuffer, uWriteSize);
-			imports::mm_unmap_locked_pages(pAddr, pMdl);
+		//挂靠目标进程
+		Utils::AttachProcess(pTargetEprocess);
+		//imports::ke_stack_attach_process(pCopyFakeEprocess, &kapc_state);
+		///创建pMdl
+		*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
+		PMDL pMdl = imports::io_allocate_mdl(Address, uWriteSize, FALSE, NULL, NULL);
+		*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
+		if (!pMdl) return 0;
+		*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
+		imports::mm_build_mdl_for_non_paged_pool(pMdl);
+		PVOID pAddr = imports::mm_map_locked_pages_specify_cache(pMdl, KernelMode, MmCached, NULL, NULL, NormalPagePriority);
+		*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
+		if (!pAddr) {
 			imports::io_free_mdl(pMdl);
-			//取消进程挂靠
 			imports::ke_unstack_detach_process(&kapc_state);
 			imports::ex_free_pool_with_tag(pTempInBuffer, 0);
-			status = STATUS_SUCCESS;
+			return 0;
 		}
+		//写入内存
+		Utils::kmemcpy(pAddr, pTempInBuffer, uWriteSize);
+		imports::mm_unmap_locked_pages(pAddr, pMdl);
+		imports::io_free_mdl(pMdl);
+		//取消进程挂靠
+		Utils::DetachProcess();
+		//imports::ke_unstack_detach_process(&kapc_state);
+		imports::ex_free_pool_with_tag(pTempInBuffer, 0);
+		status = STATUS_SUCCESS;
+
 
 
 		return status;
@@ -292,15 +242,17 @@ namespace memory {
 		PVOID									MappAddr = NULL;
 		PMDL									pMdl = NULL;
 
+		Utils::AttachProcess(pTargetEprocess);
 		//挂靠目标进程
-		imports::ke_stack_attach_process(pTargetEprocess, &kapc_state);
+		//imports::ke_stack_attach_process(pTargetEprocess, &kapc_state);
 		BaseAddr = imports::ex_allocate_pool(NonPagedPool, uSize);
 		if (!BaseAddr)
 		{
-			imports::ke_unstack_detach_process(&kapc_state);
+			Utils::DetachProcess();
+			//imports::ke_unstack_detach_process(&kapc_state);
 			return STATUS_UNSUCCESSFUL;
 		}
-		
+
 		Utils::kmemset(BaseAddr, 0, uSize);
 		*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
 		///创建pMdl
@@ -308,7 +260,8 @@ namespace memory {
 		*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
 		if (!pMdl) {
 			imports::ex_free_pool_with_tag(BaseAddr, 0);
-			imports::ke_unstack_detach_process(&kapc_state);
+			Utils::DetachProcess();
+			//imports::ke_unstack_detach_process(&kapc_state);
 			return STATUS_UNSUCCESSFUL;
 		}
 		*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
@@ -316,7 +269,7 @@ namespace memory {
 		imports::mm_build_mdl_for_non_paged_pool(pMdl);
 		*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
 		__try {
-		
+
 			//MDL指向的物理页映射值虚拟地址
 			*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
 			MappAddr = imports::mm_map_locked_pages_specify_cache(pMdl, UserMode, MmCached, NULL, NULL, NormalPagePriority);
@@ -324,14 +277,16 @@ namespace memory {
 			if (!MappAddr) {
 				imports::io_free_mdl(pMdl);
 				imports::ex_free_pool_with_tag(BaseAddr, 0);
-				imports::ke_unstack_detach_process(&kapc_state);
+				Utils::DetachProcess();
+				//imports::ke_unstack_detach_process(&kapc_state);
 				return STATUS_UNSUCCESSFUL;
 			}
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER) {
 			imports::io_free_mdl(pMdl);
 			imports::ex_free_pool_with_tag(BaseAddr, 0);
-			imports::ke_unstack_detach_process(&kapc_state);
+			Utils::DetachProcess();
+			//imports::ke_unstack_detach_process(&kapc_state);
 			return STATUS_UNSUCCESSFUL;
 		}
 
@@ -343,7 +298,8 @@ namespace memory {
 		*kernelAllocAddr = (ULONG64)BaseAddr;
 		Utils::kmemcpy(pmdl, pMdl, sizeof(MDL));
 		//取消进程挂靠
-		imports::ke_unstack_detach_process(&kapc_state);
+		//imports::ke_unstack_detach_process(&kapc_state);
+		Utils::DetachProcess();
 
 		ULONG64 uProtectCr3 = *(PULONG_PTR)((PUCHAR)pTargetEprocess + 0x28);
 
@@ -351,21 +307,21 @@ namespace memory {
 		return status;
 	}
 
- 
+
 	void FreeMemory(PEPROCESS eprocess, ULONGLONG mapLockAddr, PVOID kernelAddr, PMDL pmdl) {
-		KAPC_STATE								kapc_state = { 0 };
-		if (imports::ps_get_process_exit_process_called(eprocess))
-		{
-			return;
-		}
+		//KAPC_STATE								kapc_state = { 0 };
+		//if (imports::ps_get_process_exit_process_called(eprocess))
+		//{
+		//	return;
+		//}
 		//挂靠目标进程
-		imports::ke_stack_attach_process(eprocess, &kapc_state);
-		MmUnmapLockedPages((PVOID)mapLockAddr, pmdl);
-		imports::ex_free_pool_with_tag(kernelAddr, 0);
+		//imports::ke_stack_attach_process(eprocess, &kapc_state);
+		//MmUnmapLockedPages((PVOID)mapLockAddr, pmdl);
+		//imports::ex_free_pool_with_tag(kernelAddr, 0);
 		//imports::io_free_mdl(pmdl);
 
 		//取消进程挂靠
-		imports::ke_unstack_detach_process(&kapc_state);
+		//imports::ke_unstack_detach_process(&kapc_state);
 	}
 
 	NTSTATUS SS_CreateMemory(ULONG uPid, ULONG_PTR uSize, PULONG64 retAddress)
@@ -396,7 +352,7 @@ namespace memory {
 
 
 
- 
+
 	ULONG_PTR getPteBase() {
 		NTSTATUS status;
 		static ULONG_PTR PTE_BASE = 0;
@@ -421,7 +377,7 @@ namespace memory {
 		}
 		return PTE_BASE;
 	}
-	 
+
 	ULONG64 getPte(ULONG64 VirtualAddress)
 	{
 		ULONG_PTR PTE_BASE = getPteBase();
@@ -494,7 +450,7 @@ namespace memory {
 		}
 
 		ULONG64 uProtectCr3 = *(PULONG_PTR)((PUCHAR)pTargetEprocess + 0x28);
-		status=p_memory::ChangeProcessPageAttributeExecute(uProtectCr3, Address, size);
+		status = p_memory::ChangeProcessPageAttributeExecute(uProtectCr3, Address, size);
 
 		return status;
 	}

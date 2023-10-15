@@ -81,13 +81,14 @@ namespace process_info {
 		//ÐÞ¸´È±Ò³Òì³£
 		status = imports::mm_copy_virtual_memory(pTargetEprocess, peb32, pTargetEprocess, peb32, 4, UserMode, &size);
 		if (!NT_SUCCESS(status))return 0;
-
-		imports::ke_stack_attach_process(pTargetEprocess, &kApcState);
+		Utils::AttachProcess(pTargetEprocess);
+		//imports::ke_stack_attach_process(pTargetEprocess, &kApcState);
 		if (imports::mm_is_address_valid(peb32))
 		{
 			status = imports::mm_copy_virtual_memory(pTargetEprocess, (PVOID)peb32->Ldr, pTargetEprocess, (PVOID)peb32->Ldr, 4, UserMode, &size);
 			if (!NT_SUCCESS(status)) {
-				imports::ke_unstack_detach_process(&kApcState);
+				Utils::DetachProcess();
+				//imports::ke_unstack_detach_process(&kApcState);
 				return 0;
 			}
 			if (imports::mm_is_address_valid((PVOID)peb32->Ldr))
@@ -111,7 +112,8 @@ namespace process_info {
 				}
 			}
 		}
-		imports::ke_unstack_detach_process(&kApcState);
+		//imports::ke_unstack_detach_process(&kApcState);
+		Utils::DetachProcess();
 		return uImageBase;
 	}
 	ULONG_PTR GetX64ProcessModule(PEPROCESS	pTargetEprocess, PUNICODE_STRING szModuleName, PULONG pModuleSize) {
@@ -126,13 +128,15 @@ namespace process_info {
 		//ÐÞ¸´È±Ò³Òì³£
 		status = imports::mm_copy_virtual_memory(pTargetEprocess, peb64, pTargetEprocess, peb64, 4, UserMode, &size);
 		if (!NT_SUCCESS(status))return 0;
-		imports::ke_stack_attach_process(pTargetEprocess, &kApcState);
+		Utils::AttachProcess(pTargetEprocess);
+		//imports::ke_stack_attach_process(pTargetEprocess, &kApcState);
 		if (imports::mm_is_address_valid(peb64))
 		{
 
 			status = imports::mm_copy_virtual_memory(pTargetEprocess, peb64->Ldr, pTargetEprocess, peb64->Ldr, 4, UserMode, &size);
 			if (!NT_SUCCESS(status)) {
-				imports::ke_unstack_detach_process(&kApcState);
+				//imports::ke_unstack_detach_process(&kApcState);
+				Utils::DetachProcess();
 				return 0;
 			}
 			if (imports::mm_is_address_valid(peb64->Ldr)) {
@@ -154,7 +158,8 @@ namespace process_info {
 				}
 			}
 		}
-		imports::ke_unstack_detach_process(&kApcState);
+		Utils::DetachProcess();
+		//imports::ke_unstack_detach_process(&kApcState);
 		return uImageBase;
 	}
 

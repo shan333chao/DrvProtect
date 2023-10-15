@@ -421,12 +421,6 @@ namespace patternSearch {
 		{
 			return 0;
 		}
-		//NTSTATUS	status = VadModules::GetModuleBaseInVAD(HandleToULong(pid), (PCHAR)dllName, &moduleBase, &moduleSize);
-		//if (!NT_SUCCESS(status))
-		//{
-		//	return 0;
-		//}
-		//Utils::self_safe_copy(eprocess, (PVOID)moduleBase, moduleSize);
 		ULONGLONG addr = scan_pattern_direct(eprocess, moduleBase, pattern, mask, moduleSize);
 		Log("search_process_pattern  %p \r\n ", addr);
 		return addr;

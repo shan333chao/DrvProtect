@@ -4,6 +4,102 @@
 #include "Log.h"
 #include "xor.h"
 
+void
+CopyList(IN PLIST_ENTRY Original,
+	IN PLIST_ENTRY Copy,
+	IN KPROCESSOR_MODE Mode)
+{
+	if (IsListEmpty(&Original[Mode]))
+	{
+		InitializeListHead(&Copy[Mode]);
+	}
+	else
+	{
+		Copy[Mode].Flink = Original[Mode].Flink;
+		Copy[Mode].Blink = Original[Mode].Blink;
+		Original[Mode].Flink->Blink = &Copy[Mode];
+		Original[Mode].Blink->Flink = &Copy[Mode];
+	}
+}
+
+void
+MoveApcState(PKAPC_STATE OldState,
+	PKAPC_STATE NewState)
+{
+	RtlCopyMemory(NewState, OldState, sizeof(KAPC_STATE));
+
+	CopyList(OldState->ApcListHead, NewState->ApcListHead, KernelMode);
+	CopyList(OldState->ApcListHead, NewState->ApcListHead, UserMode);
+}
+
+uintptr_t OldProcess;
+void Utils::AttachProcess(PEPROCESS NewProcess)
+{
+	PKTHREAD Thread =imports::ke_get_current_thread();
+	PKAPC_STATE ApcState = *(PKAPC_STATE*)(uintptr_t(Thread) + 0x98); // 0x98 = _KTHREAD::ApcState
+
+	if (*(PEPROCESS*)(uintptr_t(ApcState) + 0x20) == NewProcess) // 0x20 = _KAPC_STATE::Process
+		return;
+
+	if ((*(UCHAR*)(uintptr_t(Thread) + 0x24a) != 0)) // 0x24a = _KTHREAD::ApcStateIndex
+	{
+		KeBugCheck(INVALID_PROCESS_ATTACH_ATTEMPT);
+		return;
+	}
+
+	MoveApcState(ApcState, *(PKAPC_STATE*)(uintptr_t(Thread) + 0x258)); // 0x258 = _KTHREAD::SavedApcState
+
+	InitializeListHead(&ApcState->ApcListHead[KernelMode]);
+	InitializeListHead(&ApcState->ApcListHead[UserMode]);
+
+	OldProcess = *(uintptr_t*)(uintptr_t(ApcState) + 0x20);
+
+	*(PEPROCESS*)(uintptr_t(ApcState) + 0x20) = NewProcess; // 0x20 = _KAPC_STATE::Process
+	*(UCHAR*)(uintptr_t(ApcState) + 0x28) = 0;				// 0x28 = _KAPC_STATE::InProgressFlags
+	*(UCHAR*)(uintptr_t(ApcState) + 0x29) = 0;				// 0x29 = _KAPC_STATE::KernelApcPending
+	*(UCHAR*)(uintptr_t(ApcState) + 0x2a) = 0;				// 0x2a = _KAPC_STATE::UserApcPendingAll
+
+	*(UCHAR*)(uintptr_t(Thread) + 0x24a) = 1; // 0x24a = _KTHREAD::ApcStateIndex
+
+	auto DirectoryTableBase = *(uintptr_t*)(uintptr_t(NewProcess) + 0x28);  // 0x28 = _EPROCESS::DirectoryTableBase
+	__writecr3(DirectoryTableBase);
+}
+
+void Utils::DetachProcess()
+{
+	PKTHREAD Thread = imports::ke_get_current_thread();
+	PKAPC_STATE ApcState = *(PKAPC_STATE*)(uintptr_t(Thread) + 0x98); // 0x98 = _KTHREAD->ApcState
+
+	if ((*(UCHAR*)(uintptr_t(Thread) + 0x24a) == 0)) // 0x24a = KTHREAD->ApcStateIndex
+		return;
+
+	if ((*(UCHAR*)(uintptr_t(ApcState) + 0x28)) ||  // 0x28 = _KAPC_STATE->InProgressFlags
+		!(IsListEmpty(&ApcState->ApcListHead[KernelMode])) ||
+		!(IsListEmpty(&ApcState->ApcListHead[UserMode])))
+	{
+		KeBugCheck(INVALID_PROCESS_DETACH_ATTEMPT);
+	}
+
+	MoveApcState(*(PKAPC_STATE*)(uintptr_t(Thread) + 0x258), ApcState); // 0x258 = _KTHREAD::SavedApcState
+
+	if (OldProcess)
+		*(uintptr_t*)(uintptr_t(ApcState) + 0x20) = OldProcess; // 0x20 = _KAPC_STATE::Process
+
+	*(PEPROCESS*)(*(uintptr_t*)(uintptr_t(Thread) + 0x258) + 0x20) = 0; // 0x258 = _KTHREAD::SavedApcState + 0x20 = _KAPC_STATE::Process
+
+	*(UCHAR*)(uintptr_t(Thread) + 0x24a) = 0; // 0x24a = _KTHREAD::ApcStateIndex
+
+	auto DirectoryTableBase = *(uintptr_t*)(uintptr_t(*(PEPROCESS*)(uintptr_t(ApcState) + 0x20)) + 0x28); // 0x20 = _KAPC_STATE::Process + 0x28 = _EPROCESS::DirectoryTableBase
+	__writecr3(DirectoryTableBase);
+
+	if (!(IsListEmpty(&ApcState->ApcListHead[KernelMode])))
+	{
+		*(UCHAR*)(uintptr_t(ApcState) + 0x29) = 1; // 0x29 = _KAPC_STATE::KernelApcPending
+	}
+
+	RemoveEntryList(&ApcState->ApcListHead[KernelMode]);
+	OldProcess = 0;
+}
 
 PVOID Utils::GetFuncExportName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName) {
 	PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)ModuleBase;

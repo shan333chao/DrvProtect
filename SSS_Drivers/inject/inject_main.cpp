@@ -44,8 +44,8 @@ namespace inject_main {
 		{
 			return;
 		}
-		//½ø³ÌÉêÇëÄÚ´æ 
-		imports::ke_stack_attach_process(pEprocess, &KAPC);
+		Utils::AttachProcess(pEprocess);
+		//imports::ke_stack_attach_process(pEprocess, &KAPC);
 		PVOID entrypoint = NULL;
 		ULONGLONG dos_header = (ULONGLONG)filebufeer;
 		USHORT imageMagic = *(PUSHORT)dos_header;
@@ -66,7 +66,8 @@ namespace inject_main {
 			pehelper64::PELoaderDLL((PUCHAR)filebufeer, (PUCHAR)virtualbase, kernelImageBase, &entrypoint, pEprocess);
 		}
 		Logf("DLL ModuleBase:%p  entrypoint£º%p", virtualbase, entrypoint);
-		imports::ke_unstack_detach_process(&KAPC);
+		//imports::ke_unstack_detach_process(&KAPC);
+		Utils::DetachProcess();
 		*entry = entrypoint;
 	}
 	void injectDll(PEPROCESS process, PVOID filebuffer, ULONG64 filesize) {
