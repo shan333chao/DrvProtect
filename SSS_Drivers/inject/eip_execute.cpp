@@ -91,8 +91,6 @@ namespace eip_execute {
 				pretthreadojb = ptempthreadobj;
 				break;
 			}
-
-
 		}
 
 		return pretthreadojb;

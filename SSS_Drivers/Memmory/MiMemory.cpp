@@ -368,7 +368,15 @@ namespace MiMemory {
 		{
 	
 			physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
-
+			if (!physical_address)
+			{
+				if (!isCopyed)
+				{
+					Utils::self_safe_copy(process, (PVOID)((ULONGLONG)address + offset), readSize);
+					isCopyed = TRUE;
+				}
+				physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
+			}
 
 			if (!physical_address)
 			{

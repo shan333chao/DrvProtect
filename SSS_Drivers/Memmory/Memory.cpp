@@ -93,65 +93,10 @@ namespace memory {
 	}
 	NTSTATUS SS_WriteMemory(ULONG_PTR uPid, ULONG_PTR uFakePid, PVOID Address, ULONG_PTR uWriteSize, PVOID WriteBuffer)
 	{
-		PEPROCESS								pTargetEprocess = NULL;
-		NTSTATUS								status = STATUS_UNSUCCESSFUL;
-		//static PEPROCESS						pFakeEprocess = NULL;
-		//static PVOID							pFakeObject = NULL;
-		//PEPROCESS								pCopyFakeEprocess = NULL;
-		SIZE_T									NumberOfBytesCopied = NULL;
-		PVOID									pTempBuffer = NULL;
-		ULONG_PTR								uProtectCr3 = NULL;
-		KAPC_STATE								kapc_state = { 0 };
-		if (IsAddressValid(Address, uWriteSize))
-		{
-			return STATUS_INVALID_PARAMETER_2;
-		}
-		if (IsAddressValid(WriteBuffer, 1))
-		{
-			return STATUS_INVALID_PARAMETER_4;
-		}
-		pTargetEprocess = Utils::lookup_process_by_id((HANDLE)uPid);
-		if (!pTargetEprocess) return status;
-	
-		PVOID pTempInBuffer = imports::ex_allocate_pool(NonPagedPool, uWriteSize);
-		if (!pTempInBuffer)
-		{
-			return 0;
-		}
-		Utils::kmemset(pTempInBuffer, 0, uWriteSize);
-		Utils::kmemcpy(pTempInBuffer, WriteBuffer, uWriteSize);
-
-		//挂靠目标进程
-		Utils::AttachProcess(pTargetEprocess);
-		//imports::ke_stack_attach_process(pCopyFakeEprocess, &kapc_state);
-		///创建pMdl
-		*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
-		PMDL pMdl = imports::io_allocate_mdl(Address, uWriteSize, FALSE, NULL, NULL);
-		*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
-		if (!pMdl) return 0;
-		*(PBOOLEAN)imports::imported.kd_entered_debugger = TRUE;
-		imports::mm_build_mdl_for_non_paged_pool(pMdl);
-		PVOID pAddr = imports::mm_map_locked_pages_specify_cache(pMdl, KernelMode, MmCached, NULL, NULL, NormalPagePriority);
-		*(PBOOLEAN)imports::imported.kd_entered_debugger = FALSE;
-		if (!pAddr) {
-			imports::io_free_mdl(pMdl);
-			imports::ke_unstack_detach_process(&kapc_state);
-			imports::ex_free_pool_with_tag(pTempInBuffer, 0);
-			return 0;
-		}
-		//写入内存
-		Utils::kmemcpy(pAddr, pTempInBuffer, uWriteSize);
-		imports::mm_unmap_locked_pages(pAddr, pMdl);
-		imports::io_free_mdl(pMdl);
-		//取消进程挂靠
-		Utils::DetachProcess();
-		//imports::ke_unstack_detach_process(&kapc_state);
-		imports::ex_free_pool_with_tag(pTempInBuffer, 0);
-		status = STATUS_SUCCESS;
+	 
 
 
-
-		return status;
+		return STATUS_INVALID_ADDRESS;
 
 
 	}

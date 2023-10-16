@@ -162,17 +162,6 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = memory::SS_WriteMemoryPhy2(MM_DATA->PID, MM_DATA->Address, MM_DATA->uDataSize, MM_DATA->pValBuffer);
 		break;
 	}
-	case FAKE_READ_MEMORY: {
-		PRW_MEM_DATA MM_DATA = (PRW_MEM_DATA)pCommData->InData;
-		status = memory::SS_ReadMemory(MM_DATA->PID, MM_DATA->FakePID, MM_DATA->Address, MM_DATA->uDataSize, MM_DATA->pValBuffer);
-		break;
-	}
-	case FAKE_WRITE_MEMORY: {
-		PRW_MEM_DATA MM_DATA = (PRW_MEM_DATA)pCommData->InData;
-		status = memory::SS_WriteMemory(MM_DATA->PID, MM_DATA->FakePID, MM_DATA->Address, MM_DATA->uDataSize, MM_DATA->pValBuffer);
-		break;
-	}
-
 	case WND_PROTECT: {
 		Protect::Initialize();
 		ProtectRoute::InitProtectWindow();
