@@ -50,6 +50,10 @@ namespace ProtectWindow {
 	typedef __int64(__fastcall* FValidateHwnd)(__int64 a1);
 	typedef __int64(__fastcall* SetDisplayAffinity)(void* a1,   int a2);
 	typedef __int64 (__fastcall *OriginWM_GETTEXT)(__int64, unsigned int, __int64, __int64, __int64, int, bool);
+	typedef __int64(__fastcall* HookComm)(ULONG64 a1);
+
+	__int64 __fastcall GetWindowContextHelpId(__int64 a1);
+ 
 	ULONGLONG GetChangeWindowTreeProtection();
 	ULONGLONG GetFValidateHwnd();
 

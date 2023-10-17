@@ -60,12 +60,18 @@ __declspec(dllimport) ULONG _PhyWriteMemory(_In_ ULONG		PID, _In_ PVOID	Address,
 /// <returns>错误码</returns>
 __declspec(dllimport) ULONG _ProtectProcess(_In_ ULONG protectPid, _In_ ULONG fakePid);
 /// <summary>
-/// 保护窗口并反截图
+/// 保护窗口
 /// </summary>
 /// <param name="hwnd">主窗口句柄</param>
 /// <returns>状态码</returns>
 __declspec(dllimport) ULONG _ProtectWindow(_In_ ULONG32 hwnd);
 
+/// <summary>
+/// 反截图
+/// </summary>
+/// <param name="hwnd">主窗口句柄</param>
+/// <returns>状态码</returns>
+__declspec(dllimport) ULONG _AntiSnapShotWindow(ULONG32 hwnd);
 
 /// <summary>
 /// 查询进程模块 （会附加进程）

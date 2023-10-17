@@ -25,6 +25,8 @@ typedef enum _COMM_TYPE {
 	PHY_WRITE_MEMORY, 
 	//保护窗口
 	WND_PROTECT,
+	//反截图
+	ANTI_SNAPSHOT,
 	//申请内存
 	CREATE_MEMORY,
 	//创建线程

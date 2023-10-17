@@ -8,8 +8,8 @@ void ShowFunc() {
 	printf("----------------------------------------\n");
 	printf("\t0->  测试通讯\n");
 	printf("\t1->  进程伪装\n");
-	printf("\t2->  隐藏窗口并反截图\n");
-	printf("\t3->  内存读取\n");
+	printf("\t2->  保护窗口\n");
+	printf("\t3->  反截图\n");
 	printf("\t4->  内存写入\n");
 	printf("\t5->  物理内存读取\n");
 	printf("\t6->  物理内存写入\n");
@@ -105,14 +105,11 @@ LOOP:
 
 	case 3:
 	{
-		printf("输入要读取的进程id：\n");
-		scanf_s("%d", &pid);
-		printf("请输入读取地址：\n");
-		scanf_s("%llx", &Address);
-		printf("请输入读取长度：\n");
-		scanf_s("%d", &uDataSize);
-		FakeReadMemory(pid, fakeMemoryPid, Address, uDataSize);
+		printf("输入要反截图的窗口句柄：\n");
+		scanf_s("%08x", &hwnd);
+		ProtectWindow(hwnd);
 		break;
+ 
 	}
 
 	case 4: {

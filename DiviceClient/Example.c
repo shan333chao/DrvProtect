@@ -230,7 +230,17 @@ void ProtectWindow(ULONG32 hwnd)
 	}
 	Logp("保护成功\n");
 }
+void AntiSnapShotWindow(ULONG32 hwnd)
+{
 
+	DWORD status_code = _ProtectWindow(hwnd);
+	if (status_code > 0)
+	{
+		Logp("保护失败 错误码 %08x\n", status_code);
+		return;
+	}
+	Logp("保护成功\n");
+}
 void QueryModule(ULONG pid, PCHAR szModuleName, UCHAR type)
 {
 	ULONG uModuleSize = 0;

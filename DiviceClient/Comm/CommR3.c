@@ -72,48 +72,50 @@ BOOL DriverHookInit()
 //hook通讯
 DWORD HookComm(ULONG type, PVOID inData, ULONG inSize)
 {
-	if (!g_NtUserGetScrollBarInfo || !g_NtUserGetWindowPlacement || !g_NtUserGetTitleBarInfo)
-	{
-		DriverHookInit();
+	//if (!g_NtUserGetScrollBarInfo || !g_NtUserGetWindowPlacement || !g_NtUserGetTitleBarInfo)
+	//{
+	//	DriverHookInit();
 
-	}
-	srand(time(NULL));
-	int seed = rand() % 4;
+	//}
+	//srand(time(NULL));
+	//int seed = rand() % 4;
 	COMM_DATA commData = { 0 };
 	commData.Type = type;
 	commData.InData = (ULONG64)inData;
 	commData.InDataLen = inSize;
 	commData.ID = COMM_ID;
-	SIZE_T dwSize = 0;
-	BOOL res = FALSE; 
-	switch (seed)
-	{
 
-	case 0: {
-#ifdef _x86
-		res = g_NtUserGetWindowPlacement((HANDLE)0x10010, (uintptr_t)(&commData));
-#else
-		res = g_NtUserGetPointerProprietaryId((uintptr_t)(&commData));
-#endif // _x86
-
-	
-		break;
-	}
-	case 1: {
-		res = g_NtUserGetWindowPlacement((HANDLE)0x10010, (uintptr_t)(&commData));
-		break;
-	}
-	case 2: {
-		res = g_NtUserGetTitleBarInfo((HANDLE)0x10010, (uintptr_t)(&commData));
-		break;
-	}
-	case 3: {
-		res = g_NtUserGetScrollBarInfo((HANDLE)0x10010, 1, (uintptr_t)(&commData));
-		break;
-	}
-	default:
-		break;
-	} 
-	Logp("hook %d 通讯结果 %08x \n", seed, commData.status);
+	LPARAM res= SetMessageExtraInfo(&commData);
+//	SIZE_T dwSize = 0;
+//	BOOL res = FALSE; 
+//	switch (seed)
+//	{
+//
+//	case 0: {
+//#ifdef _x86
+//		res = g_NtUserGetWindowPlacement((HANDLE)0x10010, (uintptr_t)(&commData));
+//#else
+//		res = g_NtUserGetPointerProprietaryId((uintptr_t)(&commData));
+//#endif // _x86
+//
+//	
+//		break;
+//	}
+//	case 1: {
+//		res = g_NtUserGetWindowPlacement((HANDLE)0x10010, (uintptr_t)(&commData));
+//		break;
+//	}
+//	case 2: {
+//		res = g_NtUserGetTitleBarInfo((HANDLE)0x10010, (uintptr_t)(&commData));
+//		break;
+//	}
+//	case 3: {
+//		res = g_NtUserGetScrollBarInfo((HANDLE)0x10010, 1, (uintptr_t)(&commData));
+//		break;
+//	}
+//	default:
+//		break;
+//	} 
+	Logp("通讯结果 %08x \n", res);
 	return res ? commData.status : STATUS_OP_UNSUCCESS;
 }

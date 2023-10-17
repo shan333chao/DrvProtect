@@ -48,6 +48,9 @@
     <ClCompile Include="service\Service.c">
       <Filter>service</Filter>
     </ClCompile>
+    <ClCompile Include="ntp_client\ntp_client.c">
+      <Filter>ntp_client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Comm\CommR3.h">
@@ -73,6 +76,9 @@
     </ClInclude>
     <ClInclude Include="service\Service.h">
       <Filter>service</Filter>
+    </ClInclude>
+    <ClInclude Include="ntp_client\ntp_client.h">
+      <Filter>ntp_client</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

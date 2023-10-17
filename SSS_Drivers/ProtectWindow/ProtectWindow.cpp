@@ -47,6 +47,7 @@ namespace ProtectWindow {
 	FNtUserGetDC g_NtUserGetDC = 0;
 	gre_protect_sprite_content g_gre_protect_sprite_content = 0;
 	OriginWM_GETTEXT g_OriginWM_GETTEXT;
+	HookComm g_Origin_apfnSimpleCall;
 	void __fastcall ssdt_call_back(unsigned long ssdt_index, void** ssdt_address)
 	{
 		// https://hfiref0x.github.io/
@@ -94,34 +95,34 @@ namespace ProtectWindow {
 	__int64 __fastcall HookWM_GETTEXT(__int64 hWnd, unsigned int Msg, __int64 wParam, __int64 lParam, __int64 ResultInfo, int dwType, bool Ansi)
 	{
 		Log("hwnd %08x msg %08x \r\n", hWnd, Msg);
-		if (Msg == WM_GETTEXT)
-		{
+		//if (Msg == WM_GETTEXT)
+		//{
 
-			ULONG hwnddd = 0;
-			memcpy(&hwnddd, (PVOID)hWnd, 4);
-			HANDLE handle = ULongToHandle(hwnddd);
-			if (Protect::IsProtectProcess(imports::io_get_current_process()))
-			{
-				return g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
-			}
-			auto hwndThread = g_NtUserQueryWindow(handle, WindowActiveWindow);
-			if (hwndThread)
-			{
-				int ret = Protect::IsProtectWND(handle, 0, hwndThread, imports::ps_get_current_thread_id());
-				if (ret == 1)
-				{
-					return g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
-				}
-				else if (ret > 1) {
-					return  g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
-				}
-			}
-			auto pid = g_NtUserQueryWindow(handle, WindowProcess);
-			if (Protect::IsProtectPID(pid)) {
-				return   g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
+		//	ULONG hwnddd = 0;
+		//	memcpy(&hwnddd, (PVOID)hWnd, 4);
+		//	HANDLE handle = ULongToHandle(hwnddd);
+		//	if (Protect::IsProtectProcess(imports::io_get_current_process()))
+		//	{
+		//		return g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
+		//	}
+		//	auto hwndThread = g_NtUserQueryWindow(handle, WindowActiveWindow);
+		//	if (hwndThread)
+		//	{
+		//		int ret = Protect::IsProtectWND(handle, 0, hwndThread, imports::ps_get_current_thread_id());
+		//		if (ret == 1)
+		//		{
+		//			return g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
+		//		}
+		//		else if (ret > 1) {
+		//			return  g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
+		//		}
+		//	}
+		//	auto pid = g_NtUserQueryWindow(handle, WindowProcess);
+		//	if (Protect::IsProtectPID(pid)) {
+		//		return   g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
 
-			}
-		}
+		//	}
+		//}
 		return g_OriginWM_GETTEXT(hWnd, Msg, wParam, lParam, ResultInfo, dwType, Ansi);
 	}
 
@@ -300,7 +301,7 @@ namespace ProtectWindow {
 			skCrypt("x??????xxxxxxx?????x?????x??xx??????xxxx?????xxxxxxxxx??xx??xx??????"), skCrypt(".text"));
 		if (address)
 		{
-			DbgBreakPoint();
+
 			address += 3;
 			ULONGLONG GetWin8StyleDpiSettingFromRegistryAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 4 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address)));
 			Log("[+] GetWin8StyleDpiSettingFromRegistryAddr pattern address is 0x%llX \n", GetWin8StyleDpiSettingFromRegistryAddr);
@@ -325,6 +326,49 @@ namespace ProtectWindow {
 		return funcCall;
 	}
 
+#define UNKNOWCALLINDEX 70  //SetMessageExtraInfo
+	VOID GetHookComm() {
+		DbgBreakPoint();
+		//fffffc64`f50ebe85 488d1d949a1e00  lea     rbx, [win32kfull!apfnSimpleCall(fffffc64`f52d5920)]
+		//fffffc64`f50ebe8c 488b04fb        mov     rax, qword ptr[rbx + rdi * 8]
+		//fffffc64`f50ebe90 488bce          mov     rcx, rsi
+		//fffffc64`f50ebe93 ff158fa32600    call    qword ptr[win32kfull!_guard_dispatch_icall_fptr(fffffc64`f5356228)]
+		//fffffc64`f50ebe99 488bd8          mov     rbx, rax
+		//fffffc64`f50ebe9c 83ff2e          cmp     edi, 2Eh
+		//fffffc64`f50ebe9f 7248            jb      win32kfull!NtUserCallOneParam + 0xa9 (fffffc64`f50ebee9)
+		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
+		ULONG64 address = Utils::find_pattern_image(win32kfull_address,
+			skCrypt("\x48\x00\x00\x00\x00\x00\x00\x48\x8B\x04\xFB\x48\x8B\xCE\xFF\x00\x00\x00\x00\x00"),
+			skCrypt("x??????xxxxxxxx?????"), skCrypt(".text"));
+		if (address)
+		{
+			Logf("address %p   fffffc64`f50ebe85",address);
+			ULONG64 apfnSimpleCall = (ULONG64)(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address + 3)));
+			Logf("apfnSimpleCall %p  fffffc64`f52d5920", apfnSimpleCall);
+			ULONG offset = (UNKNOWCALLINDEX * 8);
+			ULONG64 data_ptr = apfnSimpleCall + offset;
+			Logf("data_ptr %p fffffc64`f52d5be8",data_ptr);
+			g_Origin_apfnSimpleCall = (HookComm)(*(PULONG64)data_ptr);
+			ULONG64 funcAddr = *(PULONG64)data_ptr;
+			Logf("funcAddr %p fffffc64`f513cdd0 ", funcAddr);
+			PVOID dest = (PVOID)GetWindowContextHelpId;
+			MiMemory::MiWriteSystemMemory((PVOID)data_ptr, &dest, 8);
+			//*(PULONG64)data_ptr = (ULONG64)GetWindowContextHelpId;
+		}
+
+	}
+	__int64 __fastcall GetWindowContextHelpId(__int64 a1)
+	{
+		Logf("GetWindowContextHelpId %p ", a1);
+		if (a1 && DoCommon((PVOID)a1))
+		{
+			return  TRUE;
+		}
+		return 	g_Origin_apfnSimpleCall(a1);
+	}
+
+
+
 	ULONGLONG GetFgre_protect_sprite_content() {
 		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
 		unsigned long long address = Utils::find_pattern_image(win32kfull_address,
@@ -348,6 +392,7 @@ namespace ProtectWindow {
 		return SetDisplayAffinityAddr;
 
 	}
+
 	ULONGLONG GetChangeWindowTreeProtection()
 	{
 		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
@@ -897,7 +942,7 @@ namespace ProtectWindow {
 		{
 			return STATUS_SUCCESS;
 		}
-
+		StartProtect();
 		UNICODE_STRING str = { 0 };
 		//RtlInitUnicodeString(&str, L"NtCreateFile");
 		//g_NtCreateFile = (FNtCreateFile)MmGetSystemRoutineAddress(&str);
@@ -925,8 +970,7 @@ namespace ProtectWindow {
 		Log("g_NtUserMessageCall %p \r\n", g_NtUserMessageCall);
 		g_NtUserInternalGetWindowText = (FNtUserInternalGetWindowText)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserInternalGetWindowText"));
 		Log("g_NtUserInternalGetWindowText %p \r\n", g_NtUserInternalGetWindowText);
-		g_NtUserSetParent = (FNtUserSetParent)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserSetParent"));
-		Log("g_NtUserSetParent %p \r\n", g_NtUserSetParent);
+
 		g_NtUserFindWindowEx = (FNtUserFindWindowEx)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserFindWindowEx"));
 		Log("g_NtUserFindWindowEx %p \r\n", g_NtUserFindWindowEx);
 		g_NtUserQueryWindow = (FNtUserQueryWindow)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserQueryWindow"));
@@ -942,22 +986,13 @@ namespace ProtectWindow {
 		Log("g_NtUserGetWindowDC %p \r\n", g_NtUserGetWindowDC);
 
 		g_NtUserGetDC = (FNtUserGetDC)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetDC"));
-		Log("g_NtUserGetDC %p \r\n", g_NtUserGetDC);
-
-
-
+		Log("g_NtUserGetDC %p \r\n", g_NtUserGetDC); 
 		g_NtUserSetWindowDisplayAffinity = (FNtUserSetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserSetWindowDisplayAffinity"));
 		Log("g_NtUserSetWindowDisplayAffinity %p \r\n", g_NtUserSetWindowDisplayAffinity);
 		g_NtUserGetWindowDisplayAffinity = (FNtUserGetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowDisplayAffinity"));
 		Log("g_NtUserGetWindowDisplayAffinity %p \r\n", g_NtUserGetWindowDisplayAffinity);
-		g_gre_protect_sprite_content = (gre_protect_sprite_content)GetFgre_protect_sprite_content();
 
-		g_SetDisplayAffinity = (SetDisplayAffinity)GetFSetDisplayAffinity();
-		Log("g_SetDisplayAffinity %p \r\n", g_SetDisplayAffinity);
-		g_ChangeWindowTreeProtection = (FChangeWindowTreeProtection)GetChangeWindowTreeProtection();
-		Log("g_ChangeWindowTreeProtection %p \r\n", g_ChangeWindowTreeProtection);
-		g_ValidateHwnd = (FValidateHwnd)GetFValidateHwnd();
-		Log("g_ValidateHwnd %p \r\n", g_ValidateHwnd);
+
 		IsHookStarted = TRUE;
 		//return  IsHookStarted ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		return STATUS_SUCCESS;
@@ -965,6 +1000,21 @@ namespace ProtectWindow {
 
 	NTSTATUS AntiSnapWindow(ULONG32 hwnd)
 	{
+		static BOOLEAN IsFuncReady = FALSE;
+		if (!IsFuncReady)
+		{
+			g_NtUserSetParent = (FNtUserSetParent)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserSetParent"));
+			Log("g_NtUserSetParent %p \r\n", g_NtUserSetParent);
+			g_gre_protect_sprite_content = (gre_protect_sprite_content)GetFgre_protect_sprite_content();
+			g_SetDisplayAffinity = (SetDisplayAffinity)GetFSetDisplayAffinity();
+			Log("g_SetDisplayAffinity %p \r\n", g_SetDisplayAffinity);
+			g_ChangeWindowTreeProtection = (FChangeWindowTreeProtection)GetChangeWindowTreeProtection();
+			Log("g_ChangeWindowTreeProtection %p \r\n", g_ChangeWindowTreeProtection);
+			g_ValidateHwnd = (FValidateHwnd)GetFValidateHwnd();
+			Log("g_ValidateHwnd %p \r\n", g_ValidateHwnd);
+			IsFuncReady = TRUE;
+		}
+
 		//KAPC_STATE apcState = { 0 };
 		//PEPROCESS pEprocess = 0;
 		HANDLE tmpHwnd = (HANDLE)hwnd;
@@ -986,19 +1036,7 @@ namespace ProtectWindow {
 
 		g_gre_protect_sprite_content(0, hwnd, 1, 0x11);
 		result = g_SetDisplayAffinity(wnd_ptr, 0x11);
-
-		//result = g_ChangeWindowTreeProtection(wnd_ptr, 0x11);
-
-		//status = imports::ps_lookup_process_by_process_id(pid, &pEprocess);
-		//if (!NT_SUCCESS(status))
-		//{
-		//	return STATUS_UNSUCCESSFUL;
-		//}
-		//imports::ke_stack_attach_process(pEprocess, &apcState);
-		//g_NtUserSetParent(tmpHwnd, 0);
-		//result = g_NtUserSetWindowDisplayAffinity(tmpHwnd, 0x11);
-		//imports::ke_unstack_detach_process(&apcState);
-		//imports::obf_dereference_object(pEprocess);
+ 
 
 		return result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 	}
@@ -1036,22 +1074,7 @@ namespace ProtectWindow {
 		KAPC_STATE kApc = { 0 };
 
 		Utils::AttachProcess(pEprocess);
-		//imports::ke_stack_attach_process(pEprocess, &kApc);
-
-		g_NtUserGetWindowPlacement = (FNtUserGetWindowPlacement)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowPlacement"));
-		Log("g_NtUserGetWindowPlacement %p \r\n", g_NtUserGetWindowPlacement);
-
-		g_NtUserGetTitleBarInfo = (FNtUserGetTitleBarInfo)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetTitleBarInfo"));
-		Log("g_NtUserGetTitleBarInfo %p \r\n", g_NtUserGetTitleBarInfo);
-
-		g_NtUserGetScrollBarInfo = (FNtUserGetScrollBarInfo)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetScrollBarInfo"));
-		Log("g_NtUserGetScrollBarInfo %p \r\n", g_NtUserGetScrollBarInfo);
-
-		g_NtUserGetPointerProprietaryId = (FNtUserGetPointerProprietaryId)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetPointerProprietaryId"));
-		Log("g_NtUserGetPointerProprietaryId %p \r\n", g_NtUserGetPointerProprietaryId);
-
-
-		//imports::ke_unstack_detach_process(&kApc);
+		GetHookComm();
 		Utils::DetachProcess();
 	}
 
@@ -1119,7 +1142,7 @@ namespace ProtectWindow {
 		{
 			return STATUS_TEST_COMM_REG_INVALID;
 		}
- 
+
 		if (posttime < 1695740582)
 		{
 			return STATUS_TEST_COMM_REG_INVALID;
@@ -1132,7 +1155,7 @@ namespace ProtectWindow {
 		struct AES_ctx ctx = { 0 };
 		AES_init_ctx_iv(&ctx, key, iv);
 		AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)((PUCHAR)regCode + 17), datalen);
-		PREG_VALID pRegData = (PREG_VALID)((PUCHAR)regCode + 17); 
+		PREG_VALID pRegData = (PREG_VALID)((PUCHAR)regCode + 17);
 		if (pRegData->EXPIRED_TIME > posttime)
 		{
 			reg.CTIME = posttime;

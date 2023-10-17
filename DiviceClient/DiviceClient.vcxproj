@@ -149,6 +149,7 @@
     <ClCompile Include="inject.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="Example.c" />
+    <ClCompile Include="ntp_client\ntp_client.c" />
     <ClCompile Include="service\Service.c" />
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +160,7 @@
     <ClInclude Include="Example.h" />
     <ClInclude Include="inject.h" />
     <ClInclude Include="log.h" />
+    <ClInclude Include="ntp_client\ntp_client.h" />
     <ClInclude Include="service\Service.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -179,11 +179,14 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		{
 			status = STATUS_UNSUCCESSFUL;
 			break;
-		}
-
-		status = ProtectRoute::AntiSnapWindow(WND_PTDATA->hwnds[0]);
+		} 
 		break;
 	}
+	case ANTI_SNAPSHOT:
+		PWND_PROTECT_DATA WND_PTDATA = (PWND_PROTECT_DATA)pCommData->InData;
+		status = ProtectRoute::AntiSnapWindow(WND_PTDATA->hwnds[0]);
+		break;
+
 	case CREATE_MEMORY: {
 		PCREATE_MEM_DATA MEM_DATA = (PCREATE_MEM_DATA)pCommData->InData;
 		status = memory::SS_CreateMemory(MEM_DATA->PID, MEM_DATA->uSize, MEM_DATA->pVAddress);
@@ -271,7 +274,6 @@ EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
 	else {
 		communicate::RegisterComm(Dispatch);
 	}
-	ProtectRoute::StartProtect();
 	return  STATUS_SUCCESS;
 }
 #else
@@ -286,7 +288,6 @@ EXTERN_C NTSTATUS DriverEntry(ULONG_PTR NtoskrlImageBase, PUNICODE_STRING reg) {
 	else {
 		communicate::RegisterComm(Dispatch);
 	}
-	ProtectRoute::StartProtect();
 	Log("start success %p \r\n", NtoskrlImageBase);
 	return  STATUS_SUCCESS;
 }

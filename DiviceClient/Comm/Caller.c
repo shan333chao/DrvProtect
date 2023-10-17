@@ -8,7 +8,7 @@
 #include "../log.h"
 #pragma warning(disable:4996)
 #include "../service/Service.h"
-
+#include "../ntp_client/ntp_client.h"
 
 ULONG writeFile2(char* filename, unsigned char* content, size_t bufferSize) {
 	HANDLE hFile;
@@ -139,7 +139,8 @@ ULONG _InitReg(PCHAR regCode)
 	testData.uTest = 0;
 	testData.regCode = OutputBuff;
 	testData.size = size;
-	testData.time = time(NULL);
+	//testData.time = time(NULL);
+	testData.time = get_time();
 	DWORD status_code = HookComm(TEST_COMM, &testData, sizeof(TEST_DATA));
 	ULONG ret = 0;
 	if (testData.uTest == STATUS_TEST_COMM_SUCCESS || testData.uTest == STATUS_TEST_COMM_REG_EXPIRED || testData.uTest == STATUS_TEST_COMM_REG_INVALID || testData.uTest == STATUS_TEST_COMM_UNREG_OR_EXPIRED)
@@ -253,6 +254,17 @@ ULONG _ProtectProcess(ULONG protectPid, ULONG fakePid) {
 	return  status_code;
 }
 
+ULONG _AntiSnapShotWindow(ULONG32 hwnd)
+{
+
+	WND_PROTECT_DATA WND_DATA = { 0 };
+	ULONG32 hwnds[10] = { 0 };
+	hwnds[0] = hwnd;
+	WND_DATA.hwnds = hwnds;
+	WND_DATA.Length = 1;
+	DWORD status_code = HookComm(ANTI_SNAPSHOT, &WND_DATA, sizeof(WND_PROTECT_DATA));
+	return  status_code;
+}
 ULONG _ProtectWindow(ULONG32 hwnd)
 {
 
@@ -264,7 +276,6 @@ ULONG _ProtectWindow(ULONG32 hwnd)
 	DWORD status_code = HookComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	return  status_code;
 }
-
 ULONG _QueryModule(ULONG pid, PCHAR szModuleName, PULONGLONG pModuleBase, PULONG pModuleSize, USHORT type)
 {
 
