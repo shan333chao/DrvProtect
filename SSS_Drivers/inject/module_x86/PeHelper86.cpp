@@ -92,7 +92,7 @@ namespace pehelper86 {
 		char pTempDll[100] = { 0 };
 		char pTempFuction[100] = { 0 };
 		strcpy(pTempDll, pRet);
-		char* p = strchr(pTempDll, '.');
+		char* p = strchr_imp(pTempDll, '.');
 		if (!p)
 		{
 			return (ULONG_PTR)pRet;

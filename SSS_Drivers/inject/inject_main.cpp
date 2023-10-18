@@ -92,7 +92,7 @@ namespace inject_main {
 		RemoteLoadPeData(process, filebuffer, filesize, &entrypoint, (PVOID)virtualbase, kernelAddr);
 		Logf("entrypoint %p moduleBase %p", entrypoint, virtualbase);
 		//Eip执行函数
-		eip_execute::EipExcute_x64dll(process, entrypoint, virtualbase, kernelAddr, 3);
+		eip_execute::EipExcute_x64dll(process, entrypoint, virtualbase, kernelAddr, 1);
 	}
 
 	NTSTATUS ReadFile(PCHAR dllpath, PVOID* buffer, PULONG64 size)
@@ -137,7 +137,7 @@ namespace inject_main {
 
 		//读取文件长度
 		FILE_STANDARD_INFORMATION fsi = { 0 };
-		NTSTATUS QueryInformationStatus = ZwQueryInformationFile(readHandle,
+		NTSTATUS QueryInformationStatus = imports::zw_query_information_file(readHandle,
 			&ioStackblock,
 			&fsi,
 			sizeof(FILE_STANDARD_INFORMATION),
@@ -155,7 +155,7 @@ namespace inject_main {
 		Utils::kmemset(filebuffer, 0, filesize);
 
 
-		NTSTATUS ReadFilestatus = ZwReadFile(
+		NTSTATUS ReadFilestatus =imports::zw_read_file(
 			readHandle,		//文件句柄
 			NULL, NULL, NULL,
 			&ioStackblock,	//该结构接收最终完成状态和有关所请求的读取操作的信息

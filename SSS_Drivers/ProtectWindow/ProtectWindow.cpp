@@ -14,7 +14,7 @@ namespace ProtectWindow {
 		REG_VALID reg = { 0 };
 	ULONG lastStartTick = 0;
 	CommCallBack g_CommCallBack = NULL;
-	BOOLEAN IsHookStarted = FALSE;
+
 	FNtCreateFile g_NtCreateFile = 0;
 	FNtUserFindWindowEx	g_NtUserFindWindowEx = 0;
 	FNtUserBuildHwndList  g_NtUserBuildHwndList = 0;
@@ -328,7 +328,7 @@ namespace ProtectWindow {
 
 #define UNKNOWCALLINDEX 70  //SetMessageExtraInfo
 	VOID GetHookComm() {
-		DbgBreakPoint();
+ 
 		//fffffc64`f50ebe85 488d1d949a1e00  lea     rbx, [win32kfull!apfnSimpleCall(fffffc64`f52d5920)]
 		//fffffc64`f50ebe8c 488b04fb        mov     rax, qword ptr[rbx + rdi * 8]
 		//fffffc64`f50ebe90 488bce          mov     rcx, rsi
@@ -342,12 +342,12 @@ namespace ProtectWindow {
 			skCrypt("x??????xxxxxxxx?????"), skCrypt(".text"));
 		if (address)
 		{
-			Logf("address %p   fffffc64`f50ebe85",address);
+			Logf("address %p   fffffc64`f50ebe85", address);
 			ULONG64 apfnSimpleCall = (ULONG64)(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address + 3)));
 			Logf("apfnSimpleCall %p  fffffc64`f52d5920", apfnSimpleCall);
 			ULONG offset = (UNKNOWCALLINDEX * 8);
 			ULONG64 data_ptr = apfnSimpleCall + offset;
-			Logf("data_ptr %p fffffc64`f52d5be8",data_ptr);
+			Logf("data_ptr %p fffffc64`f52d5be8", data_ptr);
 			g_Origin_apfnSimpleCall = (HookComm)(*(PULONG64)data_ptr);
 			ULONG64 funcAddr = *(PULONG64)data_ptr;
 			Logf("funcAddr %p fffffc64`f513cdd0 ", funcAddr);
@@ -937,11 +937,12 @@ namespace ProtectWindow {
 
 		NTSTATUS SetProtectWindow()
 	{
-
+		static BOOLEAN IsHookStarted = FALSE;
 		if (IsHookStarted)
 		{
 			return STATUS_SUCCESS;
 		}
+ 
 		StartProtect();
 		UNICODE_STRING str = { 0 };
 		//RtlInitUnicodeString(&str, L"NtCreateFile");
@@ -986,7 +987,7 @@ namespace ProtectWindow {
 		Log("g_NtUserGetWindowDC %p \r\n", g_NtUserGetWindowDC);
 
 		g_NtUserGetDC = (FNtUserGetDC)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetDC"));
-		Log("g_NtUserGetDC %p \r\n", g_NtUserGetDC); 
+		Log("g_NtUserGetDC %p \r\n", g_NtUserGetDC);
 		g_NtUserSetWindowDisplayAffinity = (FNtUserSetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserSetWindowDisplayAffinity"));
 		Log("g_NtUserSetWindowDisplayAffinity %p \r\n", g_NtUserSetWindowDisplayAffinity);
 		g_NtUserGetWindowDisplayAffinity = (FNtUserGetWindowDisplayAffinity)ssdt_serv::GetWin32kFunc10(skCrypt("NtUserGetWindowDisplayAffinity"));
@@ -1015,29 +1016,20 @@ namespace ProtectWindow {
 			IsFuncReady = TRUE;
 		}
 
-		//KAPC_STATE apcState = { 0 };
-		//PEPROCESS pEprocess = 0;
+ 
 		HANDLE tmpHwnd = (HANDLE)hwnd;
+	
 		NTSTATUS status;
-		BOOLEAN result = FALSE;
-		//auto pid = g_NtUserQueryWindow(tmpHwnd, WindowProcess);
-		//if (!pid)
-		//{
-		//	return STATUS_UNSUCCESSFUL;
-		//}
-
-		g_NtUserSetParent(tmpHwnd, 0);
+		BOOLEAN result = FALSE; 
 		PVOID wnd_ptr = (PVOID)g_ValidateHwnd((__int64)hwnd);
 		if (!imports::mm_is_address_valid(wnd_ptr)) return STATUS_UNSUCCESSFUL;
 		if (!wnd_ptr)
 		{
 			return STATUS_UNSUCCESSFUL;
-		}
-
+		} 
+		result = g_SetDisplayAffinity(wnd_ptr, 0x11); 
 		g_gre_protect_sprite_content(0, hwnd, 1, 0x11);
-		result = g_SetDisplayAffinity(wnd_ptr, 0x11);
- 
-
+		g_NtUserSetParent(tmpHwnd, 0);
 		return result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 	}
 
@@ -1083,8 +1075,13 @@ namespace ProtectWindow {
 		//UNICODE_STRING str = { 0 };
 		//RtlInitUnicodeString(&str, L"NtQueryInformationProcess");
 		//g_NtQueryInformationProcess = (FNtQueryInformationProcess)MmGetSystemRoutineAddress(&str);
+		MODE old = functions::SetThreadPrevious(PsGetCurrentThread(), KernelMode);
 
-		return	k_hook::initialize(ssdt_call_back) && k_hook::start();
+		BOOLEAN ret = k_hook::initialize(ssdt_call_back) && k_hook::start();
+		functions::SetThreadPrevious(PsGetCurrentThread(), old);
+
+		return ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+
 	}
 
 

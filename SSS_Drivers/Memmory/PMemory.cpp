@@ -1,5 +1,6 @@
 #pragma once
 #include "PMemory.h"
+ 
 
 
 namespace p_memory {
@@ -189,13 +190,12 @@ namespace p_memory {
 		PhysReadAddress((void*)HARD_ADR, &VirtualAddress, sizeof(VirtualAddress), &readsize);
 		unsigned long long mask = ~(1ULL << 63);          // 创建一个掩码，将第63位设置为0
 		readsize=0;
-		DbgBreakPoint();
-		PHYSICAL_ADDRESS phyAddr = { 0 };
-		phyAddr.QuadPart = HARD_ADR;
-		PVOID addr=  MmGetVirtualForPhysical(phyAddr);
+ 
 		ULONG64 buffer = VirtualAddress & mask;
-
-		PhysWriteAddress((void*)HARD_ADR, addr, sizeof(buffer), &readsize);
+		PHYSICAL_ADDRESS Address = { 0 };
+		Address.QuadPart = HARD_ADR;
+	 
+ 		//PhysWriteAddress((void*)HARD_ADR, addr, sizeof(buffer), &readsize);
 
 	};
 	ULONG64 getPte(ULONG64 CR3base, ULONG64 VirtualAddress)

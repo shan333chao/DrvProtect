@@ -5,15 +5,54 @@
 
 
 
-namespace imports { 
+namespace imports {
 
-	struct _m_imported imported = { 0 }; 
+	struct _m_imported imported = { 0 };
+
+	VentroAPI BOOLEAN __fastcall ex_acquire_rundown_protection(PEX_RUNDOWN_REF RunRef)
+	{
+		return reinterpret_cast<BOOLEAN(*)(PEX_RUNDOWN_REF)> (imported.ex_acquire_rundown_protection)(RunRef);
+	}
+
+	VentroAPI VOID __fastcall ex_release_rundown_protection(PEX_RUNDOWN_REF RunRef)
+	{
+		return reinterpret_cast<VOID(*)(PEX_RUNDOWN_REF)> (imported.ex_release_rundown_protection)(RunRef);
+	}
+
+	VentroAPI NTSTATUS	io_create_file_specify_device_object_hint(
+		_Out_ PHANDLE FileHandle,
+		_In_  ACCESS_MASK DesiredAccess,
+		_In_  POBJECT_ATTRIBUTES ObjectAttributes,
+		_Out_ PIO_STATUS_BLOCK IoStatusBlock,
+		_In_opt_ PLARGE_INTEGER AllocationSize,
+		_In_  ULONG FileAttributes,
+		_In_  ULONG ShareAccess,
+		_In_  ULONG Disposition,
+		_In_  ULONG CreateOptions,
+		_In_opt_ PVOID EaBuffer,
+		_In_  ULONG EaLength,
+		_In_  CREATE_FILE_TYPE CreateFileType,
+		_In_opt_ PVOID InternalParameters,
+		_In_  ULONG Options,
+		_In_opt_ PVOID DeviceObject
+	) {
+
+		return reinterpret_cast<NTSTATUS(*)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, PLARGE_INTEGER, ULONG, ULONG, ULONG, ULONG, PVOID, ULONG, CREATE_FILE_TYPE, PVOID, ULONG, PVOID)> (imported.io_create_file_specify_device_object_hint)(
+
+			FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, EaBuffer, EaLength, CreateFileType, InternalParameters, Options, DeviceObject);
+
+	}
+
+	VentroAPI NTSTATUS ob_reference_object_by_handle(HANDLE Handle, ACCESS_MASK DesiredAccess, POBJECT_TYPE ObjectType, KPROCESSOR_MODE AccessMode, PVOID* Object, POBJECT_HANDLE_INFORMATION HandleInformation)
+	{
+		return reinterpret_cast<NTSTATUS(*)(HANDLE, ACCESS_MASK, POBJECT_TYPE, KPROCESSOR_MODE, PVOID*, POBJECT_HANDLE_INFORMATION)> (imported.ob_reference_object_by_handle)(Handle, DesiredAccess, ObjectType, AccessMode, Object, HandleInformation);
+	}
 	VentroAPI  PVOID	  ps_get_thread_win_thread(IN PETHREAD Thread) {
 
 		return reinterpret_cast<PVOID(*)(PETHREAD)> (imported.ps_get_thread_win_thread)(Thread);
 	}
 	VentroAPI	HANDLE 		ps_get_thread_id(_In_ PETHREAD Thread) {
-	
+
 		return reinterpret_cast<HANDLE(*)(PETHREAD)> (imported.ps_get_thread_id)(Thread);
 	}
 
@@ -23,11 +62,11 @@ namespace imports {
 	}
 
 	VentroAPI PEPROCESS ps_initial_system_process() {
-	
-		return reinterpret_cast<PEPROCESS> (*(PULONGLONG) imported.ps_initial_system_process);
+
+		return reinterpret_cast<PEPROCESS> (*(PULONGLONG)imported.ps_initial_system_process);
 	}
-	
-	VentroAPI BOOLEAN ps_get_process_exit_process_called(PEPROCESS eprocess) { 
+
+	VentroAPI BOOLEAN ps_get_process_exit_process_called(PEPROCESS eprocess) {
 		return reinterpret_cast<BOOLEAN(*)(PEPROCESS)> (imported.ps_get_process_exit_process_called)(eprocess);
 	}
 
@@ -66,7 +105,7 @@ namespace imports {
 	{
 		return reinterpret_cast<NTSTATUS(*)(PFILE_OBJECT, POBJECT_NAME_INFORMATION*)> (imported.io_query_file_dos_device_name)(FileObject, ObjectNameInformation);
 	}
- 
+
 	VentroAPI PVOID ke_stack_attach_process(PRKPROCESS PROCESS, PRKAPC_STATE ApcState)
 	{
 		return reinterpret_cast<PVOID(*)(PRKPROCESS, PRKAPC_STATE)> (imported.ke_stack_attach_process)(PROCESS, ApcState);
@@ -301,12 +340,12 @@ namespace imports {
 	{
 		return reinterpret_cast<NTSTATUS(*)(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG)> (imported.zw_allocate_virtual_memory)(ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protect);
 	}
- 
+
 	VentroAPI PVOID ps_get_thread_teb(PETHREAD Thread)
 	{
 		return reinterpret_cast<PVOID(*)(PETHREAD)> (imported.ps_get_thread_teb)(Thread);
 	}
-	
+
 	VentroAPI PPEB ps_get_process_peb(PEPROCESS Process)
 	{
 		return reinterpret_cast<PPEB(*)(PEPROCESS)> (imported.ps_get_process_peb)(Process);

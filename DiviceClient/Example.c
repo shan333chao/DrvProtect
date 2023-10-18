@@ -233,7 +233,7 @@ void ProtectWindow(ULONG32 hwnd)
 void AntiSnapShotWindow(ULONG32 hwnd)
 {
 
-	DWORD status_code = _ProtectWindow(hwnd);
+	DWORD status_code = _AntiSnapShotWindow(hwnd);
 	if (status_code > 0)
 	{
 		Logp("±£»¤Ê§°Ü ´íÎóÂë %08x\n", status_code);

@@ -87,16 +87,17 @@ namespace pehelper64 {
 		char pTempDll[100] = { 0 };
 		char pTempFuction[100] = { 0 };
 		strcpy(pTempDll, pRet);
-		char* p = strchr(pTempDll, '.');
+		char* p =strchr_imp(pTempDll, '.');
 		if (!p)
 		{
 			return (ULONG_PTR)pRet;
 		}
+
 		*p = 0;
 		strcpy(pTempFuction, p + 1);
 		strcat(pTempDll, ".dll");
 		PVOID h = NULL;
-
+		Logf(" %s %s   %s", pRet, pTempFuction, pTempDll);
 		ULONG moduleSize = 0;
 		h = (PVOID)patternSearch::get_module(pEprocess, pTempDll, &moduleSize);
 		if (h == NULL)

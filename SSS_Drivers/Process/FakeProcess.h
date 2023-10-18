@@ -14,6 +14,7 @@ namespace fuck_process {
 	NTSTATUS FakeProcess(ULONG_PTR pid, ULONG_PTR fakePid);
 
 	NTSTATUS RemoveProcessProtect(ULONG_PTR pid,BOOLEAN isProtect);
+	bool  Unlock_File_Mode1(PEPROCESS eprocess);
 }
 
 

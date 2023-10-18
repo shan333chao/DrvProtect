@@ -60,7 +60,7 @@ namespace MiMemory {
 		__int64 v3; // rax
 		__int64 v5; // rax
 		__int64 v6; // rax
-	
+
 		v2 = read_i64(8 * ((va >> 39) & 0x1FF) + dir);
 		if (!v2)
 			return 0i64;
@@ -88,7 +88,7 @@ namespace MiMemory {
 
 		return 0i64;
 	}
- 
+
 	BOOLEAN read(ULONGLONG address, PVOID buffer, ULONGLONG length, ULONGLONG* ret)
 	{
 		UCHAR MM_COPY_BUFFER[0x1000];
@@ -110,7 +110,7 @@ namespace MiMemory {
 
 		MM_COPY_ADDRESS physical_address{};
 		physical_address.PhysicalAddress.QuadPart = (LONGLONG)address;
-		 
+
 		BOOLEAN v = imports::mm_copy_memory(MM_COPY_BUFFER, physical_address, length, MM_COPY_MEMORY_PHYSICAL, &length) == 0;
 		if (v)
 		{
@@ -187,21 +187,21 @@ namespace MiMemory {
 			Status = STATUS_INSUFFICIENT_RESOURCES;
 			Address.QuadPart = PhysicalAddress + BytesCopied;
 			BytesToCopy = PHYSICAL_MAP_THRESHOLD(Address.QuadPart, TotalBytes);
-			MapSection = MmMapIoSpaceEx(Address, BytesToCopy, PAGE_READWRITE);
+			MapSection = imports::mm_map_io_space_ex(Address, BytesToCopy, PAGE_READWRITE);
 
 			if (MapSection)
 			{
 				switch (DoWrite)
 				{
 				case TRUE:
-					RtlCopyMemory(MapSection, RtlOffsetToPointer(Buffer, BytesCopied), BytesToCopy);
+					Utils::kmemcpy(MapSection, RtlOffsetToPointer(Buffer, BytesCopied), BytesToCopy);
 					break;
 				case FALSE:
-					RtlCopyMemory(RtlOffsetToPointer(Buffer, BytesCopied), MapSection, BytesToCopy);
+					Utils::kmemcpy(RtlOffsetToPointer(Buffer, BytesCopied), MapSection, BytesToCopy);
 					break;
 				}
 
-				MmUnmapIoSpace(MapSection, BytesToCopy);
+				imports::mm_unmap_io_space(MapSection, BytesToCopy);
 				Status = STATUS_SUCCESS;
 				BytesCopied += BytesToCopy;
 				TotalBytes -= BytesToCopy;
@@ -282,15 +282,9 @@ namespace MiMemory {
 			return Status;
 		}
 
-		Status = STATUS_PROCESS_IS_TERMINATING;
-		PEX_RUNDOWN_REF rundownRef = (PEX_RUNDOWN_REF)GetProcessRundownProtect(PsInitialSystemProcess);
-		if (ExAcquireRundownProtection(rundownRef) == FALSE)
-		{
-			Log("[-] Process already terminating.");
-			return Status;
-		}
+ 
 
-		Address = MmGetPhysicalAddress(Source);
+		Address = imports::mm_get_physical_address(Source);
 		Status = STATUS_CONFLICTING_ADDRESSES;
 
 		if (Address.QuadPart)
@@ -298,7 +292,7 @@ namespace MiMemory {
 			Status = MiCopyPhysicalMemory(Address.QuadPart, Destination, NumberOfBytes, FALSE);
 		}
 
-		ExReleaseRundownProtection(rundownRef);
+	 
 		return Status;
 	}
 
@@ -314,23 +308,16 @@ namespace MiMemory {
 			return Status;
 		}
 
-		Status = STATUS_PROCESS_IS_TERMINATING;
-		PEX_RUNDOWN_REF rundownRef = (PEX_RUNDOWN_REF)GetProcessRundownProtect(PsInitialSystemProcess);
-		if (ExAcquireRundownProtection(rundownRef) == FALSE)
-		{
-			Log("[-] Process already terminating.");
-			return Status;
-		}
+ 
 
-		Address = MmGetPhysicalAddress(Destination);
+		Address = imports::mm_get_physical_address(Destination);
 		Status = STATUS_CONFLICTING_ADDRESSES;
 
 		if (Address.QuadPart)
 		{
 			Status = MiCopyPhysicalMemory(Address.QuadPart, Source, NumberOfBytes, TRUE);
 		}
-
-		ExReleaseRundownProtection(rundownRef);
+ 
 		return Status;
 	}
 
@@ -340,18 +327,13 @@ namespace MiMemory {
 	NTSTATUS MiReadProcessMemory(IN PEPROCESS process, IN PVOID address, OUT PVOID buffer, IN SIZE_T readSize)
 	{
 
-		NTSTATUS         Status=STATUS_UNSUCCESSFUL;
+		NTSTATUS         Status = STATUS_UNSUCCESSFUL;
 		if (process == 0)
 		{
 			Status = STATUS_PROCESS_IS_TERMINATING;
 			return Status;
 		}
-		PEX_RUNDOWN_REF rundownRef = (PEX_RUNDOWN_REF)GetProcessRundownProtect(process);
-		if (ExAcquireRundownProtection(rundownRef) == FALSE)
-		{
-			Log("[-] Process already terminating.");
-			return Status;
-		}
+ 
 		ULONGLONG cr3 = *(ULONGLONG*)((ULONGLONG)process + 0x28);
 		if (cr3 == 0)
 		{
@@ -366,7 +348,7 @@ namespace MiMemory {
 		ULONGLONG current_size;
 		while (total_size)
 		{
-	
+
 			physical_address = translate(cr3, (ULONGLONG)((ULONGLONG)address + offset));
 			if (!physical_address)
 			{
@@ -400,7 +382,7 @@ namespace MiMemory {
 			total_size -= bytes_read;
 			offset += bytes_read;
 		}
-		ExReleaseRundownProtection(rundownRef);
+ 
 		Status = STATUS_SUCCESS;
 		return Status;
 	}

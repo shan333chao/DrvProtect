@@ -170,14 +170,14 @@ namespace Protect {
 		return TRUE;
 	}
 
-	BOOLEAN AddProtectWNDBatch(PULONG32 hwnds, ULONG32 length, HANDLE threadId)
+	NTSTATUS AddProtectWNDBatch(PULONG32 hwnds, ULONG32 length, HANDLE threadId)
 	{
 
 		PPROTECT_HWND protect = (PPROTECT_HWND)imports::ex_allocate_pool_with_tag(NonPagedPool, sizeof(PROTECT_HWND) * length, PROTECT_TAG);
 		if (!protect)
 		{
 			Log("imports::ex_allocate_pool_with_tag PPROTECT_HWND failed");
-			return FALSE;
+			return STATUS_UNSUCCESSFUL;
 		}
 		Utils::kmemset(protect, 0, sizeof(PPROTECT_HWND) * length);
 		imports::ke_acquire_guarded_mutex(&HwndMutex);
@@ -190,7 +190,7 @@ namespace Protect {
 			protect += i;
 		}
 		imports::ke_release_guarded_mutex(&HwndMutex);
-		return TRUE;
+		return STATUS_SUCCESS;
 	}
 
 

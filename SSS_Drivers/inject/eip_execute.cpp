@@ -65,35 +65,14 @@ namespace eip_execute {
 	PETHREAD GetFirstThread(PEPROCESS pEprocess) {
 		//windows传统窗口程序链表第一个好像都是GUI线程
 
-		PETHREAD pretthreadojb = NULL, ptempthreadobj = NULL;
-
-		PLIST_ENTRY plisthead = NULL;
-
-		PLIST_ENTRY plistflink = NULL;
-
-		int i = 0;
-
-		plisthead = (PLIST_ENTRY)((PUCHAR)pEprocess + 0x30);
-
-		plistflink = plisthead->Flink;
-
-		pretthreadojb = (PETHREAD)((PUCHAR)plistflink - 0x2f8);
-
-		//遍历
-		for (plistflink; plistflink != plisthead; plistflink = plistflink->Flink)
-		{
-			ptempthreadobj = (PETHREAD)((PUCHAR)plistflink - 0x2f8);
-			HANDLE threadId = imports::ps_get_thread_id(ptempthreadobj);
-			PVOID win32thread = imports::ps_get_thread_win_thread(ptempthreadobj);
-			Logf("%d 线程ID: %d  iswin32Thread %p", i++, threadId, win32thread);
-			if (win32thread)
-			{
-				pretthreadojb = ptempthreadobj;
-				break;
-			}
-		}
-
-		return pretthreadojb;
+		PLIST_ENTRY ThreadListHead;
+		PLIST_ENTRY ThreadListEntry;
+		PETHREAD Thread;
+		//Win7 ~ Win11
+		ThreadListHead = (PLIST_ENTRY)((ULONG64)pEprocess + 0x30);
+		ThreadListEntry = ThreadListHead->Flink;
+		Thread = (PETHREAD)((ULONG64)ThreadListEntry - 0x2F8);
+		return Thread;
 	}
 
 	KTRAP_FRAME MyGetThreadContext(PETHREAD thread)

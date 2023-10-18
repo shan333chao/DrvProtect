@@ -112,7 +112,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case INJECT_DLL: {
-		DbgBreakPoint();
+	 
 		PINJECT_DLL_DATA data = (PINJECT_DLL_DATA)pCommData->InData;
 		status = inject_main::inject_x64DLL(data->dllFilePath, data->PID);
 		break;
@@ -123,7 +123,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case WRITE_DLL: {
-		DbgBreakPoint();
+		 
 		PWRITE_DLL_DATA dllDATA = (PWRITE_DLL_DATA)pCommData->InData;
 		status = inject_main::WriteDLLx64_dll(dllDATA->dllFilePath, dllDATA->PID, &dllDATA->entryPoint, &dllDATA->imageBase, &dllDATA->kimageBase);
 		break;
@@ -174,19 +174,14 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 			break;
 		}
 		Log("GetWindowThread %d \r\n", threadId);
-		status = Protect::AddProtectWNDBatch(WND_PTDATA->hwnds, WND_PTDATA->Length, threadId);
-		if (!WND_PTDATA->Length)
-		{
-			status = STATUS_UNSUCCESSFUL;
-			break;
-		} 
+		status = Protect::AddProtectWNDBatch(WND_PTDATA->hwnds, WND_PTDATA->Length, threadId); 
 		break;
 	}
-	case ANTI_SNAPSHOT:
+	case ANTI_SNAPSHOT: { 
 		PWND_PROTECT_DATA WND_PTDATA = (PWND_PROTECT_DATA)pCommData->InData;
 		status = ProtectRoute::AntiSnapWindow(WND_PTDATA->hwnds[0]);
 		break;
-
+	} 
 	case CREATE_MEMORY: {
 		PCREATE_MEM_DATA MEM_DATA = (PCREATE_MEM_DATA)pCommData->InData;
 		status = memory::SS_CreateMemory(MEM_DATA->PID, MEM_DATA->uSize, MEM_DATA->pVAddress);

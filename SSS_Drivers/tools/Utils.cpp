@@ -335,7 +335,12 @@ unsigned long long  Utils::find_pattern_image(unsigned long long addr, const cha
 	return 0;
 }
 VOID Utils::InitApis() {
+	imports::imported.ex_acquire_rundown_protection = GetNtFuncExportName(skCrypt("ExAcquireRundownProtection"));
+	imports::imported.ex_release_rundown_protection = GetNtFuncExportName(skCrypt("ExReleaseRundownProtection"));
 
+
+	imports::imported.io_create_file_specify_device_object_hint = GetNtFuncExportName(skCrypt("IoCreateFileSpecifyDeviceObjectHint"));
+	imports::imported.ob_reference_object_by_handle = GetNtFuncExportName(skCrypt("ObReferenceObjectByHandle"));
 	imports::imported.kd_entered_debugger= GetNtFuncExportName(skCrypt("KdEnteredDebugger"));
 	imports::imported.ps_get_thread_win_thread = GetNtFuncExportName(skCrypt("PsGetThreadWin32Thread"));
 	imports::imported.ps_get_thread_id = GetNtFuncExportName(skCrypt("PsGetThreadId"));
@@ -418,6 +423,7 @@ VOID Utils::InitApis() {
 	imports::imported.io_create_device = GetNtFuncExportName(skCrypt("IoCreateDevice"));
 	imports::imported.rtl_get_version = GetNtFuncExportName(skCrypt("RtlGetVersion"));
 	imports::imported.mm_map_io_space_ex = GetNtFuncExportName(skCrypt("MmMapIoSpaceEx"));
+	
 	imports::imported.mm_unmap_io_space = GetNtFuncExportName(skCrypt("MmUnmapIoSpace"));
 	imports::imported.mm_get_virtual_for_physical = GetNtFuncExportName(skCrypt("MmGetVirtualForPhysical"));
 	imports::imported.mm_get_physical_memory_ranges = GetNtFuncExportName(skCrypt("MmGetPhysicalMemoryRanges"));

@@ -15,51 +15,51 @@ namespace fuck_process {
 		dest->Length = source->Length;
 	}
 
-	void GET_PEB_DATA(PEPROCESS pEprocess, BOOLEAN IS_WOW64,PVOID  LDR_DATA, PVOID PARAMETERS,PVOID  TABLE_ENTRY,PULONG64 pPeb_ldr_addr,PULONG64 pParamater) {
-	 
-		ULONG peb_offset[20] = { 0 }; 
+	void GET_PEB_DATA(PEPROCESS pEprocess, BOOLEAN IS_WOW64, PVOID  LDR_DATA, PVOID PARAMETERS, PVOID  TABLE_ENTRY, PULONG64 pPeb_ldr_addr, PULONG64 pParamater) {
+
+		ULONG peb_offset[20] = { 0 };
 		UCHAR  idx_len = 0;
 		UCHAR idx_peb_ImageBaseAddress = 1;
 		UCHAR idx_peb_ldr = 2;
 		UCHAR idx_peb_ProcessParameters = 3;
 		ULONG PEB_LDR_DATA_SIZE = 4;
 		ULONG LDR_DATA_TABLE_ENTRY_SIZE = 5;
-		ULONG RTL_USER_PROCESS_PARAMETERS_SIZE =6; 
+		ULONG RTL_USER_PROCESS_PARAMETERS_SIZE = 6;
 		ULONGLONG(*read_ptr)(PEPROCESS process, ULONGLONG address) = 0;
 		ULONG64 PEB = 0;
 		if (IS_WOW64)
-		{ 
-			PEB =(ULONG64) imports::ps_get_process_wow64_process(pEprocess);
+		{
+			PEB = (ULONG64)imports::ps_get_process_wow64_process(pEprocess);
 			*(ULONGLONG*)&read_ptr = (ULONGLONG)patternSearch::read_i32;
-				peb_offset[idx_peb_ImageBaseAddress] = 0x8,
+			peb_offset[idx_peb_ImageBaseAddress] = 0x8,
 				peb_offset[idx_peb_ldr] = 0xc,
 				peb_offset[idx_peb_ProcessParameters] = 0x10;
-				peb_offset[PEB_LDR_DATA_SIZE] = sizeof(PEB_LDR_DATA32);
-				peb_offset[LDR_DATA_TABLE_ENTRY_SIZE] = sizeof(LDR_DATA_TABLE_ENTRY32);
-				peb_offset[RTL_USER_PROCESS_PARAMETERS_SIZE] = sizeof(RTL_USER_PROCESS_PARAMETERS32);
+			peb_offset[PEB_LDR_DATA_SIZE] = sizeof(PEB_LDR_DATA32);
+			peb_offset[LDR_DATA_TABLE_ENTRY_SIZE] = sizeof(LDR_DATA_TABLE_ENTRY32);
+			peb_offset[RTL_USER_PROCESS_PARAMETERS_SIZE] = sizeof(RTL_USER_PROCESS_PARAMETERS32);
 		}
 		else
 		{
 			PEB = (ULONG64)imports::ps_get_process_peb(pEprocess);
 			*(ULONGLONG*)&read_ptr = (ULONGLONG)patternSearch::read_i64;
-				peb_offset[idx_len] = 0x8,
+			peb_offset[idx_len] = 0x8,
 				peb_offset[idx_peb_ImageBaseAddress] = 0x10,
 				peb_offset[idx_peb_ldr] = 0x18,
 				peb_offset[idx_peb_ProcessParameters] = 0x20;
-				peb_offset[PEB_LDR_DATA_SIZE] = sizeof(PEB_LDR_DATA64);
-				peb_offset[LDR_DATA_TABLE_ENTRY_SIZE] = sizeof(LDR_DATA_TABLE_ENTRY);
-				peb_offset[RTL_USER_PROCESS_PARAMETERS_SIZE] = sizeof(RTL_USER_PROCESS_PARAMETERS);
-				
-		} 
-		ULONG64 ImageBaseAddress= read_ptr(pEprocess, PEB + peb_offset[idx_peb_ImageBaseAddress]);
-		ULONG64 peb_ldr_addr= read_ptr(pEprocess, PEB + peb_offset[idx_peb_ldr]);
+			peb_offset[PEB_LDR_DATA_SIZE] = sizeof(PEB_LDR_DATA64);
+			peb_offset[LDR_DATA_TABLE_ENTRY_SIZE] = sizeof(LDR_DATA_TABLE_ENTRY);
+			peb_offset[RTL_USER_PROCESS_PARAMETERS_SIZE] = sizeof(RTL_USER_PROCESS_PARAMETERS);
+
+		}
+		ULONG64 ImageBaseAddress = read_ptr(pEprocess, PEB + peb_offset[idx_peb_ImageBaseAddress]);
+		ULONG64 peb_ldr_addr = read_ptr(pEprocess, PEB + peb_offset[idx_peb_ldr]);
 
 		MiMemory::MiReadProcessMemory(pEprocess, (PVOID)peb_ldr_addr, LDR_DATA, peb_offset[PEB_LDR_DATA_SIZE]);
 
 		ULONG64 peb_ldr_Module_First = 0;
 		if (IS_WOW64)
 		{
-			peb_ldr_Module_First= ((PPEB_LDR_DATA32)LDR_DATA)->InLoadOrderModuleList.Flink;
+			peb_ldr_Module_First = ((PPEB_LDR_DATA32)LDR_DATA)->InLoadOrderModuleList.Flink;
 		}
 		else
 		{
@@ -67,7 +67,7 @@ namespace fuck_process {
 		}
 		//   +0x010 InLoadOrderModuleList : _LIST_ENTRY [ 0x00000200`4d8726d0 - 0x00000200`51ee0de0 ]
 		*pPeb_ldr_addr = peb_ldr_Module_First;
-	
+
 		ULONG64 buffer_addr = patternSearch::read_i64(pEprocess, peb_ldr_Module_First + 0x50);
 
 		MiMemory::MiReadProcessMemory(pEprocess, (PVOID)peb_ldr_Module_First, TABLE_ENTRY, peb_offset[LDR_DATA_TABLE_ENTRY_SIZE]);
@@ -77,14 +77,14 @@ namespace fuck_process {
 		MiMemory::MiReadProcessMemory(pEprocess, (PVOID)peb_Parameters, PARAMETERS, peb_offset[RTL_USER_PROCESS_PARAMETERS_SIZE]);
 	}
 
-	VOID FAKE_PEB(PEPROCESS MaskEprocess,PEPROCESS SourceEprocess) {
-		
+	VOID FAKE_PEB(PEPROCESS MaskEprocess, PEPROCESS SourceEprocess) {
+
 		ULONG64 mask_paramater_addr = 0;
 		ULONG64 mask_peb_ldr_addr = 0;
 		PEB_LDR_DATA64 mask_peb_data = { 0 };
 		LDR_DATA_TABLE_ENTRY mask_table_entry = { 0 };
 		RTL_USER_PROCESS_PARAMETERS mask_paramaters = { 0 };
-		GET_PEB_DATA(MaskEprocess, FALSE, &mask_peb_data, &mask_paramaters, &mask_table_entry,&mask_peb_ldr_addr,&mask_paramater_addr);
+		GET_PEB_DATA(MaskEprocess, FALSE, &mask_peb_data, &mask_paramaters, &mask_table_entry, &mask_peb_ldr_addr, &mask_paramater_addr);
 
 
 
@@ -93,9 +93,9 @@ namespace fuck_process {
 		PEB_LDR_DATA64 source_peb_data = { 0 };
 		LDR_DATA_TABLE_ENTRY source_table_entry = { 0 };
 		RTL_USER_PROCESS_PARAMETERS source_paramaters = { 0 };
-		GET_PEB_DATA(SourceEprocess, FALSE, &source_peb_data, &source_paramaters, &source_table_entry,&source_peb_ldr_addr,&source_paramater_addr);
+		GET_PEB_DATA(SourceEprocess, FALSE, &source_peb_data, &source_paramaters, &source_table_entry, &source_peb_ldr_addr, &source_paramater_addr);
 		//DllBase
- 
+
 		mask_table_entry.BaseDllName.Length = source_table_entry.BaseDllName.Length;
 		mask_table_entry.BaseDllName.MaximumLength = source_table_entry.BaseDllName.MaximumLength;
 		mask_table_entry.OriginalBase = source_table_entry.OriginalBase;
@@ -107,20 +107,20 @@ namespace fuck_process {
 		mask_table_entry.FullDllName.MaximumLength = source_table_entry.FullDllName.MaximumLength;
 		mask_table_entry.LoadTime = source_table_entry.LoadTime;
 		char empty[0x200] = { 0 };
-		MiMemory::MiWriteProcessMemory(MaskEprocess,(PVOID)mask_peb_ldr_addr, &mask_table_entry, sizeof(LDR_DATA_TABLE_ENTRY));
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_peb_ldr_addr, &mask_table_entry, sizeof(LDR_DATA_TABLE_ENTRY));
 		char nameTemp[0x200] = { 0 };
 
 		ULONG64 buffer_addr = patternSearch::read_i64(SourceEprocess, source_peb_ldr_addr + 0x50);
 
 		MiMemory::MiReadProcessMemory(SourceEprocess, (PVOID)buffer_addr, nameTemp, source_table_entry.FullDllName.MaximumLength);
-		ULONG64 mask_buffer= patternSearch::read_i64(MaskEprocess, mask_peb_ldr_addr + 0x50);
+		ULONG64 mask_buffer = patternSearch::read_i64(MaskEprocess, mask_peb_ldr_addr + 0x50);
 		ULONG64 FullDllName_addr = mask_buffer;
 		//先清空自己
 		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, empty, mask_table_entry.FullDllName.MaximumLength);
 		//写入复制数据
-		MiMemory::MiWriteProcessMemory(MaskEprocess,(PVOID)mask_buffer, nameTemp, source_table_entry.FullDllName.MaximumLength);
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_buffer, nameTemp, source_table_entry.FullDllName.MaximumLength);
 
-		ULONG64 BaseDllName_addr=  patternSearch::read_i64(SourceEprocess, source_peb_ldr_addr + 0x60); 
+		ULONG64 BaseDllName_addr = patternSearch::read_i64(SourceEprocess, source_peb_ldr_addr + 0x60);
 		USHORT nameOffset = BaseDllName_addr - buffer_addr;
 		patternSearch::write_i64(MaskEprocess, mask_peb_ldr_addr + 0x60, mask_buffer + nameOffset);
 
@@ -130,7 +130,7 @@ namespace fuck_process {
 		mask_paramaters.CommandLine.Length = source_table_entry.FullDllName.Length;
 		mask_paramaters.CommandLine.MaximumLength = source_table_entry.FullDllName.MaximumLength;
 
-	 
+
 
 
 		mask_paramaters.WindowTitle.Length = source_table_entry.FullDllName.Length;
@@ -160,13 +160,13 @@ namespace fuck_process {
 
 
 
- 
-	
 
- 
+
+
+
 	}
 	VOID FAKE_PEB32(PEPROCESS MaskEprocess, PEPROCESS SourceEprocess) {
-		if (!imports::ps_get_process_wow64_process(MaskEprocess)||!imports::ps_get_process_wow64_process(SourceEprocess))
+		if (!imports::ps_get_process_wow64_process(MaskEprocess) || !imports::ps_get_process_wow64_process(SourceEprocess))
 		{
 			return;
 		}
@@ -205,7 +205,7 @@ namespace fuck_process {
 
 
 		ULONG WindowTitle_MaximumLength = mask_paramaters.WindowTitle.MaximumLength;
-		MiMemory::MiWriteProcessMemory(MaskEprocess,(PVOID)mask_paramaters.CurrentDirectory.DosPath.Buffer, empty, mask_paramaters.CurrentDirectory.DosPath.MaximumLength);
+		MiMemory::MiWriteProcessMemory(MaskEprocess, (PVOID)mask_paramaters.CurrentDirectory.DosPath.Buffer, empty, mask_paramaters.CurrentDirectory.DosPath.MaximumLength);
 		mask_paramaters.CommandLine.Length = source_table_entry.FullDllName.Length;
 		mask_paramaters.CommandLine.MaximumLength = source_table_entry.FullDllName.MaximumLength;
 
@@ -238,7 +238,7 @@ namespace fuck_process {
 
 
 
-	
+
 	}
 	NTSTATUS FakeProcess(ULONG_PTR pid, ULONG_PTR fakePid)
 	{
@@ -250,7 +250,7 @@ namespace fuck_process {
 		}
 		PEPROCESS MaskEprocess = NULL;
 		PEPROCESS SourceEprocess = NULL;
- 
+
 		//要伪装的进程
 		MaskEprocess = Utils::lookup_process_by_id((HANDLE)pid);
 		if (!MaskEprocess) return status;
@@ -259,9 +259,14 @@ namespace fuck_process {
 		//被伪装的目标进程
 		SourceEprocess = Utils::lookup_process_by_id((HANDLE)fakePid);
 		if (!SourceEprocess) return status;
-	 
+
 		while (1)
 		{
+			if (!Unlock_File_Mode1(MaskEprocess))
+			{
+				status = STATUS_UNSUCCESSFUL;
+				break;
+			}
 			PUCHAR nameBuffer = (PUCHAR)imports::ex_allocate_pool(NonPagedPool, USN_PAGE_SIZE);
 			PUCHAR szNameTemp = nameBuffer;
 			Utils::kmemset(nameBuffer, 0, USN_PAGE_SIZE);
@@ -276,14 +281,14 @@ namespace fuck_process {
 				Utils::kmemcpy(szMaskImageName, szSourceImageName, 15);
 			}
 
-			////修改Eprocess.ImagePathHash
-			//{
+			//修改Eprocess.ImagePathHash
+			{
 
-			//	ULONG ImagePathHashOffset = imageNameOffset + 0x4c;
-			//	ULONG SourceImagePathHash = *(PULONG)((PUCHAR)SourceEprocess + ImagePathHashOffset);
+				ULONG ImagePathHashOffset = imageNameOffset + 0x4c;
+				ULONG SourceImagePathHash = *(PULONG)((PUCHAR)SourceEprocess + ImagePathHashOffset);
 
-			//	*(PULONG)((PUCHAR)MaskEprocess + ImagePathHashOffset) = SourceImagePathHash;
-			//}
+				*(PULONG)((PUCHAR)MaskEprocess + ImagePathHashOffset) = SourceImagePathHash;
+			}
 
 			////修改Eprocess.BaseAddressOffset
 			//{
@@ -320,7 +325,7 @@ namespace fuck_process {
 				POBJECT_NAME_INFORMATION pMaskNameInfo = (POBJECT_NAME_INFORMATION) * (PULONG_PTR)((PUCHAR)MaskEprocess + AuditOffset);
 				Utils::kmemset(pMaskNameInfo->Name.Buffer, 0, pMaskNameInfo->Name.MaximumLength);
 				Utils::kmemcpy(pMaskNameInfo->Name.Buffer, pSourceNameInfo->Name.Buffer, pSourceNameInfo->Name.Length);
-			 
+
 				pMaskNameInfo->Name.MaximumLength = pSourceNameInfo->Name.MaximumLength;
 				pMaskNameInfo->Name.Length = pSourceNameInfo->Name.Length;
 
@@ -346,12 +351,12 @@ namespace fuck_process {
 					imports::obf_dereference_object(MaskFile);
 					break;
 				}
-				Utils::kmemset(MaskFile->FileName.Buffer,0, MaskFile->FileName.MaximumLength);
+				Utils::kmemset(MaskFile->FileName.Buffer, 0, MaskFile->FileName.MaximumLength);
 				Utils::kmemcpy(MaskFile->FileName.Buffer, SourceFile->FileName.Buffer, SourceFile->FileName.Length);
 				//MaskFile->FileName.Buffer = (PWCH)szNameTemp;
 				MaskFile->FileName.MaximumLength = SourceFile->FileName.MaximumLength;
 				MaskFile->FileName.Length = SourceFile->FileName.Length;
-			 
+
 
 				//修改文件路径2
 				ULONG_PTR MaskFsContext2 = (ULONG_PTR)MaskFile->FsContext2;
@@ -432,13 +437,13 @@ namespace fuck_process {
 				imports::obf_dereference_object((PVOID)MaskToken);
 				imports::obf_dereference_object((PVOID)SourceToken);
 			}
-			
+
 
 
 			FAKE_PEB(MaskEprocess, SourceEprocess);
- 
+
 			FAKE_PEB32(MaskEprocess, SourceEprocess);
- 
+			status = STATUS_SUCCESS;
 			break;
 		}
 		//EPROCESS   PsIsProtectedProcess
@@ -446,7 +451,7 @@ namespace fuck_process {
 //	ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess"), 2);
 //	*(PULONG_PTR)((PUCHAR)MaskEprocess + isProtectOffset) = 0xff;
 //} 
-		return STATUS_SUCCESS;
+		return status;
 
 	}
 
@@ -457,7 +462,7 @@ namespace fuck_process {
 		//要解除保护的进程
 		TargetEprocess = Utils::lookup_process_by_id((HANDLE)pid);
 		if (!TargetEprocess) return status;
- 
+
 		ULONG isProtectOffset = functions::GetFunctionVariableOffset(skCrypt(L"PsIsProtectedProcess"), 2);
 		if (!isProtectOffset)
 		{
@@ -471,13 +476,87 @@ namespace fuck_process {
 		{
 			*(PULONG_PTR)((PUCHAR)TargetEprocess + isProtectOffset) = 0;
 		}
- 
+
 		status = STATUS_SUCCESS;
 
 		return status;
 	}
 
+	bool  Unlock_File_Mode1(PEPROCESS eprocess)
+	{
+		HANDLE fileHandle;
+		NTSTATUS result;
+		IO_STATUS_BLOCK ioBlock;
+		DEVICE_OBJECT* device_object = nullptr;
+		void* object = NULL;
+		OBJECT_ATTRIBUTES fileObject;
+		UNICODE_STRING uPath;
 
+
+		PFILE_OBJECT MaskFile = NULL;
+		POBJECT_NAME_INFORMATION pName = 0;
+		imports::ps_reference_process_file_pointer(eprocess, (PVOID*)&MaskFile);
+		imports::io_query_file_dos_device_name(MaskFile, &pName);
+		wchar_t prefix[0x256] = L"\\??\\";
+		wcscat(prefix, pName->Name.Buffer);
+		Logf("%ws  ", prefix);
+		imports::rtl_init_unicode_string(&uPath, prefix);
+		imports::obf_dereference_object(MaskFile);
+		//switch context to UserMode
+		//KeAttachProcess(eprocess);
+
+
+		InitializeObjectAttributes(&fileObject,
+			&uPath,
+			OBJ_CASE_INSENSITIVE,
+			NULL,
+			NULL);
+
+		result =imports::io_create_file_specify_device_object_hint(
+			&fileHandle,
+			SYNCHRONIZE | FILE_WRITE_ATTRIBUTES | FILE_READ_ATTRIBUTES | FILE_READ_DATA, //0x100181 
+			&fileObject,
+			&ioBlock,
+			0,
+			0,
+			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, //FILE_SHARE_VALID_FLAGS,
+			FILE_OPEN,
+			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,//0x60,
+			0,
+			0,
+			CreateFileTypeNone,
+			0,
+			IO_IGNORE_SHARE_ACCESS_CHECK,
+			device_object);
+		if (result != STATUS_SUCCESS)
+		{
+			Logf("error in IoCreateFileSpecifyDeviceObjectHint");
+			goto _Error;
+		}
+
+		result =imports::ob_reference_object_by_handle(fileHandle, 0, 0, 0, &object, 0);
+
+		if (result != STATUS_SUCCESS)
+		{
+			Logf("error in ObReferenceObjectByHandle");
+			imports::zw_close(fileHandle);
+			goto _Error;
+		}
+
+		/*
+		METHOD 1
+		*/
+		((FILE_OBJECT*)object)->SectionObjectPointer->ImageSectionObject = 0;
+		((FILE_OBJECT*)object)->DeleteAccess = 1;
+		imports::obf_dereference_object(object);
+		imports::zw_close(fileHandle);
+
+
+		return true;
+	_Error:
+
+		return false;
+	}
 
 }
 

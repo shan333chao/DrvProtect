@@ -105,7 +105,10 @@ struct _m_imported
 	uintptr_t ps_get_thread_win_thread;
 	uintptr_t kd_entered_debugger;
 	
-
+	uintptr_t ob_reference_object_by_handle;
+	uintptr_t io_create_file_specify_device_object_hint;
+	uintptr_t ex_acquire_rundown_protection;
+	uintptr_t ex_release_rundown_protection;
 };
 namespace imports {
 
@@ -113,6 +116,33 @@ namespace imports {
 
 
 	extern struct _m_imported imported;
+	VentroAPI BOOLEAN		FASTCALL		ex_acquire_rundown_protection(			_Inout_ PEX_RUNDOWN_REF RunRef		);
+	VentroAPI VOID 	FASTCALL		ex_release_rundown_protection(			_Inout_ PEX_RUNDOWN_REF RunRef		);
+	VentroAPI NTSTATUS	io_create_file_specify_device_object_hint(
+		_Out_ PHANDLE FileHandle,
+		_In_  ACCESS_MASK DesiredAccess,
+		_In_  POBJECT_ATTRIBUTES ObjectAttributes,
+		_Out_ PIO_STATUS_BLOCK IoStatusBlock,
+		_In_opt_ PLARGE_INTEGER AllocationSize,
+		_In_  ULONG FileAttributes,
+		_In_  ULONG ShareAccess,
+		_In_  ULONG Disposition,
+		_In_  ULONG CreateOptions,
+		_In_opt_ PVOID EaBuffer,
+		_In_  ULONG EaLength,
+		_In_  CREATE_FILE_TYPE CreateFileType,
+		_In_opt_ PVOID InternalParameters,
+		_In_  ULONG Options,
+		_In_opt_ PVOID DeviceObject
+	);
+	VentroAPI NTSTATUS ob_reference_object_by_handle(
+			_In_ HANDLE Handle,
+			_In_ ACCESS_MASK DesiredAccess,
+			_In_opt_ POBJECT_TYPE ObjectType,
+			_In_ KPROCESSOR_MODE AccessMode,
+			_Out_ PVOID* Object,
+			_Out_opt_ POBJECT_HANDLE_INFORMATION HandleInformation
+		);
 
 	VentroAPI  PVOID	  ps_get_thread_win_thread(IN PETHREAD Thread);
 
