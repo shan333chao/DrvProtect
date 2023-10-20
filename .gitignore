@@ -64,7 +64,7 @@ dkms.conf
 */Memmory/mm_vad.h
 zhaonian/driver_shellcode.h
 */Debug
-
+*/Release/*
 */SSS_Drivers/Debug/*
 */GenCode/Debug/*
 */Debug/*

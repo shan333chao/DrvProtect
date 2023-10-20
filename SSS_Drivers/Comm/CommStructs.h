@@ -71,7 +71,7 @@ typedef struct  _COMM_DATA {
 //≤‚ ‘Õ®—∂
 typedef struct _TEST_DATA { 
 	ULONG uTest;
-	PVOID regCode;
+	PVOID64 regCode;
 	UCHAR size;
 	ULONG time;
 }TEST_DATA, * PTEST_TATA;
@@ -91,9 +91,9 @@ typedef struct _FAKE_PROCESS_DATA {
 typedef struct _RW_MEM_DATA {
 	ULONG		FakePID;
 	ULONG		PID;
-	PVOID		Address;
+	PVOID64		Address;
 	ULONG		uDataSize;
-	PVOID		pValBuffer;
+	PVOID64		pValBuffer;
 }RW_MEM_DATA, * PRW_MEM_DATA;
 
 

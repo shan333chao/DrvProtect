@@ -151,7 +151,7 @@ ULONG _InitReg(PCHAR regCode)
 	else {
 		Logp("第一次通讯失败 开始加载驱动  \r\n");
 		ret = InstallDriver2();
-		if (ret == STATUS_TEST_COMM_DRIVER_STARTED)
+		if (ret == STATUS_TEST_COMM_DRIVER_STARTED||ret==23)
 		{
 			for (size_t i = 2; i < 40; i++)
 			{

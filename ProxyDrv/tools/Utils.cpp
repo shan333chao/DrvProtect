@@ -170,8 +170,7 @@ HANDLE Utils::GetPidByName(PWCH imageName)
 
 VOID Utils::InitApis() {
 	
-	imports::imported.io_create_file_specify_device_object_hint = GetNtFuncExportName(skCrypt("IoCreateFileSpecifyDeviceObjectHint"));
-	imports::imported.ob_reference_object_by_handle = GetNtFuncExportName(skCrypt("ObReferenceObjectByHandle"));
+ 
 
 	imports::imported.io_get_device_attachment_base_ref = GetNtFuncExportName(skCrypt("IoGetDeviceAttachmentBaseRef"));
 	imports::imported.io_get_related_device_object = GetNtFuncExportName(skCrypt("IoGetRelatedDeviceObject"));

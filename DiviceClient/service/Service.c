@@ -66,9 +66,9 @@ ULONG CreateServiceAndStartX86(PCHAR szDriverFullPath, PCHAR szDriverName)
 	if (!StartService(hServiceDDK, NULL, NULL))
 	{
 		status = GetLastError();
-		if (status != STATUS_TEST_COMM_DRIVER_STARTED)
+		if (status != STATUS_TEST_COMM_DRIVER_STARTED  )
 		{
-			Logp("运行驱动服务失败, %d\n", status);
+			Logp("运行驱动服务失败, %08x\n", status);
 			if (hServiceDDK)
 			{
 				CloseServiceHandle(hServiceDDK);
@@ -141,16 +141,16 @@ ULONG CreateServiceAndStartX64(PCHAR driverPath, PCHAR driverName)
 	RtlInitUnicodeString FRtlInitUnicodeString = (RtlInitUnicodeString)GetProcAddress(ntdll, "RtlInitUnicodeString");
 	ULONG SE_LOAD_DRIVER_PRIVILEGE = 10UL;
 	BOOLEAN SeLoadDriverWasEnabled;
- 
+
 	NTSTATUS Status = FRtlAdjustPrivilege(SE_LOAD_DRIVER_PRIVILEGE, TRUE, FALSE, &SeLoadDriverWasEnabled);
 	if (!NT_SUCCESS(Status)) {
-		Logp("Fatal error: failed to acquire SE_LOAD_DRIVER_PRIVILEGE. Make sure you are running as administrator."  );
+		Logp("Fatal error: failed to acquire SE_LOAD_DRIVER_PRIVILEGE. Make sure you are running as administrator.");
 		return STATUS_TEST_COMM_SE_LOAD_DRIVER_PRIVILEGE;
 	}
 
 	wchar_t wdriver_reg_path[MAX_PATH] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
 	wchar_t DriverName[0x40] = { 0 };
-	Char2Wchar(DriverName, driverName); 
+	Char2Wchar(DriverName, driverName);
 	wcscat(wdriver_reg_path, DriverName);
 	UNICODE_STRING serviceStr;
 	FRtlInitUnicodeString(&serviceStr, (PCWSTR)wdriver_reg_path);

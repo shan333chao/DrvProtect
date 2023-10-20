@@ -1,7 +1,7 @@
 del C:\DriverCodes\HideDriver\NickolasZhao\x64\Release\*.sys
 del C:\DriverCodes\HideDriver\NickolasZhao\x64\Release\encrypt.png
 
-"C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /rebuild Release   /project  C:\DriverCodes\HideDriver\NickolasZhao\SSS_Drivers\SSS_Drivers.vcxproj  
+"C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /Rebuild "Release|x64"   /project  C:\DriverCodes\HideDriver\NickolasZhao\SSS_Drivers\SSS_Drivers.vcxproj  
 
 
 
@@ -17,7 +17,7 @@ del C:\DriverCodes\HideDriver\NickolasZhao\x64\Release\SSS_Drivers.*
 
 
 
-"C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /build Release   /project  C:\DriverCodes\HideDriver\NickolasZhao\ProxyDrv\ProxyDrv.vcxproj
+"C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /Rebuild "Release|x64"   /project  C:\DriverCodes\HideDriver\NickolasZhao\ProxyDrv\ProxyDrv.vcxproj
 
 
 
@@ -37,3 +37,9 @@ ren ProxyDrv_nodbg.sys ProxyDrv.sys
 cd "C:\DriverCodes\HideDriver\NickolasZhao\x64\Release\"
 
 ClearPEdbg.exe
+
+
+"C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /Rebuild "Release|x64"  /project  C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\DiviceClient.vcxproj
+
+"C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /Rebuild "Release|x86"  /project  C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\DiviceClient.vcxproj
+

@@ -19,7 +19,14 @@
 //测试通讯
 #define  STATUS_TEST_COMM_WAY_ERROR  0x10000006 
 //驱动启动
+#ifdef  _X64
 #define  STATUS_TEST_COMM_DRIVER_STARTED 0xC000003EL
+#else
+#define  STATUS_TEST_COMM_DRIVER_STARTED 0x00000017
+#endif //  x64
+
+
+
 
 //分配驱动文件内存失败
 #define  STATUS_TEST_COMM_ALLOC_FAIL		0x10000008
