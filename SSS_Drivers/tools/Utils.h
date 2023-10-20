@@ -295,7 +295,36 @@ inline int to_lower_imp(int c)
 	else
 		return c;
 }
+inline wchar_t*  _wcsstri_imp(const wchar_t* string, const wchar_t* search)
+{
+	wchar_t* p = (wchar_t*)string;
+	wchar_t* s1, * s2;
 
+	if (!search || !*search)
+	{
+		return p;
+	}
+
+	while (*p)
+	{
+		s1 = p;
+		s2 = (wchar_t*)search;
+
+		while (*s1 && *s2 && (towlower(*s1) == towlower(*s2)))
+		{
+			s1++, s2++;
+		}
+
+		if (!*s2)
+		{
+			return p;
+		}
+
+		p++;
+	}
+
+	return NULL;
+}
 inline int strcmpi_imp(const char* s1, const char* s2)
 {
 	while (*s1 && (to_lower_imp(*s1) == to_lower_imp(*s2)))

@@ -65,14 +65,47 @@ namespace eip_execute {
 	PETHREAD GetFirstThread(PEPROCESS pEprocess) {
 		//windows传统窗口程序链表第一个好像都是GUI线程
 
-		PLIST_ENTRY ThreadListHead;
-		PLIST_ENTRY ThreadListEntry;
-		PETHREAD Thread;
-		//Win7 ~ Win11
-		ThreadListHead = (PLIST_ENTRY)((ULONG64)pEprocess + 0x30);
-		ThreadListEntry = ThreadListHead->Flink;
-		Thread = (PETHREAD)((ULONG64)ThreadListEntry - 0x2F8);
-		return Thread;
+
+
+		PETHREAD pretthreadojb = NULL, ptempthreadobj = NULL;
+
+		PLIST_ENTRY plisthead = NULL;
+
+		PLIST_ENTRY plistflink = NULL;
+
+		int i = 0;
+
+		plisthead = (PLIST_ENTRY)((PUCHAR)pEprocess + 0x30);
+
+		plistflink = plisthead->Flink;
+
+		//遍历
+		for (plistflink; plistflink != plisthead; plistflink = plistflink->Flink)
+		{
+			ptempthreadobj = (PETHREAD)((PUCHAR)plistflink - 0x2f8);
+
+			HANDLE threadId = PsGetThreadId(ptempthreadobj);
+
+			Logf("线程ID: %d", threadId);
+
+
+
+			if (!MmIsAddressValid(ptempthreadobj)) {
+				continue;
+			}
+
+			i++;
+
+			if (imports::ps_get_thread_win_thread(ptempthreadobj)) {
+				pretthreadojb = ptempthreadobj;
+				break;
+			}
+
+		}
+
+
+
+		return pretthreadojb;
 	}
 
 	KTRAP_FRAME MyGetThreadContext(PETHREAD thread)
@@ -111,106 +144,73 @@ namespace eip_execute {
 		PETHREAD thread = GetFirstThread(process);
 
 		PVOID peb32 = imports::ps_get_process_wow64_process(process);
+		MODE preMode = functions::SetThreadPrevious(imports::ke_get_current_thread(), KernelMode);
+
 		//挂起线程
 		KeSuspendThread(thread);
+		functions::SetThreadPrevious(imports::ke_get_current_thread(), preMode);
 
 		//获取寄存器上下文
 		KTRAP_FRAME context = MyGetThreadContext(thread);
 		ULONG shellcodeLength = 0;
-		if (peb32)
-		{
-			/*
-				60 | pushad
-				9C | pushfd
-				68 41420F00 | push F4241
-				68 82841E00 | push 1E8482
-				68 E3930400 | push 493E3
-				B8 00004100 | mov eax, 410000
-				FFD0 | call eax
-				9D | popfd
-				61 | popad
-				E9 E1FF16FE | jmp 420000
-			*/
-			UCHAR shellcode[] = {
 
-				0x9C,                           // pushfd   push flags
-				0x60,                           // pushad   push registers
-				0x68, 0x00, 0x00, 0x00, 0x00,   // push     nullptr (0x0)
-				0x68, 0x01, 0x00, 0x00, 0x00,   // push     DLL_PROCESS_ATTACH (0x1)
-				0x68, 0x00, 0x00, 0x00, 0x00,   // push     0x00000000
-				0xB8, 0x00, 0x00, 0x00, 0x00,   // mov      eax 0x00000000
-				0xFF, 0xD0,	                    // call     eax
-				0x61,                           // popad    pop registers	
-				0x9D,                           // popfd    pop flags
-				0xe9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 //jmp Rip 
-			};
-			
-			shellcodeLength = sizeof(shellcode);
-			//填入参数
- 
-		 
-			*(PULONG32)(shellcode + 13) = (ULONG32)R3_modulebase;      //push hModule
+		/*
+			push rcx
+			push rax
+			mov rdx,00000001 //第二个参数DLL_PROCESS_ATTACH
+			mov rax,entryaddr //地址
+			sub rsp,28
+			call rax
+			add rsp,28
+			pop rax
+			pop rcx
+			jmp rip  //rip寄存器的值
 
-			*(PULONG32)(shellcode + 18) = (ULONG32)entrypoint ;//mov eax,entryaddr
-			*(PULONG64)(shellcode + shellcodeLength - 8) = context.Rip;
-			Utils::kmemcpy((PVOID)R0_imageBase, shellcode, shellcodeLength);
-		}
-		else {
-			/*
-				push rcx
-				push rax
-				mov rdx,00000001 //第二个参数DLL_PROCESS_ATTACH
-				mov rax,entryaddr //地址
-				sub rsp,28
-				call rax
-				add rsp,28
-				pop rax
-				pop rcx
-				jmp rip  //rip寄存器的值
+		*/
+		//构造shellcode
+		//BYTE shellcode[] = {
+		//	0x51, 0x50, 0x48 ,0xBA, 0x00 ,0x00 ,0x00, 0x00, 0x00, 0x00, 0x00 ,0x00 ,
+		//	0x48 ,0xB8 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x48, 0x83 ,0xEC,
+		//	0x28 ,0xFF ,0xD0 ,0x48 ,0x83 ,0xC4 ,0x28 ,0x58 ,0x59 ,0xFF ,0x25 ,0x00 ,0x00,
+		//	0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00
+		//};
 
-			*/
-			//构造shellcode
-			//BYTE shellcode[] = {
-			//	0x51, 0x50, 0x48 ,0xBA, 0x00 ,0x00 ,0x00, 0x00, 0x00, 0x00, 0x00 ,0x00 ,
-			//	0x48 ,0xB8 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x48, 0x83 ,0xEC,
-			//	0x28 ,0xFF ,0xD0 ,0x48 ,0x83 ,0xC4 ,0x28 ,0x58 ,0x59 ,0xFF ,0x25 ,0x00 ,0x00,
-			//	0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00
-			//};
+		UCHAR shellcode[] = {
+			0x51,	//push rcx
+			0x50,	//push rax
+			0x48,0xB9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 ,//mov rcx,modulebase
+			0x48,0xBA,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 ,//mov rdx,DLL_PROCESS_ATTACH
+			0x48,0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 ,//mov rax,entryaddr
+			0x48,0x83,0xEC,0x28,								//sub rsp,28
+			0xFF,0xD0,											//call rax
+			0x48,0x83,0xC4,0x28,								//add rsp,28
+			0x58,												//pop rax
+			0x59,												//pop rcx
+			0xFF,0x25,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00//jmp Rip
+		};
 
-			UCHAR shellcode[] = {
-				0x51,	//push rcx
-				0x50,	//push rax
-				0x48,0xB9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 ,//mov rcx,modulebase
-				0x48,0xBA,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 ,//mov rdx,DLL_PROCESS_ATTACH
-				0x48,0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 ,//mov rax,entryaddr
-				0x48,0x83,0xEC,0x28,								//sub rsp,28
-				0xFF,0xD0,											//call rax
-				0x48,0x83,0xC4,0x28,								//add rsp,28
-				0x58,												//pop rax
-				0x59,												//pop rcx
-				0xFF,0x25,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00//jmp Rip
-			};
+		//BOOL APIENTRY DllMain(HMODULE hModule,
+		//	DWORD  ul_reason_for_call,
+		//	LPVOID lpReserved
+		//)
+		shellcodeLength = sizeof(shellcode);
+		//填入参数
+		*(PULONG64)(shellcode + 4) = R3_modulebase;
+		*(PULONG64)(shellcode + 14) = DLL_PROCESS_ATTACH;
+		*(PULONG64)(shellcode + 24) = (ULONG64)entrypoint;
+		*(PULONG64)(shellcode + shellcodeLength - 8) = context.Rip;
+		Utils::kmemcpy((PVOID)R0_imageBase, shellcode, shellcodeLength);
 
-			//BOOL APIENTRY DllMain(HMODULE hModule,
-			//	DWORD  ul_reason_for_call,
-			//	LPVOID lpReserved
-			//)
-			shellcodeLength = sizeof(shellcode);
-			//填入参数
-			*(PULONG64)(shellcode + 4) = R3_modulebase;
-			*(PULONG64)(shellcode + 14) = DLL_PROCESS_ATTACH;
-			*(PULONG64)(shellcode + 24) = (ULONG64)entrypoint;
-			*(PULONG64)(shellcode + shellcodeLength - 8) = context.Rip;
-			Utils::kmemcpy((PVOID)R0_imageBase, shellcode, shellcodeLength);
-		}
 		//设置rip指向shellcode 地址
 		//这里我们复用 之前申请到的PE头的 空间
 		//由于R3和R0 指向相同的物理页  所以shellcode 直接使用PE头作为起始地址
 		context.Rip = R3_modulebase;
 		MySetThreadContext(thread, context);
 
-		//恢复线程
+		preMode = functions::SetThreadPrevious(imports::ke_get_current_thread(), KernelMode);
+		//恢复线程 
 		KeResumeThread(thread);
+		functions::SetThreadPrevious(imports::ke_get_current_thread(), preMode);
 
 		//等待cleartimeSecond秒，清空shellcode
 		Utils::sleep(cleartimeSecond * 1000);
@@ -236,20 +236,47 @@ namespace eip_execute {
 			Logf("KeSuspendThread 或 KeResumeThread 未找到");
 			return FALSE;
 		}
+		UCHAR ShellcodePacket[] = {
+				0x48,0x83,0xEC,0x28,								//sub rsp,28
+				0x50,
+				0x48,0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,	//mov rax,0xffffffffffffffff
+				0xFF,0xD0,											//call rax
+				0x58,
+				0x48,0x83,0xC4,0x28,								//add rsp,28
+
+				0x50,												//push rax
+				0x48,0xB8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,	//mov rax, 0xffffffffffffffff
+				0x48,0x87,0x04,0x24,								//xchg qword [rsp], rax
+				0xC3												//ret
+		};
+		ULONG64 ShellcodeAddress;
+	 
+		SIZE_T AllocationSize;
+ 
+		AllocationSize = shellcode_len + sizeof(ShellcodePacket)+0x10;
+		ULONG64 r3Addr = 0;
+		ULONG64 r0Addr = 0;
+		MDL mdl = { 0 };
+		NTSTATUS status = memory::CreateMemory(process, AllocationSize, &r3Addr, &r0Addr, &mdl);
+
+		if (!NT_SUCCESS(status))
+		{
+ 
+			return FALSE;
+		}
 
 		//挑选第一个线程
-		PETHREAD thread = GetFirstThread(process);
-
-
+		PETHREAD thread = GetFirstThread(process); 
 		//挂起线程
-		KeSuspendThread(thread);
-
+		KeSuspendThread(thread);  
 		//获取寄存器上下文
-		KTRAP_FRAME context = MyGetThreadContext(thread);
-		//设置rip指向shellcode 地址
-		*(PULONG64)(shellcode_addr + shellcode_len - 8) = context.Rip;
-
-		context.Rip = shellcode_addr;
+		KTRAP_FRAME context = MyGetThreadContext(thread); 
+		ShellcodeAddress = (ULONG64)r3Addr + sizeof(ShellcodePacket);
+		*(PULONG64)(ShellcodePacket + 7) = ShellcodeAddress;
+		*(PULONG64)(ShellcodePacket + 25) = context.Rip;
+		Utils::kmemcpy((PVOID)r0Addr, ShellcodePacket, sizeof(ShellcodePacket));
+		Utils::kmemcpy((PVOID)(r0Addr + sizeof(ShellcodePacket)), (PVOID)shellcode_addr, shellcode_len); 
+		context.Rip = r3Addr;
 		MySetThreadContext(thread, context);
 
 		//恢复线程

@@ -377,7 +377,7 @@ VOID ConvertString2Pattern(PCHAR pattern, PCHAR mask, PCHAR outPattern) {
 }
 VOID ConvertCEPattern(PCHAR CE_XDBG_pattern, PCHAR mask, PCHAR outPattern)
 {
-	return  ;
+	return;
 }
 ULONG _SearchPattern(ULONG pid, PCHAR szModuleName, PCHAR pattern, PCHAR mask, PULONG64 retAddr)
 {
@@ -397,7 +397,7 @@ ULONG _SearchPattern(ULONG pid, PCHAR szModuleName, PCHAR pattern, PCHAR mask, P
 }
 
 
-ULONG _InjectX64DLL(ULONG pid, PCHAR dllFilePath) {
+ULONG _InjectX64DLL(ULONG pid, PCHAR dllFilePath, UCHAR type) {
 	char prefix[] = "\\??\\";
 	int totalLen = sizeof(prefix) + strlen(dllFilePath) * sizeof(char);
 	PCHAR dosPath = (PCHAR)VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
@@ -410,6 +410,7 @@ ULONG _InjectX64DLL(ULONG pid, PCHAR dllFilePath) {
 	INJECT_DLL_DATA injectDLL = { 0 };
 	injectDLL.PID = pid;
 	injectDLL.dllFilePath = dosPath;
+	injectDLL.type = type;
 	DWORD status_code = HookComm(INJECT_DLL, &injectDLL, sizeof(INJECT_DLL_DATA));
 	VirtualFree(dosPath, USN_PAGE_SIZE, MEM_RELEASE);
 	return status_code;
@@ -437,7 +438,7 @@ ULONG _WriteDLL(ULONG PID, PCHAR dllFilePath, PULONG64 entryPoint, PULONG64 R3_I
 	VirtualFree(dosPath, USN_PAGE_SIZE, MEM_RELEASE);
 	return  status_code;
 };
-ULONG _GetModuleExportAddr2(ULONG pid, ULONG64 ModuleBase, PCHAR ExportFuncName, PULONG64 funcAddr) { 
+ULONG _GetModuleExportAddr2(ULONG pid, ULONG64 ModuleBase, PCHAR ExportFuncName, PULONG64 funcAddr) {
 	MODULE_BASE_EXPORT_DATA expoetData = { 0 };
 	expoetData.PID = pid;
 	expoetData.ModuleBase = ModuleBase;

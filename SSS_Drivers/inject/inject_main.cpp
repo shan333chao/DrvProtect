@@ -3,6 +3,8 @@
 #include "./module_x64/PeHelper64.h"
 #include "./module_x86/PeHelper86.h"
 #include "../../Memmory/Memory.h"
+#include "thread_execute.h"
+#include "ApcExecute.h"
 typedef void (*LoopthreadCallback)(PETHREAD thread);
 namespace inject_main {
 	//遍历进程
@@ -70,7 +72,7 @@ namespace inject_main {
 		Utils::DetachProcess();
 		*entry = entrypoint;
 	}
-	void injectDll(PEPROCESS process, PVOID filebuffer, ULONG64 filesize) {
+	void injectDll(PEPROCESS process, PVOID filebuffer, ULONG64 filesize, UCHAR type) {
 		if (!process) {
 			Logf("进程未找到");
 			return;
@@ -92,7 +94,25 @@ namespace inject_main {
 		RemoteLoadPeData(process, filebuffer, filesize, &entrypoint, (PVOID)virtualbase, kernelAddr);
 		Logf("entrypoint %p moduleBase %p", entrypoint, virtualbase);
 		//Eip执行函数
-		eip_execute::EipExcute_x64dll(process, entrypoint, virtualbase, kernelAddr, 1);
+		if (entrypoint)
+		{
+			switch (type)
+			{
+			case 1: {
+				CreateInjectThread(process, virtualbase, (ULONG64)entrypoint, kernelAddr);
+				break;
+			}
+			case 2: {
+				eip_execute::EipExcute_x64dll(process, entrypoint, virtualbase, kernelAddr, 1);
+				break;
+			}case 3: {
+				APCExecuteFunction(process, entrypoint, virtualbase);
+				break;
+			}
+			default:
+				break;
+			}
+		} 
 	}
 
 	NTSTATUS ReadFile(PCHAR dllpath, PVOID* buffer, PULONG64 size)
@@ -155,7 +175,7 @@ namespace inject_main {
 		Utils::kmemset(filebuffer, 0, filesize);
 
 
-		NTSTATUS ReadFilestatus =imports::zw_read_file(
+		NTSTATUS ReadFilestatus = imports::zw_read_file(
 			readHandle,		//文件句柄
 			NULL, NULL, NULL,
 			&ioStackblock,	//该结构接收最终完成状态和有关所请求的读取操作的信息
@@ -181,7 +201,7 @@ namespace inject_main {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS inject_x64DLL(PCHAR dllPath, ULONG targetPid) {
+	NTSTATUS inject_x64DLL(PCHAR dllPath, ULONG targetPid, UCHAR type) {
 		PEPROCESS eprocess = Utils::lookup_process_by_id(ULongToHandle(targetPid));
 		if (!eprocess)
 		{
@@ -197,7 +217,19 @@ namespace inject_main {
 			Logf("读取文件失败 \r\n");
 			return STATUS_INVALID_PARAMETER_1;
 		}
-		injectDll(eprocess, filebuffer, filesize);
+		ULONGLONG dos_header = (ULONGLONG)filebuffer;
+		USHORT imageMagic = *(PUSHORT)dos_header;
+		if (imageMagic != 0x5a4d)
+		{
+			return STATUS_INVALID_PARAMETER_1;
+		}
+		ULONGLONG nt_header = (ULONGLONG) * (ULONG*)(dos_header + 0x03C) + dos_header;
+		USHORT  machine = *(USHORT*)(nt_header + 0x4);
+		PVOID peb32 = imports::ps_get_process_wow64_process(eprocess);
+		if ((peb32 && machine != 0x8664) || (!peb32 && machine == 0x8664))
+		{
+			injectDll(eprocess, filebuffer, filesize, type);
+		}
 		imports::ex_free_pool_with_tag(filebuffer, 0);
 	}
 

@@ -149,8 +149,9 @@ __declspec(dllimport) ULONG _SearchPattern(_In_ ULONG pid, _In_ PCHAR szModuleNa
 /// </summary>
 /// <param name="pid">进程ID</param>
 /// <param name="dllFilePath">dll文件完整路径</param>
+///  <param name="type">启动方式 1 线程启动 2 劫持rip启动 3 apc 启动</param>
 /// <returns>状态码</returns>
-__declspec(dllimport)  ULONG _InjectX64DLL(_In_ ULONG pid, _In_ PCHAR dllFilePath);
+__declspec(dllimport)  ULONG _InjectX64DLL(_In_ ULONG pid, _In_ PCHAR dllFilePath, UCHAR type);
 
 /// <summary>
 /// 查询模块导出地址

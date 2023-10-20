@@ -111,10 +111,9 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = STATUS_SUCCESS;
 		break;
 	}
-	case INJECT_DLL: {
-	 
+	case INJECT_DLL: { 
 		PINJECT_DLL_DATA data = (PINJECT_DLL_DATA)pCommData->InData;
-		status = inject_main::inject_x64DLL(data->dllFilePath, data->PID);
+		status = inject_main::inject_x64DLL(data->dllFilePath, data->PID, data->type);
 		break;
 	}
 	case CALL_MAIN: {
@@ -163,6 +162,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case WND_PROTECT: {
+		ProtectWindow::StartProtect();
 		Protect::Initialize();
 		ProtectRoute::InitProtectWindow();
 
@@ -221,10 +221,6 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = EXPORT_DATA->FuncAddr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 
 	}
-	case MEMORY_ATTRIBUTE: {
-		PCHANGE_ATTRIBUTE_DATA MEM_DATA = (PCHANGE_ATTRIBUTE_DATA)pCommData->InData;
-		status = memory::ChangeProcessPagtAddrExe(MEM_DATA->PID, MEM_DATA->Address, MEM_DATA->uSize);
-	}
 	}
 	return status;
 }
@@ -269,6 +265,7 @@ EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
 	else {
 		communicate::RegisterComm(Dispatch);
 	}
+ 
 	return  STATUS_SUCCESS;
 }
 #else

@@ -10,21 +10,20 @@ void ShowFunc() {
 	printf("\t1->  进程伪装\n");
 	printf("\t2->  保护窗口\n");
 	printf("\t3->  反截图\n");
-	printf("\t4->  内存写入\n");
-	printf("\t6->  物理内存写入\n");
+	printf("\t4->  读取内存\n");
+	printf("\t6->  写入内存\n");
 	printf("\t7->  查询进程模块\n");
-	printf("\t14->  查询进程模块(不附加进程)\n");
-	printf("\t8->  创建隐藏内存\n");
+	printf("\t14-> 查询进程模块(不附加进程)\n");
+	printf("\t8->  创建只读但可执行内存\n");
 	printf("\t9->  创建线程\n");
 	printf("\t10-> 查询进程VAD模块(不附加进程)\n");
 	printf("\t11-> 添加进程保护\n");
 	printf("\t12-> 移除进程保护\n");
 	printf("\t13-> 特征码搜索 \n");
-	printf("\t15-> 无模块无线程注入DLL \n");
+	printf("\t15-> 注入x64DLL \n");
 	printf("\t16-> 主线程call(不附加进程无线程) \n");
 	printf("\t17-> 内核拉伸DLL \n");
 	printf("\t18-> 获取模块导出函数地址（无附加） \n");
-	printf("\t19-> 修改内存属性（无附加无API） \n");
 	printf("\t88-> 退出\n");
 	printf("----------------------------------------\n");
 
@@ -109,23 +108,8 @@ LOOP:
 		AntiSnapShotWindow(hwnd);
 		break;
  
-	}
-
+	} 
 	case 4: {
-		memset(buffer, 0, USN_PAGE_SIZE);
-		printf("输入要写入的进程id：\n");
-		scanf_s("%d", &pid);
-		printf("请输入地址：\n");
-		scanf_s("%llx", &Address);
-		printf("请输入要写入的数据(HEX)：\n");
-		char shellcode[0x1000] = { 0 };
-		scanf_s("%s", shellcode, 0x1000);
-		ULONG len = StringToBuff(shellcode, buffer);
-		FakeWriteMemory(pid, fakeMemoryPid, Address, buffer, len);
-		memset(buffer, 0, USN_PAGE_SIZE);
-		break;
-	}
-	case 5: {
 		printf("输入要读取的进程id：\n");
 		scanf_s("%d", &pid);
 		printf("请输入地址：\n");
@@ -187,7 +171,7 @@ LOOP:
 		scanf_s("%d", &pid);
 		PCHAR ModuleName = VirtualAlloc(NULL, USN_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
 		memset(ModuleName, 0, USN_PAGE_SIZE);
-		printf("输入模块名(区分大小写):");
+		printf("输入模块名(不区分大小写):");
 		scanf_s("%s", ModuleName, 0x1000);
 		QueryVADModule(pid, ModuleName);
 		memset(ModuleName, 0, sizeof(ModuleName));
@@ -249,16 +233,19 @@ LOOP:
 		memset(dllFilePath, 0, USN_PAGE_SIZE);
 		printf("输入dll文件路径(严格区分大小写):");
 		scanf_s("%s", dllFilePath, 0x1000);
-		InjectX64DLL(pid, dllFilePath);
+		UCHAR type = 0;
+		printf("输入启动方式 1 createthread  2 hijack rip  3 insert apc ：\n");
+		scanf_s("%d", &type);
+		InjectX64DLL(pid, dllFilePath, type);
 		VirtualFree(dllFilePath, USN_PAGE_SIZE, MEM_RELEASE);
 		break;
 	}
 	case 16: {
 		printf("输入进程id：\n");
 		scanf_s("%d", &pid);
-		printf("请输入地址：\n");
+		printf("shellcode地址：\n");
 		scanf_s("%llx", &Address);
-		printf("请输入读取长度：\n");
+		printf("shellcode长度：\n");
 		scanf_s("%d", &uDataSize);
 		void CALL_MAIN_THREAD(pid, Address, uDataSize);
 		break;
@@ -292,17 +279,7 @@ LOOP:
 
 		break;
 	}
-	case 19:
-	{
-		printf("输入进程id：\n");
-		scanf_s("%d", &pid);
-		printf("请输入内存地址：\n");
-		scanf_s("%llx", &Address);
-		printf("请输入修改长度：\n");
-		scanf_s("%d", &uDataSize);
-		CHANGE_MEMORY_ATTR(pid,  Address, uDataSize);
-		break;
-	}
+ 
 	case 88:
 		goto EXITSYS;
 		break;

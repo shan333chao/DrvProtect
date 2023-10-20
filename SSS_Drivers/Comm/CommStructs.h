@@ -146,10 +146,21 @@ typedef struct _PATTEERN_DATA {
 	ULONGLONG addr;
 }PATTEERN_DATA,*PPATTEERN_DATA;
 
-//注入dll
+/// <summary>
+/// 注入dll
+/// 
+/// pid 进程id ，
+/// dllPath dll路径，
+/// type 启动方式，
+///			1 线程启动
+///			2 劫持rip启动
+///			3 apc启动
+/// </summary>
 typedef struct _INJECT_DLL_DATA {
 	ULONG PID;
 	PCHAR dllFilePath; 
+
+	UCHAR type;
 }INJECT_DLL_DATA,*PINJECT_DLL_DATA;
 
 

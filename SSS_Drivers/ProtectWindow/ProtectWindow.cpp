@@ -943,7 +943,7 @@ namespace ProtectWindow {
 			return STATUS_SUCCESS;
 		}
  
-		StartProtect();
+ 
 		UNICODE_STRING str = { 0 };
 		//RtlInitUnicodeString(&str, L"NtCreateFile");
 		//g_NtCreateFile = (FNtCreateFile)MmGetSystemRoutineAddress(&str);
@@ -1075,10 +1075,10 @@ namespace ProtectWindow {
 		//UNICODE_STRING str = { 0 };
 		//RtlInitUnicodeString(&str, L"NtQueryInformationProcess");
 		//g_NtQueryInformationProcess = (FNtQueryInformationProcess)MmGetSystemRoutineAddress(&str);
-		MODE old = functions::SetThreadPrevious(PsGetCurrentThread(), KernelMode);
+		MODE old = functions::SetThreadPrevious(imports::ke_get_current_thread(), KernelMode);
 
 		BOOLEAN ret = k_hook::initialize(ssdt_call_back) && k_hook::start();
-		functions::SetThreadPrevious(PsGetCurrentThread(), old);
+		functions::SetThreadPrevious(imports::ke_get_current_thread(), old);
 
 		return ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 

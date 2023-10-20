@@ -23,7 +23,7 @@ namespace VadModules {
 						ULONG_PTR fileObj = ((Root->Subsection->ControlArea->FilePointer.Value >> 4) << 4);
 						if (fileObj)
 						{
-							if (Utils::kwcsstr(((PFILE_OBJECT)fileObj)->FileName.Buffer, szModuleName) != 0) {
+							if (_wcsstri_imp(((PFILE_OBJECT)fileObj)->FileName.Buffer, szModuleName) != 0) {
 								pBuffer->VadInfos[pBuffer->nCnt].pFileObject = fileObj;
 
 								// 得到起始页与结束页
@@ -103,7 +103,7 @@ namespace VadModules {
 						ULONG_PTR fileObj = ((Root->Subsection->ControlArea->FilePointer.Value >> 4) << 4);
 						if (fileObj)
 						{
-							if (Utils::kwcsstr(((PFILE_OBJECT)fileObj)->FileName.Buffer, szModuleName) != 0) {
+							if (_wcsstri_imp(((PFILE_OBJECT)fileObj)->FileName.Buffer, szModuleName) != 0) {
 								pBuffer->VadInfos[pBuffer->nCnt].pFileObject = fileObj;
 								// 得到起始页与结束页
 								ULONG64 endptr = (ULONG64)Root->Core.EndingVpnHigh;
@@ -198,7 +198,7 @@ namespace VadModules {
 				PFILE_OBJECT  file = (PFILE_OBJECT)vad.pBuffer->VadInfos[i].pFileObject;
 				Log("Flags = %wZ \r\n", file->FileName);
 
-				if (Utils::kwcsstr(file->FileName.Buffer, moduleNameMem.Buffer) != 0)
+				if (_wcsstri_imp(file->FileName.Buffer, moduleNameMem.Buffer) != 0)
 				{
 					*pModuleBase = vad.pBuffer->VadInfos[i].startVpn;
 					*moduleSize = (vad.pBuffer->VadInfos[i].endVpn - vad.pBuffer->VadInfos[i].startVpn) ^ 0xfff;

@@ -324,9 +324,9 @@ void SearchPattern(ULONG pid, PCHAR szModuleName, PCHAR pattern, PCHAR mask)
 	getchar();
 }
 
-void InjectX64DLL(ULONG pid, PCHAR dllFilePath) {
+void InjectX64DLL(ULONG pid, PCHAR dllFilePath,UCHAR type) {
  
-	DWORD status_code =_InjectX64DLL(pid, dllFilePath);
+	DWORD status_code =_InjectX64DLL(pid, dllFilePath,type);
 	if (status_code > 0)
 	{
 		Logp("×¢Èë³ö´í ´íÎóÂë %08x\n", status_code);
