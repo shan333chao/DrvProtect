@@ -13,26 +13,7 @@ ULONG InstallDriver();
 /// <param name="regCode">注册码</param>
 /// <returns></returns>
 __declspec(dllimport) ULONG   _InitReg(_In_ PCHAR regCode);
-/// <summary>
-/// 伪装读取内存
-/// </summary>
-/// <param name="PID">进程ID</param>
-/// <param name="fakePid">伪装进程ID</param>
-/// <param name="Address">内存地址</param>
-/// <param name="buffer">要读到的地址</param>
-/// <param name="uDataSize">读取的字节长度</param>
-/// <returns>状态码</returns>
-__declspec(dllimport) ULONG _FakeReadMemory(_In_ ULONG PID, _In_ ULONG fakePid, _In_ PVOID Address, _Out_ PVOID buffer, _In_ ULONG uDataSize);
-/// <summary>
-/// 伪装写入内存
-/// </summary>
-/// <param name="PID">进程id</param>
-/// <param name="fakePid">伪装进程id</param>
-/// <param name="Address">写入的地址</param>
-/// <param name="pValBuffer">要写入的数据的地址</param>
-/// <param name="length">数据字节长度</param>
-/// <returns>状态码</returns>
-__declspec(dllimport) ULONG _FakeWriteMemory(_In_ ULONG		PID, _In_ ULONG fakePid, _In_ ULONG64	Address, _In_ PVOID pValBuffer, _In_ ULONG length);
+
 /// <summary>
 /// 读取物理内存
 /// </summary>

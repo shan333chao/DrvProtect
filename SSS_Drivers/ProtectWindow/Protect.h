@@ -47,7 +47,7 @@ namespace Protect {
 	BOOLEAN AddProtectPid(ULONG PID, ULONG fakeID);
 	ULONG32 IsProtectWND(HANDLE hwnd, HANDLE child, HANDLE hwndThread, HANDLE currentThread);
 	BOOLEAN AddProtectWND(HANDLE hwnd, HANDLE threadId);
-	NTSTATUS AddProtectWNDBatch(PULONG32 hwnds, ULONG32 length, HANDLE threadId);
+	NTSTATUS AddProtectWNDBatch(ULONG32 hwnds, HANDLE threadId);
 
 
 }

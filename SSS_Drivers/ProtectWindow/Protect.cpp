@@ -108,7 +108,7 @@ namespace Protect {
 	BOOLEAN AddProtectPid(ULONG PID, ULONG fakeID)
 	{
 		PEPROCESS TargetProcess = 0;
-		TargetProcess=Utils::lookup_process_by_id((HANDLE)PID);
+		TargetProcess = Utils::lookup_process_by_id((HANDLE)PID);
 		if (!TargetProcess)
 		{
 			return FALSE;
@@ -170,25 +170,21 @@ namespace Protect {
 		return TRUE;
 	}
 
-	NTSTATUS AddProtectWNDBatch(PULONG32 hwnds, ULONG32 length, HANDLE threadId)
+	NTSTATUS AddProtectWNDBatch(ULONG32 hwnds, HANDLE threadId)
 	{
 
-		PPROTECT_HWND protect = (PPROTECT_HWND)imports::ex_allocate_pool_with_tag(NonPagedPool, sizeof(PROTECT_HWND) * length, PROTECT_TAG);
+		PPROTECT_HWND protect = (PPROTECT_HWND)imports::ex_allocate_pool_with_tag(NonPagedPool, sizeof(PROTECT_HWND), PROTECT_TAG);
 		if (!protect)
 		{
 			Log("imports::ex_allocate_pool_with_tag PPROTECT_HWND failed");
 			return STATUS_UNSUCCESSFUL;
 		}
-		Utils::kmemset(protect, 0, sizeof(PPROTECT_HWND) * length);
+	 
 		imports::ke_acquire_guarded_mutex(&HwndMutex);
-		for (size_t i = 0; i < length; i++)
-		{
-			protect->hwnd = (HANDLE)hwnds[i];
-			protect->thread = threadId;
-			Log("hwnd %x \r\n", hwnds[i]);
-			InsertTailList(&ProtectHWNDS, &protect->ProtectHWNDS);
-			protect += i;
-		}
+		protect->hwnd = (HANDLE)hwnds;
+		protect->thread = threadId;
+		Log("hwnd %x \r\n", hwnds);
+		InsertTailList(&ProtectHWNDS, &protect->ProtectHWNDS);
 		imports::ke_release_guarded_mutex(&HwndMutex);
 		return STATUS_SUCCESS;
 	}

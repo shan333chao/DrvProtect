@@ -7,60 +7,51 @@ C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(48,26): warnin
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(131,1): warning C4273: “_InitReg”: dll 链接不一致
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(15,31): message : 参见“_InitReg”的前一个定义
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(143,28): warning C4244: “=”: 从“LONGLONG”转换到“ULONG”，可能丢失数据
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(177,1): warning C4273: “_FakeReadMemory”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(25,29): message : 参见“_FakeReadMemory”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(197,1): warning C4273: “_FakeWriteMemory”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(35,29): message : 参见“_FakeWriteMemory”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(217,1): warning C4273: “_PhyReadMemory”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(44,29): message : 参见“_PhyReadMemory”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(229,1): warning C4273: “_PhyWriteMemory”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(53,29): message : 参见“_PhyWriteMemory”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(240,56): warning C4273: “_ProtectProcess”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(61,29): message : 参见“_ProtectProcess”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(258,1): warning C4273: “_AntiSnapShotWindow”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(74,29): message : 参见“_AntiSnapShotWindow”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(269,1): warning C4273: “_ProtectWindow”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(67,29): message : 参见“_ProtectWindow”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(280,1): warning C4273: “_QueryModule”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(85,29): message : 参见“_QueryModule”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(298,1): warning C4273: “_AllocateMem”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(107,29): message : 参见“_AllocateMem”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(314,1): warning C4273: “_QueryVADModule”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(96,29): message : 参见“_QueryVADModule”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(336,1): warning C4273: “_CreateMyThread”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(117,29): message : 参见“_CreateMyThread”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(347,1): warning C4273: “_ProtectProcessR3_Add”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(125,29): message : 参见“_ProtectProcessR3_Add”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(355,43): warning C4273: “_ProtectProcessR3_Remove”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(132,29): message : 参见“_ProtectProcessR3_Remove”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(363,73): warning C4273: “ConvertString2Pattern”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(191,28): message : 参见“ConvertString2Pattern”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(367,36): warning C4098: “ConvertString2Pattern”:“void”函数返回值
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(379,1): warning C4273: “ConvertCEPattern”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(200,28): message : 参见“ConvertCEPattern”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(383,1): warning C4273: “_SearchPattern”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(144,29): message : 参见“_SearchPattern”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(400,63): warning C4273: “_InjectX64DLL”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(154,30): message : 参见“_InjectX64DLL”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(419,114): warning C4273: “_WriteDLL”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(183,29): message : 参见“_WriteDLL”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(441,101): warning C4273: “_GetModuleExportAddr2”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(172,29): message : 参见“_GetModuleExportAddr2”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(456,79): warning C4273: “_CALL_MAIN_THREAD”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(220,29): message : 参见“_CALL_MAIN_THREAD”的前一个定义
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(468,69): warning C4273: “_CHANGE_MEMORY_ATTR”: dll 链接不一致
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(210,29): message : 参见“_CHANGE_MEMORY_ATTR”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(178,1): warning C4273: “_PhyReadMemory”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(25,29): message : 参见“_PhyReadMemory”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(190,1): warning C4273: “_PhyWriteMemory”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(34,29): message : 参见“_PhyWriteMemory”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(201,56): warning C4273: “_ProtectProcess”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(42,29): message : 参见“_ProtectProcess”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(219,1): warning C4273: “_AntiSnapShotWindow”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(55,29): message : 参见“_AntiSnapShotWindow”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(227,1): warning C4273: “_ProtectWindow”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(48,29): message : 参见“_ProtectWindow”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(235,1): warning C4273: “_QueryModule”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(66,29): message : 参见“_QueryModule”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(253,1): warning C4273: “_AllocateMem”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(88,29): message : 参见“_AllocateMem”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(269,1): warning C4273: “_QueryVADModule”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(77,29): message : 参见“_QueryVADModule”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(291,1): warning C4273: “_CreateMyThread”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(98,29): message : 参见“_CreateMyThread”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(302,1): warning C4273: “_ProtectProcessR3_Add”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(106,29): message : 参见“_ProtectProcessR3_Add”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(310,43): warning C4273: “_ProtectProcessR3_Remove”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(113,29): message : 参见“_ProtectProcessR3_Remove”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(318,73): warning C4273: “ConvertString2Pattern”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(172,28): message : 参见“ConvertString2Pattern”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(322,36): warning C4098: “ConvertString2Pattern”:“void”函数返回值
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(334,1): warning C4273: “ConvertCEPattern”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(181,28): message : 参见“ConvertCEPattern”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(338,1): warning C4273: “_SearchPattern”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(125,29): message : 参见“_SearchPattern”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(355,63): warning C4273: “_InjectX64DLL”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(135,30): message : 参见“_InjectX64DLL”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(374,114): warning C4273: “_WriteDLL”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(164,29): message : 参见“_WriteDLL”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(396,101): warning C4273: “_GetModuleExportAddr2”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(153,29): message : 参见“_GetModuleExportAddr2”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(411,79): warning C4273: “_CALL_MAIN_THREAD”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(201,29): message : 参见“_CALL_MAIN_THREAD”的前一个定义
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.c(423,69): warning C4273: “_CHANGE_MEMORY_ATTR”: dll 链接不一致
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\Caller.h(191,29): message : 参见“_CHANGE_MEMORY_ATTR”的前一个定义
   CommR3.c
 C:\DriverCodes\HideDriver\NickolasZhao\SSS_Drivers\Comm\CommStructs.h(59,2): warning C4091: “typedef ”: 没有声明变量时忽略“_COMM_TYPE”的左侧
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(47,23): warning C4244: “=”: 从“ULONG”转换到“UCHAR”，可能丢失数据
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(49,30): warning C4244: “=”: 从“ULONG”转换到“UCHAR”，可能丢失数据
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(52,49): warning C4047: “函数”:“DWORD”与“void *”的间接级别不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(52,45): warning C4024: “DeviceIoControl”: 形参和实参 2 的类型不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(54,35): warning C4244: “return”: 从“NTSTATUS”转换到“BOOLEAN”，可能丢失数据
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(83,22): warning C4244: “=”: 从“ULONG”转换到“UCHAR”，可能丢失数据
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(85,29): warning C4244: “=”: 从“ULONG”转换到“UCHAR”，可能丢失数据
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(88,43): warning C4047: “函数”:“LPARAM”与“COMM_DATA *”的间接级别不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(88,34): warning C4024: “SetMessageExtraInfo”: 形参和实参 1 的类型不同
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(21,22): warning C4244: “=”: 从“ULONG”转换到“UCHAR”，可能丢失数据
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(23,29): warning C4244: “=”: 从“ULONG”转换到“UCHAR”，可能丢失数据
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(26,43): warning C4047: “函数”:“LPARAM”与“COMM_DATA *”的间接级别不同
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Comm\CommR3.c(26,34): warning C4024: “SetMessageExtraInfo”: 形参和实参 1 的类型不同
   inject.c
   main.c
 C:\DriverCodes\HideDriver\NickolasZhao\SSS_Drivers\Comm\CommStructs.h(59,2): warning C4091: “typedef ”: 没有声明变量时忽略“_COMM_TYPE”的左侧
@@ -70,7 +61,6 @@ C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\main.c(85,22): warning C4020
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\main.c(108,21): warning C4013: “AntiSnapShotWindow”未定义；假设外部返回 int
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\main.c(116,11): warning C4477: “scanf_s”: 格式字符串“%llx”需要类型“unsigned __int64 *”的参数，但可变参数 1 拥有了类型“PVOID *”
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\main.c(129,11): warning C4477: “scanf_s”: 格式字符串“%llx”需要类型“unsigned __int64 *”的参数，但可变参数 1 拥有了类型“PVOID *”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\main.c(156,35): warning C4020: “AllocateMem”: 实参太多
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\main.c(166,29): warning C4047: “函数”:“PUCHAR”与“ULONG”的间接级别不同
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\main.c(166,23): warning C4024: “CreateMyThread”: 形参和实参 2 的类型不同
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\main.c(166,37): warning C4047: “函数”:“ULONG”与“PUCHAR”的间接级别不同
@@ -212,35 +202,17 @@ C:\Windows Kits\10\Include\10.0.19041.0\um\winnt.h(2574): message : 参见“STA
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(70,3): warning C4473: “printf”: 没有为格式字符串传递足够的参数
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(70,3): message : 占位符和其参数预计 1 可变参数，但提供的却是 0 参数
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(70,3): message : 缺失的可变参数 1 为格式字符串“%d”所需
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(120,60): warning C4047: “函数”:“ULONG64”与“PVOID”的间接级别不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(120,53): warning C4024: “_FakeWriteMemory”: 形参和实参 3 的类型不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(203,29): warning C4028: 形参 2 与声明不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(203,37): warning C4047: “函数”:“LPARAM”与“FWindowInfo *”的间接级别不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(203,31): warning C4024: “EnumWindows”: 形参和实参 2 的类型不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(210,3): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 2 拥有了类型“HWND”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(254,2): warning C4477: “printf”: 格式字符串“%p”需要类型“void *”的参数，但可变参数 2 拥有了类型“ULONG64”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(254,2): warning C4313: “printf”: 格式字符串中的“%p”与“ULONG64”类型的参数 2 冲突
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(269,2): warning C4477: “printf”: 格式字符串“%p”需要类型“void *”的参数，但可变参数 2 拥有了类型“ULONG64”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(269,2): warning C4313: “printf”: 格式字符串中的“%p”与“ULONG64”类型的参数 2 冲突
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(280,3): warning C4033: “AllocateMem”必须返回值
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(282,2): warning C4477: “printf”: 格式字符串“%p”需要类型“void *”的参数，但可变参数 1 拥有了类型“ULONG64”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(282,2): warning C4313: “printf”: 格式字符串中的“%p”与“ULONG64”类型的参数 1 冲突
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(283,13): warning C4047: “return”:“PUCHAR”与“ULONG64”的间接级别不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(294,32): warning C4022: “_PhyWriteMemory”: 指针与实参 2 不匹配
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(301,32): warning C4022: “_CreateMyThread”: 指针与实参 2 不匹配
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(323,2): warning C4477: “printf”: 格式字符串“%p”需要类型“void *”的参数，但可变参数 1 拥有了类型“ULONG64”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(323,2): warning C4313: “printf”: 格式字符串中的“%p”与“ULONG64”类型的参数 1 冲突
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(351,2): warning C4477: “printf”: 格式字符串“%p”需要类型“void *”的参数，但可变参数 1 拥有了类型“ULONG64”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(351,2): warning C4313: “printf”: 格式字符串中的“%p”与“ULONG64”类型的参数 1 冲突
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(352,2): warning C4477: “printf”: 格式字符串“%p”需要类型“void *”的参数，但可变参数 1 拥有了类型“ULONG64”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(352,2): warning C4313: “printf”: 格式字符串中的“%p”与“ULONG64”类型的参数 1 冲突
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(353,2): warning C4477: “printf”: 格式字符串“%p”需要类型“void *”的参数，但可变参数 1 拥有了类型“ULONG64”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(353,2): warning C4313: “printf”: 格式字符串中的“%p”与“ULONG64”类型的参数 1 冲突
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(373,59): warning C4047: “函数”:“ULONG64”与“PCHAR”的间接级别不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(373,49): warning C4024: “_GetModuleExportAddr2”: 形参和实参 2 的类型不同
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(379,2): warning C4477: “printf”: 格式字符串“%p”需要类型“void *”的参数，但可变参数 3 拥有了类型“ULONG64”
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(379,2): warning C4313: “printf”: 格式字符串中的“%p”与“ULONG64”类型的参数 3 冲突
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(389,3): warning C4033: “CHANGE_MEMORY_ATTR”必须返回值
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(155,29): warning C4028: 形参 2 与声明不同
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(155,37): warning C4047: “函数”:“LPARAM”与“FWindowInfo *”的间接级别不同
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(155,31): warning C4024: “EnumWindows”: 形参和实参 2 的类型不同
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(162,3): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 2 拥有了类型“HWND”
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(233,3): warning C4033: “AllocateMem”必须返回值
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(236,13): warning C4047: “return”:“PUCHAR”与“ULONG64”的间接级别不同
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(247,32): warning C4022: “_PhyWriteMemory”: 指针与实参 2 不匹配
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(254,32): warning C4022: “_CreateMyThread”: 指针与实参 2 不匹配
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(326,59): warning C4047: “函数”:“ULONG64”与“PCHAR”的间接级别不同
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(326,49): warning C4024: “_GetModuleExportAddr2”: 形参和实参 2 的类型不同
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(342,3): warning C4033: “CHANGE_MEMORY_ATTR”必须返回值
   ntp_client.c
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\ntp_client\ntp_client.c(63,18): warning C4244: “函数”: 从“time_t”转换到“unsigned int”，可能丢失数据
 C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\ntp_client\ntp_client.c(88,63): warning C4133: “函数”: 从“timeval *”到“const timeval *”的类型不兼容
@@ -252,7 +224,7 @@ C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\service\Service.c(66,33): wa
     正在创建库 C:\DriverCodes\HideDriver\NickolasZhao\Release\DiviceClient_x86.lib 和对象 C:\DriverCodes\HideDriver\NickolasZhao\Release\DiviceClient_x86.exp
   正在生成代码
   Previous IPDB not found, fall back to full compilation.
-C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(284): warning C4715: “AllocateMem”: 不是所有的控件路径都返回值
-  All 70 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\Example.c(237): warning C4715: “AllocateMem”: 不是所有的控件路径都返回值
+  All 67 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   已完成代码的生成
   DiviceClient.vcxproj -> C:\DriverCodes\HideDriver\NickolasZhao\Release\DiviceClient_x86.exe

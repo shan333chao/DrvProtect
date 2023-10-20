@@ -96,7 +96,7 @@ LOOP:
 
 	case 2: {
 		printf("输入要保护的主窗口句柄(HEX)：\n");
-		scanf_s("%08x", &hwnd);
+		scanf_s("%d", &hwnd);
 		ProtectWindow(hwnd);
 		break;
 	}
@@ -104,7 +104,7 @@ LOOP:
 	case 3:
 	{
 		printf("输入要反截图的主窗口句柄：\n");
-		scanf_s("%08x", &hwnd);
+		scanf_s("%d", &hwnd);
 		AntiSnapShotWindow(hwnd);
 		break;
  
@@ -153,7 +153,7 @@ LOOP:
 		scanf_s("%d", &pid);
 		printf("输入申请的内存大小(DEC)：\n");
 		scanf_s("%d", &uDataSize);
-		AllocateMem(pid, fakeMemoryPid, uDataSize);
+		AllocateMem(pid,  uDataSize);
 		break;
 	}
 	case 9: {

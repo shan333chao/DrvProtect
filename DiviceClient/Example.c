@@ -79,55 +79,7 @@ void TestComm(PVOID regCode)
 
 
 }
-
-void FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, ULONG uDataSize)
-{
-
-	PVOID pValBuffer = VirtualAlloc(NULL, uDataSize, MEM_COMMIT, PAGE_READWRITE);
-	DWORD status_code = _FakeReadMemory(PID, fakePid, Address, pValBuffer, uDataSize);
-	switch (status_code)
-	{
-	case STATUS_COMMON_ALLOC_FAILED:
-		Logp("分配内存错误 :\n");
-	default:
-		break;
-	}
-
-	PUCHAR data = (PUCHAR)pValBuffer;
-	Logp("读到的数据:\n");
-	for (size_t i = 0; i < uDataSize; i++)
-	{
-		if (!(i % 16))
-		{
-			Logp("\n");
-		}
-		printf("%02x ", data[i]);
-	}
-	Logp("\n");
-	VirtualFree(pValBuffer, 0, MEM_RELEASE);
-
-}
-
-void FakeWriteMemory(ULONG PID, ULONG fakePid, PVOID Address, PUCHAR pValBuffer, ULONG length)
-{
-	RW_MEM_DATA TestMEM = { 0 };
-	TestMEM.pValBuffer = pValBuffer;
-	TestMEM.uDataSize = length;
-	TestMEM.PID = PID;
-	TestMEM.FakePID = fakePid;
-	TestMEM.Address = Address;
-
-	DWORD status_code = _FakeWriteMemory(PID, fakePid, Address, pValBuffer, length);
-	if (status_code)
-	{
-		Logp("写入成功:\n");
-	}
-	else {
-		Logp("写入失败 %08x:\n", status_code);
-	}
-
-
-}
+ 
 
 void PhyReadMemory(ULONG PID, PVOID Address, ULONG uDataSize)
 {
@@ -245,13 +197,14 @@ void QueryModule(ULONG pid, PCHAR szModuleName, UCHAR type)
 {
 	ULONG uModuleSize = 0;
 	ULONG64 moduleBase = 0;
+	printf("szModuleName %s \n", szModuleName);
 	DWORD status_code = _QueryModule(pid, szModuleName, &moduleBase, &uModuleSize, type);
 	if (status_code)
 	{
 		Logp("查询模块失败 错误码 %08x\n", status_code);
 		return;
 	}
-	Logp("\n模块名: %s \n 模块基址: 0x%p \n 模块大小: 0x%08x\n", szModuleName, moduleBase, uModuleSize);
+	Logp("\n模块名: %s \n 模块基址: 0x%llx \n 模块大小: 0x%08x\n", szModuleName, moduleBase, uModuleSize);
 }
 
 void QueryVADModule(ULONG pid, PCHAR szModuleName)
@@ -266,7 +219,7 @@ void QueryVADModule(ULONG pid, PCHAR szModuleName)
 		Logp("查询模块失败 错误码 %08x\n", status_code);
 		return;
 	}
-	Logp("\n模块名: %s \n 模块基址: 0x%p \n 模块大小: 0x%08x\n", szModuleName, moduleBase, uModuleSize);
+	Logp("\n模块名: %s \n 模块基址: 0x%llx \n 模块大小: 0x%08x\n", szModuleName, moduleBase, uModuleSize);
 }
 
 PUCHAR AllocateMem(ULONG PID, ULONG uDataSize)
@@ -279,7 +232,7 @@ PUCHAR AllocateMem(ULONG PID, ULONG uDataSize)
 		Logp("申请内存失败 错误码 %08x\n", status_code);
 		return;
 	}
-	Logp("申请到的内存地址:0x%p\n", Addr);
+	Logp("申请到的内存地址:0x%llx\n", Addr);
 	return Addr;
 }
 
@@ -320,7 +273,7 @@ void SearchPattern(ULONG pid, PCHAR szModuleName, PCHAR pattern, PCHAR mask)
 		return;
 	}
 	Logp("SearchPattern 成功\n");
-	Logp("特征地址： %p \r\n", addr);
+	Logp("特征地址： 0x%llx \r\n", addr);
 	getchar();
 }
 
@@ -348,9 +301,9 @@ void WriteX64DLL(ULONG PID, PCHAR dllFilePath)
 		return;
 	}
 	Logp("写入DLL 成功 ");
-	Logp("entryPoint %p \r\n", entryPoint);
-	Logp("imageBase %p \r\n", imageBase);
-	Logp("kimageBase %p \r\n",kimageBase);
+	Logp("entryPoint 0x%llx \r\n", entryPoint);
+	Logp("imageBase 0x%llx \r\n", imageBase);
+	Logp("kimageBase 0x%llx \r\n",kimageBase);
 
 }
 
@@ -376,7 +329,7 @@ void GetModuleExportAddr(ULONG pid, PCHAR ModuleName, PCHAR ExportFuncName) {
 		Logp("读取导出表方法 出错 %08x\n", status_code);
 		return;
 	}
-	Logp("函数 %s ->  %s  :  0x%p \r\n", ModuleName, ExportFuncName,  FuncAddr);
+	Logp("函数 %s ->  %s  :  0x%llx \r\n", ModuleName, ExportFuncName,  FuncAddr);
 
 }
 

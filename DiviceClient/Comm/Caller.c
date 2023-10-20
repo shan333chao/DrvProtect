@@ -173,46 +173,7 @@ ULONG _InitReg(PCHAR regCode)
 	return testData.uTest;
 }
 
-ULONG _FakeReadMemory(ULONG PID, ULONG fakePid, PVOID Address, PVOID buffer, ULONG uDataSize)
-{
-	if (!PID)
-	{
-		return  STATUS_COMMON_PARAM_1;
-	}
-	if (!fakePid)
-	{
-		return STATUS_COMMON_PARAM_2;
-	}
-	RW_MEM_DATA TestMEM = { 0 };
-	TestMEM.pValBuffer = buffer;
-	TestMEM.uDataSize = uDataSize;
-	TestMEM.PID = PID;
-	TestMEM.FakePID = fakePid;
-	TestMEM.Address = Address;
-	DWORD status_code = HookComm(FAKE_READ_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
-	return status_code;
-}
-
-ULONG _FakeWriteMemory(ULONG PID, ULONG fakePid, ULONG64 Address, PVOID pValBuffer, ULONG length)
-{
-	if (!PID)
-	{
-		return  STATUS_COMMON_PARAM_1;
-	}
-	if (!fakePid)
-	{
-		return STATUS_COMMON_PARAM_2;
-	}
-	RW_MEM_DATA TestMEM = { 0 };
-	TestMEM.pValBuffer = pValBuffer;
-	TestMEM.uDataSize = length;
-	TestMEM.PID = PID;
-	TestMEM.FakePID = fakePid;
-	TestMEM.Address = (PVOID)Address;
-	DWORD status_code = HookComm(FAKE_WRITE_MEMORY, &TestMEM, sizeof(RW_MEM_DATA));
-	return status_code;
-}
-
+ 
 ULONG _PhyReadMemory(ULONG PID, PVOID Address, PVOID buffer, ULONG uDataSize)
 {
 
@@ -256,23 +217,17 @@ ULONG _ProtectProcess(ULONG protectPid, ULONG fakePid) {
 
 ULONG _AntiSnapShotWindow(ULONG32 hwnd)
 {
-
-	WND_PROTECT_DATA WND_DATA = { 0 };
-	ULONG32 hwnds[10] = { 0 };
-	hwnds[0] = hwnd;
-	WND_DATA.hwnds = hwnds;
-	WND_DATA.Length = 1;
+	WND_PROTECT_DATA WND_DATA = { 0 }; 
+	WND_DATA.hwnd = hwnd;
+ 
 	DWORD status_code = HookComm(ANTI_SNAPSHOT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	return  status_code;
 }
 ULONG _ProtectWindow(ULONG32 hwnd)
-{
-
-	WND_PROTECT_DATA WND_DATA = { 0 };
-	ULONG32 hwnds[10] = { 0 };
-	hwnds[0] = hwnd;
-	WND_DATA.hwnds = hwnds;
-	WND_DATA.Length = 1;
+{ 
+	WND_PROTECT_DATA WND_DATA = { 0 }; 
+	WND_DATA.hwnd = hwnd;
+ 
 	DWORD status_code = HookComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	return  status_code;
 }
@@ -444,7 +399,7 @@ ULONG _GetModuleExportAddr2(ULONG pid, ULONG64 ModuleBase, PCHAR ExportFuncName,
 	expoetData.ModuleBase = ModuleBase;
 	expoetData.ExportFuncName = ExportFuncName;
 	expoetData.FuncAddr = 0;
-	DWORD status_code = DriverComm(MODULE_NAME_EXPORT, &expoetData, sizeof(MODULE_BASE_EXPORT_DATA));
+	DWORD status_code = HookComm(MODULE_NAME_EXPORT, &expoetData, sizeof(MODULE_BASE_EXPORT_DATA));
 	if (status_code == STATUS_OP_SUCCESS)
 	{
 		*funcAddr = expoetData.FuncAddr;
@@ -459,7 +414,7 @@ ULONG _CALL_MAIN_THREAD(ULONG PID, ULONG64 shellcodeAddr, ULONG shellcodeLen) {
 	callData.PID = PID;
 	callData.shellcodeAddr = shellcodeAddr;
 	callData.shellcodeLen = shellcodeLen;
-	DWORD status_code = DriverComm(CALL_MAIN, &callData, sizeof(WRITE_DLL_DATA));
+	DWORD status_code = HookComm(CALL_MAIN, &callData, sizeof(WRITE_DLL_DATA));
 	return status_code;
 
 }
@@ -470,7 +425,7 @@ ULONG _CHANGE_MEMORY_ATTR(ULONG PID, ULONG64 address, ULONG length) {
 	data.PID = PID;
 	data.Address = address;
 	data.uSize = length;
-	DWORD status_code = DriverComm(MEMORY_ATTRIBUTE, &data, sizeof(CHANGE_ATTRIBUTE_DATA));
+	DWORD status_code = HookComm(MEMORY_ATTRIBUTE, &data, sizeof(CHANGE_ATTRIBUTE_DATA));
 	return status_code;
 
 }

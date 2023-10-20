@@ -327,6 +327,10 @@ inline wchar_t*  _wcsstri_imp(const wchar_t* string, const wchar_t* search)
 }
 inline int strcmpi_imp(const char* s1, const char* s2)
 {
+	if (strlen(s1)!=strlen(s2))
+	{
+		return 1;
+	}
 	while (*s1 && (to_lower_imp(*s1) == to_lower_imp(*s2)))
 	{
 		s1++;

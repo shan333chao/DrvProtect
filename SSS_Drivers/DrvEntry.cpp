@@ -100,7 +100,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	}
 #endif // DEBUG_MODE == 0
 
-
+	Utils::safe_copy(pCommData, pCommData, sizeof(COMM_DATA));
 	switch (pCommData->Type)
 	{
 	case TEST_COMM: {
@@ -113,7 +113,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	}
 	case INJECT_DLL: { 
 		PINJECT_DLL_DATA data = (PINJECT_DLL_DATA)pCommData->InData;
-		status = inject_main::inject_x64DLL(data->dllFilePath, data->PID, data->type);
+		status = inject_main::inject_x64DLL((PCHAR)data->dllFilePath, data->PID, data->type);
 		break;
 	}
 	case CALL_MAIN: {
@@ -124,7 +124,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	case WRITE_DLL: {
 		 
 		PWRITE_DLL_DATA dllDATA = (PWRITE_DLL_DATA)pCommData->InData;
-		status = inject_main::WriteDLLx64_dll(dllDATA->dllFilePath, dllDATA->PID, &dllDATA->entryPoint, &dllDATA->imageBase, &dllDATA->kimageBase);
+		status = inject_main::WriteDLLx64_dll((PCHAR)dllDATA->dllFilePath, dllDATA->PID, &dllDATA->entryPoint, &dllDATA->imageBase, &dllDATA->kimageBase);
 		break;
 	}
 	case PROTECT_PROCESS: {
@@ -136,18 +136,18 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		PQUERY_MODULE_DATA  QUERY_MODULE = (PQUERY_MODULE_DATA)pCommData->InData;
 		if (QUERY_MODULE->type == 1)
 		{
-			QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfo(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, QUERY_MODULE->pModuleSize);
+			QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfo(QUERY_MODULE->PID, (PCHAR)QUERY_MODULE->pcModuleName, (PULONG)QUERY_MODULE->pModuleSize);
 		}
 		else if (QUERY_MODULE->type == 2)
 		{
-			QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfoNoAttach(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, QUERY_MODULE->pModuleSize);
+			QUERY_MODULE->pModuleBase = process_info::GetProcessModuleInfoNoAttach(QUERY_MODULE->PID, (PCHAR)QUERY_MODULE->pcModuleName, (PULONG)QUERY_MODULE->pModuleSize);
 		}
 		status = QUERY_MODULE->pModuleBase ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
 	case QUERY_VAD_MODULE: {
 		PQUERY_MODULE_DATA  QUERY_MODULE = (PQUERY_MODULE_DATA)pCommData->InData;
-		status = VadModules::GetModuleBaseInVAD(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, &QUERY_MODULE->pModuleBase, QUERY_MODULE->pModuleSize);
+		status = VadModules::GetModuleBaseInVAD(QUERY_MODULE->PID, (PCHAR)QUERY_MODULE->pcModuleName, &QUERY_MODULE->pModuleBase, (PULONG)QUERY_MODULE->pModuleSize);
 		status = QUERY_MODULE->pModuleBase ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
@@ -167,19 +167,20 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		ProtectRoute::InitProtectWindow();
 
 		PWND_PROTECT_DATA WND_PTDATA = (PWND_PROTECT_DATA)pCommData->InData;
-		HANDLE threadId = ProtectRoute::GetWindowThread((HANDLE)WND_PTDATA->hwnds[0]);
+		HANDLE threadId = ProtectRoute::GetWindowThread((HANDLE)WND_PTDATA->hwnd);
 		if (!threadId)
 		{
 			status = STATUS_UNSUCCESSFUL;
 			break;
 		}
 		Log("GetWindowThread %d \r\n", threadId);
-		status = Protect::AddProtectWNDBatch(WND_PTDATA->hwnds, WND_PTDATA->Length, threadId); 
+		status = Protect::AddProtectWNDBatch(WND_PTDATA->hwnd,  threadId); 
 		break;
 	}
 	case ANTI_SNAPSHOT: { 
 		PWND_PROTECT_DATA WND_PTDATA = (PWND_PROTECT_DATA)pCommData->InData;
-		status = ProtectRoute::AntiSnapWindow(WND_PTDATA->hwnds[0]);
+		Utils::safe_copy((PVOID)pCommData->InData, (PVOID)pCommData->InData, sizeof(WND_PROTECT_DATA));
+		status = ProtectRoute::AntiSnapWindow(WND_PTDATA->hwnd);
 		break;
 	} 
 	case CREATE_MEMORY: {
@@ -205,19 +206,19 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 	}
 	case PATTERN_SEARCH: {
 		PPATTEERN_DATA PATTERN = (PPATTEERN_DATA)pCommData->InData;
-		PATTERN->addr = patternSearch::search_process_pattern(ULongToHandle(PATTERN->PID), PATTERN->pcModuleName, PATTERN->pattern, PATTERN->mask);
+		PATTERN->addr = patternSearch::search_process_pattern(ULongToHandle(PATTERN->PID), (PCHAR)PATTERN->pcModuleName, (PCHAR)PATTERN->pattern, (PCHAR)PATTERN->mask);
 		status = PATTERN->addr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
 	case MODULE_NAME_EXPORT: {
 		PMODULE_EXPORT_DATA EXPORT_DATA = (PMODULE_EXPORT_DATA)pCommData->InData;
-		EXPORT_DATA->FuncAddr = process_info::GetProcessModuleExport(EXPORT_DATA->PID, EXPORT_DATA->ModuleName, EXPORT_DATA->ExportFuncName);
+		EXPORT_DATA->FuncAddr = process_info::GetProcessModuleExport(EXPORT_DATA->PID, (PCHAR)EXPORT_DATA->ModuleName, (PCHAR)EXPORT_DATA->ExportFuncName);
 		status = EXPORT_DATA->FuncAddr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		break;
 	}
 	case MODULE_BASE_EXPORT: {
 		PMODULE_BASE_EXPORT_DATA EXPORT_DATA = (PMODULE_BASE_EXPORT_DATA)pCommData->InData;
-		EXPORT_DATA->FuncAddr = process_info::GetProcessModuleExport2(EXPORT_DATA->PID, EXPORT_DATA->ModuleBase, EXPORT_DATA->ExportFuncName);
+		EXPORT_DATA->FuncAddr = process_info::GetProcessModuleExport2(EXPORT_DATA->PID, EXPORT_DATA->ModuleBase, (PCHAR)EXPORT_DATA->ExportFuncName);
 		status = EXPORT_DATA->FuncAddr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 
 	}

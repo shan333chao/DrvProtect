@@ -17,8 +17,7 @@ typedef struct _FWindowInfo {
 
  
 void TestComm(PVOID regCode);
-void FakeReadMemory(ULONG		PID, ULONG fakePid, PVOID	Address, ULONG		uDataSize);
-void FakeWriteMemory(ULONG		PID, ULONG fakePid, PVOID	Address, PUCHAR pValBuffer,ULONG length);
+ 
 void PhyReadMemory(ULONG		PID, PVOID	Address, ULONG		uDataSize);
 BOOL PhyWriteMemory(ULONG		PID, PVOID	Address, PUCHAR		pValBuffer, ULONG length);
 
