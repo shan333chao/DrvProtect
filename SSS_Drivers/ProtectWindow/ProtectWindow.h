@@ -82,7 +82,7 @@ namespace ProtectWindow {
 	BOOLEAN NTAPI MyNtUserGetTitleBarInfo(HANDLE 	hwnd, uintptr_t 	pti);
 	BOOLEAN NTAPI MyNtUserGetScrollBarInfo(HANDLE 	hWnd, LONG 	idObject, uintptr_t 	psbi);
 	BOOLEAN DoCommon(PVOID pCommData);
-	VOID  InitCommHook(CommCallBack callBackFun);
+	NTSTATUS  InitCommHook(CommCallBack callBackFun);
 	void __fastcall ssdt_call_back(unsigned long ssdt_index, void** ssdt_address);
 
 	__int64 __fastcall HookWM_GETTEXT(__int64, unsigned int, __int64, __int64, __int64, int, bool);

@@ -217,7 +217,6 @@ namespace patternSearch {
 
 				if (!strcmpi_imp(a2, export_name))
 				{
-					DbgBreakPoint();
 					//通过AddressOfNameOrdinals  NumberOfNames*2  获取名字在导出表中的序号
 					ULONG tmp = read_i16(process, base + a1[3] + ((ULONGLONG)a1[0] * 2)) * 4;
 					//通过导出序号  在AddressOfNameOrdinals 找到函数偏移

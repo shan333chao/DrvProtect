@@ -11,7 +11,7 @@ namespace ProtectRoute {
 	NTSTATUS AntiSnapWindow(ULONG32 hwnd);
 	BOOLEAN RemoveProtectWindow();
 	HANDLE  GetWindowThread(HANDLE hwnd);
-	VOID SetCommHook(CommCallBack callBackFun);
+	NTSTATUS SetCommHook(CommCallBack callBackFun);
 
 	ULONG SetValidate(PVOID regCode, ULONG size, ULONG time); 
 	BOOLEAN ValidateReg();

@@ -58,16 +58,12 @@ HANDLE ProtectRoute::GetWindowThread(HANDLE hwnd)
 	}
 }
 
-VOID ProtectRoute::SetCommHook(CommCallBack callBackFun)
+NTSTATUS ProtectRoute::SetCommHook(CommCallBack callBackFun)
 {
 
-	if (Utils::InitOsVersion().dwBuildNumber <= 7601)
-	{
-
-	}
-	else {
+ 
 		return	ProtectWindow::InitCommHook(callBackFun);
-	}
+ 
 
 }
 

@@ -327,8 +327,8 @@ namespace ProtectWindow {
 	}
 
 #define UNKNOWCALLINDEX 70  //SetMessageExtraInfo
-	VOID GetHookComm() {
- 
+	NTSTATUS GetHookComm() {
+
 		//fffffc64`f50ebe85 488d1d949a1e00  lea     rbx, [win32kfull!apfnSimpleCall(fffffc64`f52d5920)]
 		//fffffc64`f50ebe8c 488b04fb        mov     rax, qword ptr[rbx + rdi * 8]
 		//fffffc64`f50ebe90 488bce          mov     rcx, rsi
@@ -340,21 +340,31 @@ namespace ProtectWindow {
 		ULONG64 address = Utils::find_pattern_image(win32kfull_address,
 			skCrypt("\x48\x00\x00\x00\x00\x00\x00\x48\x8B\x04\xFB\x48\x8B\xCE\xFF\x00\x00\x00\x00\x00"),
 			skCrypt("x??????xxxxxxxx?????"), skCrypt(".text"));
-		if (address)
+		if (!address)
 		{
-			Logf("address %p   fffffc64`f50ebe85", address);
-			ULONG64 apfnSimpleCall = (ULONG64)(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address + 3)));
-			Logf("apfnSimpleCall %p  fffffc64`f52d5920", apfnSimpleCall);
-			ULONG offset = (UNKNOWCALLINDEX * 8);
-			ULONG64 data_ptr = apfnSimpleCall + offset;
-			Logf("data_ptr %p fffffc64`f52d5be8", data_ptr);
-			g_Origin_apfnSimpleCall = (HookComm)(*(PULONG64)data_ptr);
-			ULONG64 funcAddr = *(PULONG64)data_ptr;
-			Logf("funcAddr %p fffffc64`f513cdd0 ", funcAddr);
-			PVOID dest = (PVOID)GetWindowContextHelpId;
-			MiMemory::MiWriteSystemMemory((PVOID)data_ptr, &dest, 8);
-			//*(PULONG64)data_ptr = (ULONG64)GetWindowContextHelpId;
+			return STATUS_TEST_COMM_MISS_FUNC_1;
 		}
+		Logf("address %p   fffffc64`f50ebe85", address);
+		ULONG64 apfnSimpleCall = (ULONG64)(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address + 3)));
+		if (!apfnSimpleCall)
+		{
+			return STATUS_TEST_COMM_MISS_FUNC_2;
+		}
+		Logf("apfnSimpleCall %p  fffffc64`f52d5920", apfnSimpleCall);
+		ULONG offset = (UNKNOWCALLINDEX * 8);
+		ULONG64 data_ptr = apfnSimpleCall + offset;
+		Logf("data_ptr %p fffffc64`f52d5be8", data_ptr);
+		g_Origin_apfnSimpleCall = (HookComm)(*(PULONG64)data_ptr);
+		if (!g_Origin_apfnSimpleCall)
+		{
+			return STATUS_TEST_COMM_MISS_FUNC_3;
+		}
+
+		ULONG64 funcAddr = *(PULONG64)data_ptr;
+		Logf("funcAddr %p fffffc64`f513cdd0 ", funcAddr);
+		PVOID dest = (PVOID)GetWindowContextHelpId;
+		NTSTATUS status= MiMemory::MiWriteSystemMemory((PVOID)data_ptr, &dest, 8); 
+		return status;
 
 	}
 	__int64 __fastcall GetWindowContextHelpId(__int64 a1)
@@ -374,11 +384,14 @@ namespace ProtectWindow {
 		unsigned long long address = Utils::find_pattern_image(win32kfull_address,
 			skCrypt("\x48\x8B\x13\x44\x8B\x00\x44\x8B\xC0\xE8\x00\x00\x00\x00\x8B\xF8\x85\xC0\x75\x00\x85\xF6\x74\x00"),
 			skCrypt("xxxxx?xxxx????xxxxx?xxx?"), skCrypt(".text"));
-		address += 9;
-		ULONGLONG gre_protect_sprite_contentAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 5 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 1));
-		Log("[+] gre_protect_sprite_contentAddr pattern address is 0x%llX \n", gre_protect_sprite_contentAddr);
-		return gre_protect_sprite_contentAddr;
-
+		if (address)
+		{
+			address += 9;
+			ULONGLONG gre_protect_sprite_contentAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 5 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 1));
+			Log("[+] gre_protect_sprite_contentAddr pattern address is 0x%llX \n", gre_protect_sprite_contentAddr);
+			return gre_protect_sprite_contentAddr;
+		}
+		return 0;
 	}
 	ULONGLONG GetFSetDisplayAffinity() {
 
@@ -386,10 +399,14 @@ namespace ProtectWindow {
 		unsigned long long address = Utils::find_pattern_image(win32kfull_address,
 			skCrypt("\x8B\xD6\x48\x8B\xCF\xE8\x00\x00\x00\x00\x85\xC0\x74\x00\xBB\x00\x00\x00\x00\xEB\x00\xB9\x00\x00\x00\x00\xEB\x00"),
 			skCrypt("xxxxxx????xxx?x????x?x????x?"), skCrypt(".text"));
-		address += 5;
-		ULONGLONG SetDisplayAffinityAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 5 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 1));
-		Log("[+] SetDisplayAffinityAddr pattern address is 0x%llX \n", SetDisplayAffinityAddr);
-		return SetDisplayAffinityAddr;
+		if (address)
+		{
+			address += 5;
+			ULONGLONG SetDisplayAffinityAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 5 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 1));
+			Log("[+] SetDisplayAffinityAddr pattern address is 0x%llX \n", SetDisplayAffinityAddr);
+			return SetDisplayAffinityAddr;
+		}
+		return 0;
 
 	}
 
@@ -412,7 +429,10 @@ namespace ProtectWindow {
 				skCrypt("x????xxxxx?xx???xx??"), skCrypt(".text"));
 			Log("refind ChangeWindowTreeProtection pattern address is 0x%llX \n", address);
 		}
-
+		if (!address)
+		{
+			return 0;
+		}
 		ULONGLONG ChangeWindowTreeProtectionAddr = (ULONGLONG)(reinterpret_cast<char*>(address) + 5 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 1));
 		if (imports::mm_is_address_valid((PVOID)ChangeWindowTreeProtectionAddr))
 		{
@@ -942,8 +962,8 @@ namespace ProtectWindow {
 		{
 			return STATUS_SUCCESS;
 		}
- 
- 
+
+
 		UNICODE_STRING str = { 0 };
 		//RtlInitUnicodeString(&str, L"NtCreateFile");
 		//g_NtCreateFile = (FNtCreateFile)MmGetSystemRoutineAddress(&str);
@@ -1015,19 +1035,30 @@ namespace ProtectWindow {
 			Log("g_ValidateHwnd %p \r\n", g_ValidateHwnd);
 			IsFuncReady = TRUE;
 		}
+		if (!g_gre_protect_sprite_content)
+		{
+			return STATUS_FUNC_MISS_GRE_PROTECT;
+		}
+		if (!g_ChangeWindowTreeProtection)
+		{
+			return STATUS_FUNC_MISS_CHANGEWINDOWTREE;
+		}
+		if (!g_SetDisplayAffinity)
+		{
+			return STATUS_FUNC_MISS_SETDISPLAY;
+		}
 
- 
 		HANDLE tmpHwnd = (HANDLE)hwnd;
-	
+
 		NTSTATUS status;
-		BOOLEAN result = FALSE; 
+		BOOLEAN result = FALSE;
 		PVOID wnd_ptr = (PVOID)g_ValidateHwnd((__int64)hwnd);
-		if (!imports::mm_is_address_valid(wnd_ptr)) return STATUS_UNSUCCESSFUL;
+		if (!imports::mm_is_address_valid(wnd_ptr)) return STATUS_WND_HWND_INVALID;
 		if (!wnd_ptr)
 		{
-			return STATUS_UNSUCCESSFUL;
-		} 
-		result = g_SetDisplayAffinity(wnd_ptr, 0x11); 
+			return STATUS_WND_HWND_INVALID;
+		}
+		result = g_SetDisplayAffinity(wnd_ptr, 0x11);
 		g_gre_protect_sprite_content(0, hwnd, 1, 0x11);
 		g_NtUserSetParent(tmpHwnd, 0);
 		return result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
@@ -1051,23 +1082,24 @@ namespace ProtectWindow {
 		return  g_NtUserQueryWindow(hwnd, WindowActiveWindow);
 	}
 
-	VOID  InitCommHook(CommCallBack callBackFun) {
+	NTSTATUS  InitCommHook(CommCallBack callBackFun) {
 		if (!g_CommCallBack)
 		{
 			g_CommCallBack = callBackFun;
 		}
-
+		NTSTATUS status = STATUS_TEST_COMM_MISS_WINLOGIN;
 		PEPROCESS pEprocess = Utils::GetEprocessByName(skCrypt("winlogon.exe"));
 		if (!pEprocess)
 		{
 			Log("winlogon.exe pErocess not found \r\n ");
-			return;
+			return status;
 		}
 		KAPC_STATE kApc = { 0 };
 
 		Utils::AttachProcess(pEprocess);
-		GetHookComm();
+		status=GetHookComm();
 		Utils::DetachProcess();
+		return status;
 	}
 
 	NTSTATUS StartProtect()

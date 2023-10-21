@@ -14,30 +14,21 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Comm">
-      <UniqueIdentifier>{ff50e72f-e141-4b4e-98a9-f08052d078a1}</UniqueIdentifier>
+      <UniqueIdentifier>{7571cf8d-4b8a-4d00-9f72-a713197be489}</UniqueIdentifier>
     </Filter>
     <Filter Include="ntp_client">
-      <UniqueIdentifier>{c45ab171-8098-4835-a882-465e71380250}</UniqueIdentifier>
+      <UniqueIdentifier>{39f6b55f-397c-4d48-b436-1648dff98820}</UniqueIdentifier>
     </Filter>
     <Filter Include="service">
-      <UniqueIdentifier>{b8e5381b-6cf8-45d1-a4af-45d5408360aa}</UniqueIdentifier>
+      <UniqueIdentifier>{34a1d188-6726-40fd-9395-3b89575dfb6c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Comm\CommR3.c">
-      <Filter>Comm</Filter>
-    </ClCompile>
-    <ClCompile Include="Example.c">
+    <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="aes.c">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Comm\Caller.c">
-      <Filter>Comm</Filter>
     </ClCompile>
     <ClCompile Include="service\Service.c">
       <Filter>service</Filter>
@@ -45,24 +36,18 @@
     <ClCompile Include="ntp_client\ntp_client.c">
       <Filter>ntp_client</Filter>
     </ClCompile>
+    <ClCompile Include="Comm\CommR3.c">
+      <Filter>Comm</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\Caller.c">
+      <Filter>Comm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Comm\CommR3.h">
-      <Filter>Comm</Filter>
-    </ClInclude>
-    <ClInclude Include="Example.h">
+    <ClInclude Include="log.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="aes.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Comm\Caller.h">
-      <Filter>Comm</Filter>
-    </ClInclude>
-    <ClInclude Include="driver_shellcode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="log.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="service\Service.h">
@@ -70,6 +55,15 @@
     </ClInclude>
     <ClInclude Include="ntp_client\ntp_client.h">
       <Filter>ntp_client</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\Caller.h">
+      <Filter>Comm</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\CommR3.h">
+      <Filter>Comm</Filter>
+    </ClInclude>
+    <ClInclude Include="driver_shellcode.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

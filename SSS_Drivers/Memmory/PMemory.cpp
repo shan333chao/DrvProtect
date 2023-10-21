@@ -90,7 +90,7 @@ namespace p_memory {
 			return 0;
 		virt_addr_t virt_base = { 0 };
 		virt_base.value = SectionBase;
-		size_t read = 0;
+		SIZE_T read = 0;
 		PPHYSICAL_MEMORY_RANGE ranges = imports::mm_get_physical_memory_ranges();
 
 		for (int i = 0;; i++) {
@@ -288,7 +288,7 @@ namespace p_memory {
 			ULONG64 uEndAddress = (uStartAddress + uSize);
 			while (uStartAddress <= uEndAddress)
 			{
-				ULONG64	pde = getPde(uProtectCr3, uStartAddress);
+				ULONG64	pde =  getPde(uProtectCr3, uStartAddress);
 				ULONG64	pte = getPte(uProtectCr3, uStartAddress);
 				if (pte || pde)
 				{
