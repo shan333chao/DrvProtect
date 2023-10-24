@@ -163,6 +163,19 @@ namespace process_info {
 		return uImageBase;
 	}
 
+	ULONG GetProcessIdByDllName(PCHAR dllName, PULONG pid)
+	{
+
+		PEPROCESS eProcess = patternSearch::GetProcessByDllName(dllName);
+		if (eProcess)
+		{
+			*pid = (ULONG)imports::ps_get_process_id(eProcess);
+			return STATUS_SUCCESS;
+		}
+
+		return STATUS_UNSUCCESSFUL;
+	}
+
 
 
 

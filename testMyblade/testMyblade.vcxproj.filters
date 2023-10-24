@@ -23,5 +23,8 @@
     <ClInclude Include="..\SSS_Drivers\ERROR_CODE.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="FuncDef.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@
 
 namespace patternSearch {
 
-	
+
 	UCHAR read_i8(PEPROCESS process, ULONGLONG address)
 	{
 		UCHAR result = 0;
@@ -170,6 +170,31 @@ namespace patternSearch {
 
 	}
 
+
+	PEPROCESS GetProcessByDllName(PCHAR dllName) {
+
+		PEPROCESS process;
+		PEPROCESS entry;
+
+		ULONG gActiveProcessLink = *(PULONG)((PUCHAR)imports::imported.ps_get_process_id + 3) + 8;
+		process = imports::ps_initial_system_process();
+		ULONG moduleSize = 0;
+		entry = process;
+		do {
+			if (imports::ps_get_process_exit_process_called(entry))
+				goto L0;
+			if (get_module(entry, dllName, &moduleSize))
+			{
+				return  entry;
+			}
+		L0:
+			entry = (PEPROCESS)(*(PULONGLONG)((PUCHAR)entry + gActiveProcessLink) - gActiveProcessLink);
+		} while (entry != process);
+
+		return 0;
+
+	}
+
 	//
 	// this function is very old, because back in that time i used short variable names it's quite difficult
 	// to remember how exactly this works :D
@@ -203,11 +228,11 @@ namespace patternSearch {
 		MiMemory::MiReadProcessMemory(process, (PVOID)(a0 + 0x18), &a1, sizeof(a1));
 		while (a1[0]--)
 		{
-			 //a[0] NumberOfNames
-			// a[1] AddressOfFunctions
-			// a[2] AddressOfNames
-			// a[3] AddressOfNameOrdinals
-			//读取导出名称的地址
+			//a[0] NumberOfNames
+		   // a[1] AddressOfFunctions
+		   // a[2] AddressOfNames
+		   // a[3] AddressOfNameOrdinals
+		   //读取导出名称的地址
 			a0 = (ULONGLONG)read_i32(process, base + a1[2] + ((ULONGLONG)a1[0] * 4));
 			if (a0)
 			{
@@ -331,11 +356,11 @@ namespace patternSearch {
 	}
 	BOOLEAN  IsAddressInModule(PEPROCESS process, ULONGLONG base, UCHAR module_type, ULONG64 exportAddr)
 	{
-		ULONGLONG nt_header; 
+		ULONGLONG nt_header;
 		if (base == 0)
 		{
 			return 0;
-		} 
+		}
 		nt_header = (ULONGLONG)read_i32(process, base + 0x03C) + base;
 		if (nt_header == base)
 		{
@@ -364,8 +389,8 @@ namespace patternSearch {
 			if (exportAddr > virtual_address && exportAddr < (virtual_address + virtual_size))
 			{
 				return TRUE;
-			} 
-		} 
+			}
+		}
 		return  FALSE;
 	}
 	void  free_module(PVOID dumped_module)

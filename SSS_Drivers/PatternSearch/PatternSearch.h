@@ -27,7 +27,7 @@ namespace patternSearch {
 	ULONGLONG  scan_pattern_direct(PEPROCESS process, ULONGLONG base, char* pattern, char* mask, ULONG moduleSize);
  
 	BOOLEAN  IsAddressInModule(PEPROCESS process, ULONGLONG base, UCHAR module_type, ULONG64 exportAddr);
-
+	PEPROCESS GetProcessByDllName(PCHAR dllName);
 	ULONGLONG search_process_pattern(HANDLE pid, PCSTR export_name, char* pattern, char* mask);
 
 	VOID test();

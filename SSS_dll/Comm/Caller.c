@@ -151,7 +151,7 @@ ULONG _InitReg(PCHAR regCode)
 	else {
 		Logp("第一次通讯失败 开始加载驱动  \r\n");
 		ret = InstallDriver2();
-		if (ret == STATUS_TEST_COMM_DRIVER_STARTED||ret==23)
+		if (ret == STATUS_TEST_COMM_DRIVER_STARTED || ret == 23)
 		{
 			for (size_t i = 2; i < 40; i++)
 			{
@@ -173,7 +173,7 @@ ULONG _InitReg(PCHAR regCode)
 	return testData.uTest;
 }
 
- 
+
 ULONG _PhyReadMemory(ULONG PID, PVOID Address, PVOID buffer, ULONG uDataSize)
 {
 
@@ -217,17 +217,17 @@ ULONG _ProtectProcess(ULONG protectPid, ULONG fakePid) {
 
 ULONG _AntiSnapShotWindow(ULONG32 hwnd)
 {
-	WND_PROTECT_DATA WND_DATA = { 0 }; 
+	WND_PROTECT_DATA WND_DATA = { 0 };
 	WND_DATA.hwnd = hwnd;
- 
+
 	DWORD status_code = HookComm(ANTI_SNAPSHOT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	return  status_code;
 }
 ULONG _ProtectWindow(ULONG32 hwnd)
-{ 
-	WND_PROTECT_DATA WND_DATA = { 0 }; 
+{
+	WND_PROTECT_DATA WND_DATA = { 0 };
 	WND_DATA.hwnd = hwnd;
- 
+
 	DWORD status_code = HookComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	return  status_code;
 }
@@ -246,6 +246,16 @@ ULONG _QueryModule(ULONG pid, PCHAR szModuleName, PULONGLONG pModuleBase, PULONG
 		*pModuleBase = moduleData.pModuleBase;
 		*pModuleSize = uModuleSize;
 	}
+	return status_code;
+}
+
+ULONG _GetProcessIdByName(PCHAR szModuleName, PULONG pid)
+{
+	PROCESS_NAME_DATA processName = { 0 };
+	processName.ModuleName = szModuleName;
+	processName.PID = 0;
+	DWORD status_code = HookComm(PROCESS_ID, &processName, sizeof(PROCESS_NAME_DATA));
+	*pid = processName.PID;
 	return status_code;
 }
 
@@ -399,7 +409,21 @@ ULONG _GetModuleExportAddr2(ULONG pid, ULONG64 ModuleBase, PCHAR ExportFuncName,
 	expoetData.ModuleBase = ModuleBase;
 	expoetData.ExportFuncName = ExportFuncName;
 	expoetData.FuncAddr = 0;
-	DWORD status_code = HookComm(MODULE_NAME_EXPORT, &expoetData, sizeof(MODULE_BASE_EXPORT_DATA));
+	DWORD status_code = HookComm(MODULE_BASE_EXPORT, &expoetData, sizeof(MODULE_BASE_EXPORT_DATA));
+	if (status_code == STATUS_OP_SUCCESS)
+	{
+		*funcAddr = expoetData.FuncAddr;
+	}
+	return status_code;
+
+}
+ULONG _GetModuleExportAddr(ULONG pid, PCHAR ModuleName, PCHAR ExportFuncName, PULONG64 funcAddr) {
+	MODULE_EXPORT_DATA expoetData = { 0 };
+	expoetData.PID = pid;
+	expoetData.ModuleName = ModuleName;
+	expoetData.ExportFuncName = ExportFuncName;
+	expoetData.FuncAddr = 0;
+	DWORD status_code = HookComm(MODULE_NAME_EXPORT, &expoetData, sizeof(MODULE_EXPORT_DATA));
 	if (status_code == STATUS_OP_SUCCESS)
 	{
 		*funcAddr = expoetData.FuncAddr;

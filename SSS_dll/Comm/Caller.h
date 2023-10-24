@@ -67,6 +67,13 @@ __declspec(dllimport) ULONG _QueryModule(_In_ ULONG pid, _In_ PCHAR szModuleName
 
 
 /// <summary>
+/// 通过模块名获取进程id
+/// </summary>
+/// <param name="szModuleName">模块名</param>
+/// <returns>进程id</returns>
+__declspec(dllimport) ULONG _GetProcessIdByName(_In_ PCHAR szModuleName, PULONG pid);
+
+/// <summary>
 /// 在VAD中查询进程模块(无附加)
 /// </summary>
 /// <param name="pid">进程ID</param>
@@ -144,13 +151,25 @@ __declspec(dllimport)  ULONG _InjectX64DLL(_In_ ULONG pid, _In_ PCHAR dllFilePat
 __declspec(dllimport) ULONG _GetModuleExportAddr(ULONG pid, PCHAR ModuleName, PCHAR ExportFuncName);
 
 /// <summary>
-/// 查询模块导出地址
+/// 查询模块导出地址2
 /// </summary>
 /// <param name="pid">进程id</param>
 /// <param name="ModuleBase">模块基址 </param>
 /// <param name="ExportFuncName">导出方法名称（分大小写）</param>
+/// <param name="funcAddr">导出方法地址</param>
 /// <returns>状态码</returns>
 __declspec(dllimport) ULONG _GetModuleExportAddr2(ULONG pid, ULONG64 ModuleBase, PCHAR ExportFuncName,PULONG64 FuncAddr);
+
+/// <summary>
+/// 查询模块导出地址
+/// </summary>
+/// <param name="pid">进程id</param>
+/// <param name="ModuleName">模块名 </param>
+/// <param name="ExportFuncName">导出方法名称</param>
+/// <param name="funcAddr">导出方法地址</param>
+/// <returns>状态码</returns> 
+__declspec(dllimport) ULONG _GetModuleExportAddr(ULONG pid, PCHAR ModuleName, PCHAR ExportFuncName, PULONG64 funcAddr);
+
 
 /// <summary>
 /// 写入一个DLL （不启动，需要手动构建DLL 启动）

@@ -54,7 +54,9 @@ typedef enum _COMM_TYPE {
 	//通过模块基址查找导出函数
 	MODULE_BASE_EXPORT,
 	//修改内存属性
-	MEMORY_ATTRIBUTE
+	MEMORY_ATTRIBUTE,
+	//通过进程名获取进程id
+	PROCESS_ID
 
 };
 
@@ -193,3 +195,10 @@ typedef struct _MODULE_BASE_EXPORT_DATA {
 	PVOID64 ExportFuncName;
 	ULONG64 FuncAddr;
 }MODULE_BASE_EXPORT_DATA, * PMODULE_BASE_EXPORT_DATA;
+
+
+typedef struct _PROCESS_NAME_DATA {
+	ULONG PID;
+	PVOID64 ModuleName;
+ 
+}PROCESS_NAME_DATA, * PPROCESS_NAME_DATA;

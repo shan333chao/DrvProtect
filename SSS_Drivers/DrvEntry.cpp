@@ -111,7 +111,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		status = STATUS_SUCCESS;
 		break;
 	}
-	case INJECT_DLL: { 
+	case INJECT_DLL: {
 		PINJECT_DLL_DATA data = (PINJECT_DLL_DATA)pCommData->InData;
 		status = inject_main::inject_x64DLL((PCHAR)data->dllFilePath, data->PID, data->type);
 		break;
@@ -122,7 +122,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case WRITE_DLL: {
-		 
+
 		PWRITE_DLL_DATA dllDATA = (PWRITE_DLL_DATA)pCommData->InData;
 		status = inject_main::WriteDLLx64_dll((PCHAR)dllDATA->dllFilePath, dllDATA->PID, &dllDATA->entryPoint, &dllDATA->imageBase, &dllDATA->kimageBase);
 		break;
@@ -174,15 +174,15 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 			break;
 		}
 		Log("GetWindowThread %d \r\n", threadId);
-		status = Protect::AddProtectWNDBatch(WND_PTDATA->hwnd,  threadId); 
+		status = Protect::AddProtectWNDBatch(WND_PTDATA->hwnd, threadId);
 		break;
 	}
-	case ANTI_SNAPSHOT: { 
+	case ANTI_SNAPSHOT: {
 		PWND_PROTECT_DATA WND_PTDATA = (PWND_PROTECT_DATA)pCommData->InData;
 		Utils::safe_copy((PVOID)pCommData->InData, (PVOID)pCommData->InData, sizeof(WND_PROTECT_DATA));
 		status = ProtectRoute::AntiSnapWindow(WND_PTDATA->hwnd);
 		break;
-	} 
+	}
 	case CREATE_MEMORY: {
 		PCREATE_MEM_DATA MEM_DATA = (PCREATE_MEM_DATA)pCommData->InData;
 		status = memory::SS_CreateMemory(MEM_DATA->PID, MEM_DATA->uSize, MEM_DATA->pVAddress);
@@ -220,7 +220,14 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		PMODULE_BASE_EXPORT_DATA EXPORT_DATA = (PMODULE_BASE_EXPORT_DATA)pCommData->InData;
 		EXPORT_DATA->FuncAddr = process_info::GetProcessModuleExport2(EXPORT_DATA->PID, EXPORT_DATA->ModuleBase, (PCHAR)EXPORT_DATA->ExportFuncName);
 		status = EXPORT_DATA->FuncAddr > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-
+		break;
+	}
+	case PROCESS_ID: {
+		PPROCESS_NAME_DATA processData = (PPROCESS_NAME_DATA)pCommData->InData;
+		ULONG pid = 0;
+		status = process_info::GetProcessIdByDllName((PCHAR)processData->ModuleName, &pid);
+		processData->PID = pid; 
+		break; 
 	}
 	}
 	return status;
@@ -266,7 +273,7 @@ EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
 	else {
 		communicate::RegisterComm(Dispatch);
 	}
- 
+
 	return  STATUS_SUCCESS;
 }
 #else
