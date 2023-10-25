@@ -29,12 +29,13 @@ namespace ProtectWindow {
 	typedef BOOL(*FNtUserValidateHandleSecure)(HANDLE hHdl);
 	typedef ULONG_PTR(*FNtUserCallHwndParam)(HWND hwnd, DWORD_PTR param, DWORD code);
 	typedef ULONG_PTR(*FNtUserCallHwnd) (HWND hwnd, DWORD code);
-
+	typedef __int64(__fastcall* FNtUserGetWindowDC)(__int64);
+	typedef __int64(__fastcall* FNtUserGetDC)(__int64 a1);
 	ULONG_PTR MyNtUserCallHwnd(HWND hwnd, DWORD code);
 	ULONG_PTR MyNtUserCallHwndParam(HWND hwnd, DWORD_PTR param, DWORD code);
 	BOOL MyNtUserValidateHandleSecure(HANDLE hHdl);
 
-
+	__int64  MyNtUserGetWindowDC(__int64 hwnd);
 
 	INT MyNtUserGetClassName(HWND hWnd, BOOL Ansi, PUNICODE_STRING ClassName);
 	BOOL MyNtUserPostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);

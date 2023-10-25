@@ -23,9 +23,9 @@ static const ULONG64 mask = (~0xfull << 8) & 0xfffffffffull;
 //} MM_COPY_ADDRESS, * PMMCOPY_ADDRESS;
 
 typedef PVOID (*FPsGetProcessSectionBaseAddress)(PEPROCESS pTargetProcess);
-PVOID MmMapIoSpaceEx(_In_ PHYSICAL_ADDRESS PhysicalAddress, _In_ SIZE_T           NumberOfBytes, _In_ ULONG            Protect);
-
-NTSTATUS MmCopyMemory(_In_ PVOID TargetAddress, _In_ MM_COPY_ADDRESS SourceAddress, _In_ SIZE_T NumberOfBytes, _In_ ULONG Flags, _Out_ PSIZE_T NumberOfBytesTransferred);
+//PVOID MmMapIoSpaceEx(_In_ PHYSICAL_ADDRESS PhysicalAddress, _In_ SIZE_T           NumberOfBytes, _In_ ULONG            Protect);
+//
+//NTSTATUS MmCopyMemory(_In_ PVOID TargetAddress, _In_ MM_COPY_ADDRESS SourceAddress, _In_ SIZE_T NumberOfBytes, _In_ ULONG Flags, _Out_ PSIZE_T NumberOfBytesTransferred);
 
 ULONG_PTR GetCr3FromSectionBase(PEPROCESS pTargetProcess);
 PVOID InitializeMmPfnDatabase();

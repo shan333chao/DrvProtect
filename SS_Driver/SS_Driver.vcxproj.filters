@@ -53,6 +53,12 @@
     <Filter Include="FileUtil">
       <UniqueIdentifier>{832d005a-8688-4655-91a1-f2896544afca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="obcallback">
+      <UniqueIdentifier>{bbd40123-27e3-4748-b3ca-c43289802201}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="file_filter">
+      <UniqueIdentifier>{b154dc66-de2d-43c0-a1c4-389d62a83cad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SS_Entry.cpp">
@@ -108,6 +114,9 @@
     </ClCompile>
     <ClCompile Include="SFile\FileUtil.c">
       <Filter>FileUtil</Filter>
+    </ClCompile>
+    <ClCompile Include="process_callback.cpp">
+      <Filter>obcallback</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -188,6 +197,9 @@
     </ClInclude>
     <ClInclude Include="SFile\FileUtil.h">
       <Filter>FileUtil</Filter>
+    </ClInclude>
+    <ClInclude Include="process_callback.h">
+      <Filter>obcallback</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -94,7 +94,38 @@ PSSDTStruct InitSSDTAndShadow(BOOLEAN IsShadowSSDT)
 
 }
 
+PVOID  GetFuncExportName(_In_ PVOID ModuleBase, _In_ PCHAR FuncName) {
+	PIMAGE_DOS_HEADER lpDosHeader = (PIMAGE_DOS_HEADER)ModuleBase;
+	PIMAGE_NT_HEADERS64 lpNtHeader =
+		(PIMAGE_NT_HEADERS64)(lpDosHeader->e_lfanew + (ULONG64)ModuleBase);
 
+	PIMAGE_EXPORT_DIRECTORY lpExportDir =
+		(PIMAGE_EXPORT_DIRECTORY)((ULONG64)ModuleBase +
+			lpNtHeader->OptionalHeader
+			.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+			.VirtualAddress);
+
+	ULONG32* lpNameArr =
+		(ULONG32*)(lpExportDir->AddressOfNames + (ULONG64)ModuleBase);
+
+	ULONG32* lpFuncs =
+		(ULONG32*)(lpExportDir->AddressOfFunctions + (ULONG64)ModuleBase);
+
+	USHORT* lpOrdinals =
+		(USHORT*)(lpExportDir->AddressOfNameOrdinals + (ULONG64)ModuleBase);
+
+	for (auto nIdx = 0u; nIdx < lpExportDir->NumberOfFunctions; ++nIdx) {
+		if (!lpNameArr[nIdx] || !lpOrdinals[nIdx])
+			continue;
+
+		if (strcmpi_imp((PCHAR)((PUCHAR)ModuleBase + lpNameArr[nIdx]), FuncName) == 0) {
+			Log("%s %p \r\n", FuncName, (PUCHAR)ModuleBase + lpFuncs[lpOrdinals[nIdx]]);
+			return (PVOID)((PUCHAR)ModuleBase + lpFuncs[lpOrdinals[nIdx]]);
+		}
+	}
+	Log("%s  not found \r\n", FuncName);
+	return NULL;
+}
 
 PVOID  GetFunctionAddrInSSDT(ULONG serviceNum)
 {
@@ -137,3 +168,4 @@ PVOID  GetFunctionAddrInSSDT(ULONG serviceNum)
 
 	return ret;
 }
+ 

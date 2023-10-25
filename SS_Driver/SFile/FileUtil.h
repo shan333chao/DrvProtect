@@ -5,4 +5,4 @@
 BOOLEAN DestroyDriverFile(_In_ PUNICODE_STRING DriverPath);
 
 
-BOOLEAN RemoveFileLink(ULONG pid);
+BOOLEAN RemoveFileLink(PEPROCESS eprocess);

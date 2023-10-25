@@ -221,10 +221,13 @@ NTSTATUS PhysReadAddress(PVOID address, PVOID buffer, SIZE_T size, SIZE_T* read)
 {
 	if (!address)
 		return STATUS_UNSUCCESSFUL;
-
+#if (NTDDI_VERSION >= NTDDI_WIN8)
 	MM_COPY_ADDRESS addr = { 0 };
 	addr.PhysicalAddress.QuadPart = (LONGLONG)address;
 	return MmCopyMemory(buffer, addr, size, MM_COPY_MEMORY_PHYSICAL, read);
+#else
+	return STATUS_UNSUCCESSFUL;
+#endif
 }
 
 NTSTATUS PhysWriteAddress(PVOID address, PVOID buffer, SIZE_T size, SIZE_T* written)
@@ -235,7 +238,7 @@ NTSTATUS PhysWriteAddress(PVOID address, PVOID buffer, SIZE_T size, SIZE_T* writ
 	PHYSICAL_ADDRESS addr = { 0 };
 	addr.QuadPart = (LONGLONG)address;
 
-	PVOID mapped_mem = MmMapIoSpaceEx(addr, size, PAGE_READWRITE);
+	PVOID mapped_mem = MmMapIoSpace(addr, size, PAGE_READWRITE);
 
 	if (!mapped_mem)
 		return STATUS_UNSUCCESSFUL;

@@ -12,16 +12,17 @@ PNtProtectVirtualMemory GetNtProtectVirtualMemory()
 		return NtProtectVirtualMemoryAddr;
 	}
 
-	//.text : 00000001401BE203 50                            push    rax
-	//.text : 00000001401BE204 B8 50 00 00 00                mov     eax, 50h; 'P'
-	ULONG serviceNum = 0;
-	UNICODE_STRING uFuncName = { 0 };
-	RtlInitUnicodeString(&uFuncName, L"ZwProtectVirtualMemory");
-	serviceNum = GetNtFuncNumber(uFuncName, 0x50u, 0xB8u);
-	if (serviceNum)
-	{
-		NtProtectVirtualMemoryAddr = (PNtProtectVirtualMemory)GetFunctionAddrInSSDT(serviceNum);
-	}
+	////.text : 00000001401BE203 50                            push    rax
+	////.text : 00000001401BE204 B8 50 00 00 00                mov     eax, 50h; 'P'
+	//ULONG serviceNum = 0;
+	//UNICODE_STRING uFuncName = { 0 };
+	//RtlInitUnicodeString(&uFuncName, L"ZwProtectVirtualMemory");
+	//serviceNum = GetNtFuncNumber(uFuncName, 0x50u, 0xB8u);
+	//if (serviceNum)
+	//{
+
+	//}
+	NtProtectVirtualMemoryAddr = (PNtProtectVirtualMemory)GetFunctionAddrInSSDT(77);
 	return NtProtectVirtualMemoryAddr;
 }
 

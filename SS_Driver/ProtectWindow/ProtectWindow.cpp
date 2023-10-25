@@ -8,8 +8,8 @@ namespace ProtectWindow {
 		BOOLEAN IsHookStarted = FALSE;
 	FNtCreateFile g_NtCreateFile = 0;
 	FNtUserFindWindowEx	g_NtUserFindWindowEx = 0;
-	FNtUserBuildHwndList  g_NtUserBuildHwndList = 0;
-	FNtUserBuildHwndList7  g_NtUserBuildHwndList7 = 0;
+ 
+	FNtUserBuildHwndList7  g_NtUserBuildHwndList = 0;
 	FNtUserQueryWindow	g_NtUserQueryWindow = 0;
 	FNtUserGetForegroundWindow	g_NtUserGetForegroundWindow = 0;
 	FNtUserWindowFromPoint	g_NtUserWindowFromPoint = 0;
@@ -28,31 +28,42 @@ namespace ProtectWindow {
 	FNtUserCallHwndParam g_NtUserCallHwndParam = 0;
 	FNtUserValidateHandleSecure g_NtUserValidateHandleSecure = 0;
 	FNtUserCallHwnd g_NtUserCallHwnd = 0;
+	FNtUserGetWindowDC g_NtUserGetWindowDC = 0;
+	FNtUserGetDC g_NtUserGetDC = 0;
 	void __fastcall ssdt_call_back(unsigned long ssdt_index, void** ssdt_address)
 	{
 		// https://hfiref0x.github.io/
 		UNREFERENCED_PARAMETER(ssdt_index);
-		if (*ssdt_address == g_NtUserCallHwndParam) { *ssdt_address = MyNtUserCallHwndParam; return; }
+		if (*ssdt_address == 0)
+		{
+			return;
+		}
+		//if (*ssdt_address == g_NtUserCallHwndParam) { *ssdt_address = MyNtUserCallHwndParam; return; }
 		if (*ssdt_address == g_NtUserValidateHandleSecure) { *ssdt_address = MyNtUserValidateHandleSecure; return; }
-		if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }
-		if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }
+		//if (*ssdt_address == g_NtUserCallHwnd) { *ssdt_address = MyNtUserCallHwnd; return; }
+		//if (*ssdt_address == g_NtUserCallOneParam) { *ssdt_address = MyNtUserCallOneParam; return; }
 		if (*ssdt_address == g_NtUserInternalGetWindowText) { *ssdt_address = MyNtUserInternalGetWindowText; return; }
-		if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }
-		if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }
+		//if (*ssdt_address == g_NtUserPostMessage) { *ssdt_address = MyNtUserPostMessage; return; }
+		//if (*ssdt_address == g_NtUserMessageCall) { *ssdt_address = MyNtUserMessageCall; return; }
 		//if (*ssdt_address == g_NtQueryInformationProcess) { *ssdt_address = MyNtQueryInformationProcess; return; }
-		if (*ssdt_address == g_NtCreateFile) { *ssdt_address = MyNtCreateFile; return; }
+		//if (*ssdt_address == g_NtCreateFile) { *ssdt_address = MyNtCreateFile; return; }
 		//if (*ssdt_address == g_NtOpenThread) { *ssdt_address = MyNtOpenThread; return; }
 		//if (*ssdt_address == g_NtOpenProcess) { *ssdt_address = MyNtOpenProcess; return; }
 		if (*ssdt_address == g_NtUserFindWindowEx) { *ssdt_address = MyNtUserFindWindowEx; return; }
 		if (*ssdt_address == g_NtUserQueryWindow) { *ssdt_address = MyNtUserQueryWindow; return; }
 		//if (*ssdt_address == g_NtUserWindowFromPoint) { *ssdt_address = MyNtUserWindowFromPoint; return; }
 		if (*ssdt_address == g_NtUserGetForegroundWindow) { *ssdt_address = MyNtUserGetForegroundWindow; return; }
-		if (*ssdt_address == g_NtUserBuildHwndList) { *ssdt_address = MyNtUserBuildHwndList; return; }
-		if (*ssdt_address == g_NtUserSetWindowDisplayAffinity) { *ssdt_address = MyNtUserSetWindowDisplayAffinity; return; }
-		if (*ssdt_address == g_NtUserGetWindowDisplayAffinity) { *ssdt_address = MyNtUserGetWindowDisplayAffinity; return; }
+	 
+		if (*ssdt_address== g_NtUserBuildHwndList)
+		{
+			*ssdt_address = MyNtUserBuildHwndList7; 
+			return;
+		}
+ 
 		if (*ssdt_address == g_NtUserGetClassName) { *ssdt_address = MyNtUserGetClassName; return; }
 
-
+		if (*ssdt_address == g_NtUserGetWindowDC) { *ssdt_address = MyNtUserGetWindowDC; return; }
+		if (*ssdt_address == g_NtUserGetDC) { *ssdt_address = MyNtUserGetWindowDC; return; }
 
 
 		//if (*ssdt_address == g_NtUserBuildHwndList7) { *ssdt_address = MyNtUserBuildHwndList7;  return; }
@@ -132,6 +143,28 @@ namespace ProtectWindow {
 			}
 		}
 		return  g_NtUserValidateHandleSecure(hHdl);
+	}
+
+	__int64 MyNtUserGetWindowDC(__int64 hwnd)
+	{
+		if (Protect::IsProtectProcess(IoGetCurrentProcess()))
+		{
+			return  g_NtUserGetWindowDC(hwnd);
+		}
+		auto threadHandle = g_NtUserQueryWindow(ULongToHandle(hwnd), WindowActiveWindow);
+		if (threadHandle)
+		{
+			auto ret = Protect::IsProtectWND((HWND)hwnd, 0, threadHandle, PsGetCurrentProcessId());
+			auto pid = g_NtUserQueryWindow(ULongToHandle(hwnd), (WINDOWINFOCLASS)0);
+			if (ret == 1)
+			{
+				return   g_NtUserGetWindowDC(hwnd);
+			}
+			else if (ret > 1 || Protect::IsProtectPID(pid)) {
+				return g_NtUserGetWindowDC(0x10010);
+			}
+		}
+		return  g_NtUserGetWindowDC(hwnd);
 	}
 
 
@@ -368,67 +401,7 @@ namespace ProtectWindow {
 		return res;
 	}
 
-	NTSTATUS MyNtUserBuildHwndList(HANDLE hDesktop, HWND  hwndParent, BOOLEAN bChildren, BOOLEAN bUnknownFlag, ULONG dwThreadId, ULONG lParam, HWND* pWnd, PULONG pBufSize)
-	{
-
-		if (Protect::IsProtectProcess(PsGetCurrentProcess()))
-		{
-			return  g_NtUserBuildHwndList(hDesktop, hwndParent, bChildren, bUnknownFlag, dwThreadId, lParam, pWnd, pBufSize);
-		}
-		HANDLE currentThread = PsGetCurrentThreadId();
-		if (bChildren)
-		{
-			HANDLE handle = g_NtUserQueryWindow(hwndParent, WindowActiveWindow);
-			if (handle)
-			{
-				int ret = Protect::IsProtectWND(hwndParent, 0, handle, currentThread);
-				if (ret == 1)
-				{
-					return   g_NtUserBuildHwndList(hDesktop, hwndParent, bChildren, bUnknownFlag, dwThreadId, lParam, pWnd, pBufSize);
-				}
-				else if (ret > 1) {
-					return STATUS_UNSUCCESSFUL;
-				}
-			}
-		}
-		auto status = g_NtUserBuildHwndList(hDesktop, hwndParent, bChildren, bUnknownFlag, dwThreadId, lParam, pWnd, pBufSize);
-
-		if (NT_SUCCESS(status) && pWnd != nullptr && pBufSize != nullptr)
-		{
-			ULONG i = 0;
-			ULONG j;
-			while (i < *pBufSize)
-			{
-				if (pWnd[i] == nullptr)
-				{
-					i++;
-					continue;
-				}
-				auto handle = g_NtUserQueryWindow(pWnd[i], WindowActiveWindow);
-				if (!handle)
-				{
-					i++;
-					continue;
-				}
-				int ret = Protect::IsProtectWND(pWnd[i], 0, handle, currentThread);
-				auto pid = g_NtUserQueryWindow(pWnd[i], WindowProcess);
-				if (ret > 1 || Protect::IsProtectPID(pid))
-				{
-					if (i == 0)
-					{
-						pWnd[i] = (HWND)0x10010;
-					}
-					else {
-						pWnd[i] = pWnd[i - 1];
-					}
-				}
-				i++;
-			}
-		}
-
-		return status;
-	}
-
+ 
 	HANDLE MyNtUserQueryWindow(HWND  hWnd, WINDOWINFOCLASS WindowInfo)
 	{
 
@@ -543,9 +516,62 @@ namespace ProtectWindow {
 	}
 	NTSTATUS   MyNtUserBuildHwndList7(HANDLE hDesktop, HWND hwndParent, BOOLEAN bChildren, ULONG dwThreadId, ULONG lParam, PHANDLE pWnd, PULONG pBufSize) {
 
-		auto res = g_NtUserBuildHwndList7(hDesktop, hwndParent, bChildren, dwThreadId, lParam, pWnd, pBufSize);
+		if (Protect::IsProtectProcess(IoGetCurrentProcess()))
+		{
+			return  g_NtUserBuildHwndList(hDesktop, hwndParent, bChildren, dwThreadId, lParam, pWnd, pBufSize);
+		}
+		HANDLE currentThread = PsGetCurrentThreadId();
+		if (bChildren)
+		{
+			HANDLE handle = g_NtUserQueryWindow(hwndParent, WindowActiveWindow);
+			if (handle)
+			{
+				int ret = Protect::IsProtectWND(hwndParent, 0, handle, currentThread);
+				if (ret == 1)
+				{
+					return   g_NtUserBuildHwndList(hDesktop, hwndParent, bChildren, dwThreadId, lParam, pWnd, pBufSize);
+				}
+				else if (ret > 1) {
+					return STATUS_UNSUCCESSFUL;
+				}
+			}
+		}
+		auto status = g_NtUserBuildHwndList(hDesktop, hwndParent, bChildren, dwThreadId, lParam, pWnd, pBufSize);
 
-		return res;
+		if (NT_SUCCESS(status) && pWnd != nullptr && pBufSize != nullptr)
+		{
+			ULONG i = 0;
+			ULONG j;
+			while (i < *pBufSize)
+			{
+				if (pWnd[i] == nullptr)
+				{
+					i++;
+					continue;
+				}
+				HANDLE handle = g_NtUserQueryWindow(pWnd[i], WindowActiveWindow);
+				if (!handle)
+				{
+					i++;
+					continue;
+				}
+				int ret = Protect::IsProtectWND((HWND)pWnd[i], 0, handle, currentThread);
+				HANDLE pid = g_NtUserQueryWindow(pWnd[i], WindowProcess);
+				if (ret > 1 || Protect::IsProtectPID(pid))
+				{
+					if (i == 0)
+					{
+						pWnd[i] = (HANDLE)0x10010;
+					}
+					else {
+						pWnd[i] = pWnd[i - 1];
+					}
+				}
+				i++;
+			}
+		}
+
+		return status;
 	}
 
 	BOOLEAN MyNtUserSetWindowDisplayAffinity(HWND hWnd, LONG dwAffinity)
@@ -602,47 +628,40 @@ namespace ProtectWindow {
 		//Log("g_NtOpenProcess %p \r\n", g_NtOpenProcess);
 		//RtlInitUnicodeString(&str, L"NtOpenThread");
 		//g_NtOpenThread = (FNtOpenThread)MmGetSystemRoutineAddress(&str);
-		//Log("g_NtOpenThread %p \r\n", g_NtOpenThread);
-		InitializeWin32uDLL();
+		//Log("g_NtOpenThread %p \r\n", g_NtOpenThread); 
 
-
-		g_NtUserValidateHandleSecure = (FNtUserValidateHandleSecure)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserValidateHandleSecure"));
+		g_NtUserValidateHandleSecure = (FNtUserValidateHandleSecure)GetFunctionAddrInSSDT(0x1334);
 		Log("g_NtUserValidateHandleSecure %p \r\n", g_NtUserValidateHandleSecure);
-
-		g_NtUserCallHwnd = (FNtUserCallHwnd)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserCallHwnd"));
+		g_NtUserCallHwnd = (FNtUserCallHwnd)GetFunctionAddrInSSDT(0x110c);
 		Log("g_NtUserCallHwnd %p \r\n", g_NtUserCallHwnd);
-
-		g_NtUserCallHwndParam = (FNtUserCallHwndParam)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserCallHwndParam"));
+		g_NtUserCallHwndParam = (FNtUserCallHwndParam)GetFunctionAddrInSSDT(0x109e);
 		Log("g_NtUserCallHwndParam %p \r\n", g_NtUserCallHwndParam);
-
-		g_NtUserGetClassName = (FNtUserGetClassName)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserGetClassName"));
+		g_NtUserGetClassName = (FNtUserGetClassName)GetFunctionAddrInSSDT(0x107b);
 		Log("g_NtUserGetClassName %p \r\n", g_NtUserGetClassName);
-		g_NtUserPostMessage = (FNtUserPostMessage)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserPostMessage"));
+		g_NtUserPostMessage = (FNtUserPostMessage)GetFunctionAddrInSSDT(0x100f);
 		Log("g_NtUserPostMessage %p \r\n", g_NtUserPostMessage);
-		g_NtUserMessageCall = (FNtUserMessageCall)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserMessageCall"));
+		g_NtUserMessageCall = (FNtUserMessageCall)GetFunctionAddrInSSDT(0x1007);
 		Log("g_NtUserMessageCall %p \r\n", g_NtUserMessageCall);
-		g_NtUserInternalGetWindowText = (FNtUserInternalGetWindowText)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserInternalGetWindowText"));
+		g_NtUserInternalGetWindowText = (FNtUserInternalGetWindowText)GetFunctionAddrInSSDT(0x1063);
 		Log("g_NtUserInternalGetWindowText %p \r\n", g_NtUserInternalGetWindowText);
-		g_NtUserSetParent = (FNtUserSetParent)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserSetParent"));
-		Log("g_NtUserSetParent %p \r\n", g_NtUserSetParent);
-		g_NtUserFindWindowEx = (FNtUserFindWindowEx)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserFindWindowEx"));
+		//g_NtUserSetParent = (FNtUserSetParent)GetFunctionAddrInSSDT(0x1077);
+		//Log("g_NtUserSetParent %p \r\n", g_NtUserSetParent);
+		g_NtUserFindWindowEx = (FNtUserFindWindowEx)GetFunctionAddrInSSDT(0x106e);
 		Log("g_NtUserFindWindowEx %p \r\n", g_NtUserFindWindowEx);
-		g_NtUserQueryWindow = (FNtUserQueryWindow)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserQueryWindow"));
+		g_NtUserQueryWindow = (FNtUserQueryWindow)GetFunctionAddrInSSDT(0x1010);
 		Log("g_NtUserQueryWindow %p \r\n", g_NtUserQueryWindow);
-		g_NtUserGetForegroundWindow = (FNtUserGetForegroundWindow)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserGetForegroundWindow"));
-		Log("g_NtUserGetForegroundWindow %p \r\n", g_NtUserGetForegroundWindow);
-		g_NtUserWindowFromPoint = (FNtUserWindowFromPoint)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserWindowFromPoint"));
-		Log("g_NtUserWindowFromPoint %p \r\n", g_NtUserWindowFromPoint);
-		g_NtUserBuildHwndList = (FNtUserBuildHwndList)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserBuildHwndList"));
-		Log("g_NtUserBuildHwndList %p \r\n", g_NtUserBuildHwndList);
-		g_NtUserSetWindowDisplayAffinity = (FNtUserSetWindowDisplayAffinity)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserSetWindowDisplayAffinity"));
-		Log("g_NtUserSetWindowDisplayAffinity %p \r\n", g_NtUserSetWindowDisplayAffinity);
-		g_NtUserGetWindowDisplayAffinity = (FNtUserGetWindowDisplayAffinity)GetFunctionAddrInSSDT(GetFuncAddrByExportName("NtUserGetWindowDisplayAffinity"));
-		Log("g_NtUserGetWindowDisplayAffinity %p \r\n", g_NtUserGetWindowDisplayAffinity);
-		DeinitializeWin32uDLL();
-		IsHookStarted = TRUE;
+		g_NtUserGetForegroundWindow = (FNtUserGetForegroundWindow)GetFunctionAddrInSSDT(0x103c);
+		Log("g_NtUserGetForegroundWindow %p \r\n", g_NtUserGetForegroundWindow); 
+		g_NtUserBuildHwndList = (FNtUserBuildHwndList7)GetFunctionAddrInSSDT(0x101c);
+		Log("g_NtUserBuildHwndList %p \r\n", g_NtUserBuildHwndList); 
+		 
+		g_NtUserGetWindowDC = (FNtUserGetWindowDC)GetFunctionAddrInSSDT(4196);
+		Log("g_NtUserGetWindowDC %p \r\n", g_NtUserGetWindowDC);
 
+		g_NtUserGetDC = (FNtUserGetDC)GetFunctionAddrInSSDT(4106);
+		Log("g_NtUserGetDC %p \r\n", g_NtUserGetDC);
 
+		IsHookStarted = TRUE; 
 		//return  IsHookStarted ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 		return STATUS_SUCCESS;
 	}

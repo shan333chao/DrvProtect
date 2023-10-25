@@ -60,8 +60,7 @@
     <DriverType>WDM</DriverType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <TargetVersion>
-    </TargetVersion>
+    <TargetVersion>Windows7</TargetVersion>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
@@ -144,6 +143,7 @@
       <LanguageStandard>stdcpp14</LanguageStandard>
       <RuntimeLibrary>
       </RuntimeLibrary>
+      <PreprocessorDefinitions>_DEBUG_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
@@ -172,6 +172,7 @@
     <ClCompile Include="Memmory\PMemory.c" />
     <ClCompile Include="Process\FakeProcess.c" />
     <ClCompile Include="Process\Process.c" />
+    <ClCompile Include="process_callback.cpp" />
     <ClCompile Include="ProtectWindow\Protect.cpp" />
     <ClCompile Include="ProtectWindow\ProtectWindow.cpp" />
     <ClCompile Include="SFile\FileUtil.c" />
@@ -199,6 +200,7 @@
     <ClInclude Include="Memmory\PMemory.h" />
     <ClInclude Include="Process\FakeProcess.h" />
     <ClInclude Include="Process\Process.h" />
+    <ClInclude Include="process_callback.h" />
     <ClInclude Include="ProtectWindow\Protect.hpp" />
     <ClInclude Include="ProtectWindow\ProtectWindow.hpp" />
     <ClInclude Include="SFile\FileUtil.h" />

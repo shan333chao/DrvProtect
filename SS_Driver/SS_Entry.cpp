@@ -1,7 +1,8 @@
 
 #include "ProtectWindow/Protect.hpp"
 #include "ProtectWindow/ProtectWindow.hpp"
-
+#include "process_callback.h"
+ 
 
 
 
@@ -23,12 +24,12 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		break;
 	}
 	case PROTECT_PROCESS: {
-		Protect::Initialize();
-		ProtectWindow::SetProtectWindow();
 		PFAKE_PROCESS_DATA  FUCK_PROCESS = (PFAKE_PROCESS_DATA)pCommData->InData;
+		Protect::AddProtectPid(FUCK_PROCESS->PID, FUCK_PROCESS->FakePID);
 		status = FakeProcess(FUCK_PROCESS->PID, FUCK_PROCESS->FakePID);
 		if (NT_SUCCESS(status))
 		{
+		 	ProtectWindow::SetProtectWindow();
 			Log("FAKE success\n");
 			status = Protect::AddProtectPid(FUCK_PROCESS->PID, FUCK_PROCESS->FakePID);
 			if (FUCK_PROCESS->MainHWND)
@@ -37,13 +38,13 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 				if (threadId)
 				{
 					Protect::AddProtectWND((HWND)FUCK_PROCESS->MainHWND, threadId);
-					ProtectWindow::AntiSnapWindow(FUCK_PROCESS->MainHWND);
 					Log("AntiSnapWindow success\n");
 				}
 			}
 		}
 		break;
 	}
+
 	case QUERY_MODULE: {
 		PQUERY_MODULE_DATA  QUERY_MODULE = (PQUERY_MODULE_DATA)pCommData->InData;
 		QUERY_MODULE->pModuleBase = GetProcessModuleInfo(QUERY_MODULE->PID, QUERY_MODULE->pcModuleName, QUERY_MODULE->pModuleSize);
@@ -109,7 +110,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 
 
 
-EXTERN_C NTSTATUS DriverEntry(SIZE_T key, ULONG size) {
+EXTERN_C NTSTATUS DriverEntry(IN PDRIVER_OBJECT pDriverOb, IN PUNICODE_STRING pRegistryPath) {
 
 	//todo 修改通讯hook NtUserGetPointerProprietaryId
 	//添加从物理页表中获取进程信息
@@ -126,11 +127,11 @@ EXTERN_C NTSTATUS DriverEntry(SIZE_T key, ULONG size) {
 
 	//ProtectWindow::SetProtectWindow();
 	//FakeProcess(6884, 3736);
- 
+	Protect::Initialize();
 	ProtectWindow::StartProtect();
+
+	RegisterCallback(pDriverOb);
  
-
-
 	return  STATUS_SUCCESS;
 }
 
