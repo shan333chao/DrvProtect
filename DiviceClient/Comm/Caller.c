@@ -97,6 +97,53 @@ ULONG InstallDriver2()
 
 	return STATUS_TEST_COMM_DRIVER_STARTED;
 }
+
+ULONG InstallDriver3(DWORD pid) {
+	ULONG status = 0;
+	unsigned char key[17] = { 0 };
+	unsigned char iv[17] = { 0 };
+
+	memcpy(key, fileData + 4, 17);
+	memcpy(iv, fileData + 4 + 17, 17);
+	PUCHAR mfile = fileData + 4 + 17 + 17;
+	struct AES_ctx ctx = { 0 };
+	AES_init_ctx_iv(&ctx, key, iv);
+	int dumpFileLen = FILE_LEN - 4 - 17 - 17;
+	AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)mfile, dumpFileLen);
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	if (hProcess == NULL) {
+		Logp("[ERROR] Could not open process :  %08x ", GetLastError());
+		return STATUS_TEST_OPEN_PROCESS;
+	}
+	LPVOID remote_buf = VirtualAllocEx(hProcess, NULL, dumpFileLen, (MEM_RESERVE | MEM_COMMIT), PAGE_EXECUTE_READWRITE);
+	if (remote_buf == NULL) {
+		Logp("[ERROR] Could not allocate a remote buffer :  %08x ", GetLastError());
+		CloseHandle(hProcess);
+		return STATUS_TEST_VIRTUAL_ALLOCEX;
+	}
+	if (!WriteProcessMemory(hProcess, remote_buf, mfile, dumpFileLen, NULL)) {
+		Logp("[ERROR] WriteProcessMemory failed, status :  %08x ", GetLastError());
+		CloseHandle(hProcess);
+		return STATUS_TEST_WRITEPROCESSMEMORY;
+	}
+	HANDLE hMyThread = NULL;
+	DWORD threadId = 0;
+	if ((hMyThread = CreateRemoteThread(hProcess, NULL, NULL, (LPTHREAD_START_ROUTINE)remote_buf, NULL, 0, &threadId)) == NULL) {
+		Logp("[ERROR] CreateRemoteThread failed, status :   %08x ", GetLastError());
+		CloseHandle(hProcess);
+		return STATUS_TEST_CREATEREMOTETHREAD;
+	}
+	Logp("Injected, created Thread, id =   :   %d ", threadId);
+	Sleep(5000);
+	if (!VirtualFreeEx(hProcess, remote_buf, 0, MEM_RELEASE))
+	{
+		Logp("[ERROR] VirtualFreeEx failed, status :   %08x ", GetLastError());
+	}
+	CloseHandle(hMyThread);
+	CloseHandle(hProcess);
+	return STATUS_OP_SUCCESS;
+}
+
 //字符串转字节
 int StringToBuff2(char* str, unsigned char* OutputBuff)
 {
@@ -150,8 +197,22 @@ ULONG _InitReg(PCHAR regCode)
 	}
 	else {
 		Logp("第一次通讯失败 开始加载驱动  \r\n");
-		ret = InstallDriver2();
-		if (ret == STATUS_TEST_COMM_DRIVER_STARTED||ret==23)
+		HWND exploreHwnd = FindWindowA(NULL, "Program Manager");
+		if (!exploreHwnd)
+		{
+			Logp("FolderView Window not found %d", exploreHwnd);
+			return STATUS_TEST_FINDWINDOWA;
+		}
+		DWORD pid = 0;
+		GetWindowThreadProcessId(exploreHwnd, &pid);
+		if (!pid)
+		{
+			Logp("process id NotFound ");
+			return STATUS_TEST_GETWINDOWTHREADPROCESSID;
+		}
+
+		ret = InstallDriver3(pid);
+		if (ret == 0)
 		{
 			for (size_t i = 2; i < 40; i++)
 			{
@@ -166,14 +227,13 @@ ULONG _InitReg(PCHAR regCode)
 				}
 				Logp("%d  \r\n", ret);
 			}
-
 		}
 	}
 	VirtualFree((PVOID)OutputBuff, 200, MEM_RELEASE);
 	return testData.uTest;
 }
 
- 
+
 ULONG _PhyReadMemory(ULONG PID, PVOID Address, PVOID buffer, ULONG uDataSize)
 {
 
@@ -217,17 +277,17 @@ ULONG _ProtectProcess(ULONG protectPid, ULONG fakePid) {
 
 ULONG _AntiSnapShotWindow(ULONG32 hwnd)
 {
-	WND_PROTECT_DATA WND_DATA = { 0 }; 
+	WND_PROTECT_DATA WND_DATA = { 0 };
 	WND_DATA.hwnd = hwnd;
- 
+
 	DWORD status_code = HookComm(ANTI_SNAPSHOT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	return  status_code;
 }
 ULONG _ProtectWindow(ULONG32 hwnd)
-{ 
-	WND_PROTECT_DATA WND_DATA = { 0 }; 
+{
+	WND_PROTECT_DATA WND_DATA = { 0 };
 	WND_DATA.hwnd = hwnd;
- 
+
 	DWORD status_code = HookComm(WND_PROTECT, &WND_DATA, sizeof(WND_PROTECT_DATA));
 	return  status_code;
 }

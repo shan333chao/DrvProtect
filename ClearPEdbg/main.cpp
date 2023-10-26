@@ -106,10 +106,7 @@ void write_header_file(unsigned char* pFileData, long lFileSize ) {
 	fputs("\r\n};\r\n", pfile);
 	fclose(pfile);
 }
-void removeDebug() {
-
-
-
+void removeDebug() { 
 	FILE* pfile = NULL;
 	long lFileSize = 0;
 	unsigned char* pFileData = NULL;
@@ -119,7 +116,7 @@ void removeDebug() {
 
 	char currentPath[MAX_PATH] = { 0 };
 	GetCurrentDirectoryA(MAX_PATH, currentPath);
-	char fileName[15] = "ProxyDrv.sys";
+	char fileName[20] = "loader_shell.dll";
 	char gang[5] = "\\";
 	char currentPath2[MAX_PATH] = { 0 };
 	memcpy(currentPath2, currentPath, sizeof(currentPath));
@@ -151,27 +148,7 @@ void removeDebug() {
 	fclose(pfile);
 	pfile = NULL;
  
-	PIMAGE_DOS_HEADER pDosImage = (PIMAGE_DOS_HEADER)pFileData;
-	PIMAGE_NT_HEADERS pNtsImage = (PIMAGE_NT_HEADERS)(pFileData + pDosImage->e_lfanew);
-
-	//É¾³ýµ÷ÊÔÐÅÏ¢
-	DWORD _PE_DEBUG =  pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress ;
-	DWORD addr= rav2Fov((PCHAR)pFileData, _PE_DEBUG);
-	ULONG dbgDirCount = pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size / sizeof(IMAGE_DEBUG_DIRECTORY);
-	PIMAGE_DEBUG_DIRECTORY pDEBUG = (PIMAGE_DEBUG_DIRECTORY)(addr + pFileData);
-	for (size_t i = 0; i < dbgDirCount; i++)
-	{ 
-		memset(pDEBUG[i].PointerToRawData + pFileData, 0x00, pDEBUG[i].SizeOfData);
-	}
-	memset(addr + pFileData, 0xcc, pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size);
-	pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress = 0;
-	pNtsImage->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size = 0;
-
-	char nfileName[20] = "ProxyDrv_nodbg.sys";
-
-
-
-	writeFile(nfileName, pFileData, lFileSize);
+ 
 
 	struct AES_ctx ctx = {0};
 	unsigned char key[] = "\xde\xad\xbe\xef\xca\xfe\xba\xbe\xde\xad\xbe\xef\xca\xfe\xba\xbe";
@@ -200,8 +177,7 @@ void removeDebug() {
 	memcpy(encryptData, prebuff, sizeof(prebuff));
 	memcpy(encryptData + sizeof(prebuff), pFileData, lFileSize);
 
-	char nencryptfileName[20] = "encrypt.png";
-	writeFile(nencryptfileName,(PUCHAR) encryptData, encryptSize);
+ 
 
 	write_header_file((PUCHAR)encryptData, encryptSize);
 	free(encryptData);

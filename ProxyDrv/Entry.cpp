@@ -45,7 +45,7 @@ EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pDriver, PUNICODE_STRING pReg) {
 	//É¾³ý×¢²á±í
 	LoadDrv::DeleteRegeditEntry(pReg);
 	PUCHAR drvImageBase = LoadDrv::LoadDriver(pDriver, pReg);
-	ClearDriverTrace(pDriver);
-	LoadDrv::ClearPeSection(drvImageBase);
+	//ClearDriverTrace(pDriver);
+	//LoadDrv::ClearPeSection(drvImageBase);
 	return  STATUS_DATA_ERROR;
 }

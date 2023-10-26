@@ -107,7 +107,7 @@ EXTERN_C NTSTATUS NTAPI Dispatch(PCOMM_DATA pCommData) {
 		PTEST_TATA td = (PTEST_TATA)pCommData->InData;
 		td->uTest = ProtectRoute::SetValidate(td->regCode, td->size, td->time);
 		Log("[SSS]TEST %08x \r\n", td->uTest);
-		clear_unloaded_driver();
+		//clear_unloaded_driver();
 		status = STATUS_SUCCESS;
 		break;
 	}
@@ -278,8 +278,10 @@ EXTERN_C NTSTATUS DriverEntry(PDRIVER_OBJECT pdriver, PUNICODE_STRING reg) {
 }
 #else
 
-EXTERN_C NTSTATUS DriverEntry(ULONG_PTR NtoskrlImageBase, PUNICODE_STRING reg) {
+EXTERN_C NTSTATUS DriverEntry(ULONG_PTR NtoskrlImageBase, ULONG_PTR NtoskrlImageBase2) {
+	Logf("NtoskrlImageBase %p  NtoskrlImageBase2 %p", NtoskrlImageBase, NtoskrlImageBase2);
 	Utils::SetKernelBase(NtoskrlImageBase);
+
 	Utils::InitApis();
 	if (Utils::InitOsVersion().dwBuildNumber > 7601)
 	{

@@ -93,7 +93,7 @@ void encryptData() {
 	pfile = NULL;
 
 	//写出文件
-	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\ProxyDrv\\MyDriver.h", "w");
+	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\NewLoader\\MyDriver.h", "w");
 	if (!pfile)
 	{
 		printf("写出文件失败");
@@ -220,7 +220,7 @@ void NoEncryptData() {
 	pfile = NULL;
 
 	//写出文件
-	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\ProxyDrv\\MyDriver2.h", "w");
+	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\NewLoader\\MyDriver2.h", "w");
 	if (!pfile)
 	{
 		printf("写出文件失败");
