@@ -3,7 +3,14 @@
 #include "FuncDef.h"
 
 
-HMODULE dllModule = LoadLibraryA("c:\\SSS_dll_dbg_x64.dll");
+#ifdef _X86
+HMODULE dllModule = LoadLibraryA("SSS_dll_x86.dll");
+#else
+HMODULE dllModule = LoadLibraryA("SSS_dll_x64.dll");
+#endif // WIN32
+
+
+
 WriteMemory write_memory = NULL;
 ReadMemory read_memory = NULL;
 InitReg reg = NULL;
@@ -356,7 +363,7 @@ VOID InjectX64DllExample() {
 
 
 	ULONG pid = 0;
-	char moduleName[] = "die.exe";
+	char moduleName[] = "x64dbg.exe";
 	pid = GetProcessId(moduleName);
 	if (!pid)
 	{
@@ -467,7 +474,7 @@ int main()
 	//InjectX64DllExample();
 	//GetModuleExportExample();
 	//GetModuleExportExample2();
-	CreateThreadExample();
+	//CreateThreadExample();
 	getchar();
 
 

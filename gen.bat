@@ -43,3 +43,14 @@ ClearPEdbg.exe
 
 "C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /Rebuild "Release|x86"  /project  C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\DiviceClient.vcxproj
 
+copy C:\DriverCodes\HideDriver\NickolasZhao\DiviceClient\driver_shellcode.h  C:\DriverCodes\HideDriver\NickolasZhao\SSS_dll
+
+"C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /Rebuild "Release|x64"  /project  C:\DriverCodes\HideDriver\NickolasZhao\SSS_dll\SSS_dll.vcxproj
+
+"C:\ProgramFiles (x86)\VisualStudio\2019\Community\Common7\IDE\devenv.com"  "C:\DriverCodes\HideDriver\NickolasZhao\YSN.sln" /Rebuild "Release|x86"  /project  C:\DriverCodes\HideDriver\NickolasZhao\SSS_dll\SSS_dll.vcxproj
+
+del /q C:\DriverCodes\HideDriver\NickolasZhao\out_put\*.*
+
+copy C:\DriverCodes\HideDriver\NickolasZhao\Win32\Release\SSS_dll_x86.dll C:\DriverCodes\HideDriver\NickolasZhao\out_put
+copy C:\DriverCodes\HideDriver\NickolasZhao\x64\Release\SSS_dll_x64.dll C:\DriverCodes\HideDriver\NickolasZhao\out_put
+

@@ -68,7 +68,7 @@ void Get_time_t(time_t* t)
 
  
 
-	printf("idx %d  %s  \t", idx, ntp_host[idx]);
+
 	addr_server.sin_addr.S_un.S_addr = inet_addr(ntp_host[idx]); //该地址为阿里云NTP服务器的公网地址，其他NTP服务器地址可自行百度搜索。
 	SOCKADDR_IN sock;
 	int len = sizeof(sock);
