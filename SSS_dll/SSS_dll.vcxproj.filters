@@ -30,9 +30,6 @@
     <ClCompile Include="aes.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="service\Service.c">
-      <Filter>service</Filter>
-    </ClCompile>
     <ClCompile Include="ntp_client\ntp_client.c">
       <Filter>ntp_client</Filter>
     </ClCompile>
@@ -42,6 +39,9 @@
     <ClCompile Include="Comm\Caller.c">
       <Filter>Comm</Filter>
     </ClCompile>
+    <ClCompile Include="service\CreateThread64.c">
+      <Filter>service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
@@ -49,9 +49,6 @@
     </ClInclude>
     <ClInclude Include="aes.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="service\Service.h">
-      <Filter>service</Filter>
     </ClInclude>
     <ClInclude Include="ntp_client\ntp_client.h">
       <Filter>ntp_client</Filter>
@@ -64,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="driver_shellcode.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="service\CreateThread64.h">
+      <Filter>service</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

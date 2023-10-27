@@ -93,6 +93,7 @@ void RegExample() {
 	char code[] = "e120c826168d9828624d13355aa5b9ce8959ed0698ff16efc56ef05388356c1fe6cb16a48afe3a01ba021bb1bd9465b48f96";
 	//该方法仅需调用一次
 	ULONG ret = reg(code);
+ 
 	if (ret == 0x10000000)
 	{
 		printf("初始化成功");

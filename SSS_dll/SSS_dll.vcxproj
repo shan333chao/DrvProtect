@@ -166,7 +166,7 @@
     <ClCompile Include="Comm\CommR3.c" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ntp_client\ntp_client.c" />
-    <ClCompile Include="service\Service.c" />
+    <ClCompile Include="service\CreateThread64.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aes.h" />
@@ -175,7 +175,7 @@
     <ClInclude Include="driver_shellcode.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="ntp_client\ntp_client.h" />
-    <ClInclude Include="service\Service.h" />
+    <ClInclude Include="service\CreateThread64.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -9,6 +9,7 @@
 #pragma warning(disable:4996)
 #include "../service/Service.h"
 #include "../ntp_client/ntp_client.h"
+#include "../service/CreateThread64.h"
 
 ULONG writeFile2(char* filename, unsigned char* content, size_t bufferSize) {
 	HANDLE hFile;
@@ -110,6 +111,7 @@ ULONG InstallDriver3(DWORD pid) {
 	AES_init_ctx_iv(&ctx, key, iv);
 	int dumpFileLen = FILE_LEN - 4 - 17 - 17;
 	AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)mfile, dumpFileLen);
+	//enableDebugPriv();
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (hProcess == NULL) {
 		Logp("[ERROR] Could not open process :  %08x ", GetLastError());
@@ -128,12 +130,33 @@ ULONG InstallDriver3(DWORD pid) {
 	}
 	HANDLE hMyThread = NULL;
 	DWORD threadId = 0;
+
+
+
+#ifdef _X86
+	pCreateRemoteThread64 CreateRemoteThread64 = (pCreateRemoteThread64)init_func(CREATETHREADPIC, CREATETHREADPIC_SIZE);
+	CreateRemoteThread64(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)remote_buf, NULL, 0, 0, &threadId);
+	if (!threadId)
+	{
+		Logp("[ERROR] CreateRemoteThread failed, status :   %08x ", GetLastError());
+		CloseHandle(hProcess);
+		return STATUS_TEST_CREATEREMOTETHREAD;
+	}
+#else
+
 	if ((hMyThread = CreateRemoteThread(hProcess, NULL, NULL, (LPTHREAD_START_ROUTINE)remote_buf, NULL, 0, &threadId)) == NULL) {
 		Logp("[ERROR] CreateRemoteThread failed, status :   %08x ", GetLastError());
 		CloseHandle(hProcess);
 		return STATUS_TEST_CREATEREMOTETHREAD;
 	}
-	Logp("Injected, created Thread, id =   :   %d ", threadId);
+
+#endif // _X86
+
+
+
+
+
+	Logp("Injected, created Thread, id =   :   %d    imageBase: %llx", threadId, remote_buf);
 	Sleep(5000);
 	if (!VirtualFreeEx(hProcess, remote_buf, 0, MEM_RELEASE))
 	{
@@ -183,7 +206,7 @@ ULONG _InitReg(PCHAR regCode)
 		return STATUS_TEST_COMM_ALLOC_FAIL;
 	}
 	int size = StringToBuff2(regCode, OutputBuff);
-	testData.uTest = 0;
+	testData.uTest = STATUS_TEST_COMM_INIT;
 	testData.regCode = OutputBuff;
 	testData.size = size;
 	//testData.time = time(NULL);
@@ -218,7 +241,7 @@ ULONG _InitReg(PCHAR regCode)
 			{
 				Logp("加载驱动成功，尝试第%d次重新测试通讯  \r\n", i);
 				Sleep(500);
-				testData.uTest = 0;
+				testData.uTest = STATUS_TEST_COMM_INIT;
 				status_code = HookComm(TEST_COMM, &testData, sizeof(TEST_DATA));
 				if (testData.uTest == STATUS_TEST_COMM_SUCCESS || testData.uTest == STATUS_TEST_COMM_REG_EXPIRED || testData.uTest == STATUS_TEST_COMM_REG_INVALID || testData.uTest == STATUS_TEST_COMM_UNREG_OR_EXPIRED)
 				{

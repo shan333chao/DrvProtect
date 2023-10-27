@@ -7,57 +7,16 @@
 #include "../driver_shellcode.h"
 #include "../log.h"
 #pragma warning(disable:4996)
-#include "../service/Service.h"
+#ifdef _X86
+#include "../service/CreateThread64.h"
+#endif
 #include "../ntp_client/ntp_client.h"
 
-ULONG writeFile2(char* filename, unsigned char* content, size_t bufferSize) {
-	HANDLE hFile;
-	DWORD dwBytesWritten = 0;
-	BOOL bErrorFlag = FALSE;
+ 
 
-	hFile = CreateFileA((LPCSTR)filename, // name of the file
-		GENERIC_WRITE,                    // open for writing
-		0,                                // do not share
-		NULL,                             // default security
-		CREATE_ALWAYS,                    // always override file
-		FILE_ATTRIBUTE_NORMAL,            // normal file
-		NULL);                            // no attr. template
+ 
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		Logp("[-] Failed to access: %s\n", (char*)filename);
-		return STATUS_TEST_COMM_MISS_DRIVE_FILE;
-	}
-
-	bErrorFlag = WriteFile(
-		hFile,           // open file handle
-		content,         // start of data to write
-		(DWORD)bufferSize,      // number of bytes to write
-		&dwBytesWritten, // number of bytes that were written
-		NULL);           // no overlapped structure
-	CloseHandle(hFile);
-	if (FALSE == bErrorFlag) {
-		return STATUS_TEST_COMM_MISS_DRIVE_FILE;
-	}
-	Logp("[*] %s file created.\n", filename);
-	return STATUS_OP_SUCCESS;
-}
-
-//生成随机字符串
-void GenerateRandomString2(PCHAR randomString, int length) {
-	char characters[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	srand((unsigned int)time(NULL));
-	for (int i = 0; i < length; i++) {
-		int randomIndex = rand() % (sizeof(characters) - 1);
-		randomString[i] = characters[randomIndex];
-	}
-	randomString[length] = '\0';
-
-}
-
-
-//安装驱动
-ULONG InstallDriver2()
-{
+ULONG InstallDriver3(DWORD pid) {
 	ULONG status = 0;
 	unsigned char key[17] = { 0 };
 	unsigned char iv[17] = { 0 };
@@ -69,34 +28,62 @@ ULONG InstallDriver2()
 	AES_init_ctx_iv(&ctx, key, iv);
 	int dumpFileLen = FILE_LEN - 4 - 17 - 17;
 	AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)mfile, dumpFileLen);
-	int namelen = 10;
-	char* szDriverName = (char*)malloc((namelen + 1) * sizeof(char));
-	memset(szDriverName, 0, namelen);
-	GenerateRandomString2(szDriverName, namelen);
-	char szDriverFullPath[MAX_PATH];
-	GetCurrentDirectoryA(MAX_PATH, szDriverFullPath);
-	sprintf(szDriverFullPath, "%s\\%s", szDriverFullPath, szDriverName);
-	status = writeFile2(szDriverFullPath, mfile, dumpFileLen);
-
-	if (status > 0)
-	{
-		free(szDriverName);
-		return status;
+	//enableDebugPriv();
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	if (hProcess == NULL) {
+		Logp("[ERROR] Could not open process :  %08x ", GetLastError());
+		return STATUS_TEST_OPEN_PROCESS;
 	}
+	LPVOID remote_buf = VirtualAllocEx(hProcess, NULL, dumpFileLen, (MEM_RESERVE | MEM_COMMIT), PAGE_EXECUTE_READWRITE);
+	if (remote_buf == NULL) {
+		Logp("[ERROR] Could not allocate a remote buffer :  %08x ", GetLastError());
+		CloseHandle(hProcess);
+		return STATUS_TEST_VIRTUAL_ALLOCEX;
+	}
+	if (!WriteProcessMemory(hProcess, remote_buf, mfile, dumpFileLen, NULL)) {
+		Logp("[ERROR] WriteProcessMemory failed, status :  %08x ", GetLastError());
+		CloseHandle(hProcess);
+		return STATUS_TEST_WRITEPROCESSMEMORY;
+	}
+	HANDLE hMyThread = NULL;
+	DWORD threadId = 0;
+
+
 
 #ifdef _X86
-	status = CreateServiceAndStartX86(szDriverFullPath, szDriverName);
-#else
-	status = CreateServiceAndStartX64(szDriverFullPath, szDriverName);
-#endif // _X64
-	free(szDriverName);
-	if (status > 0)
+	pCreateRemoteThread64 CreateRemoteThread64 = (pCreateRemoteThread64)init_func(CREATETHREADPIC, CREATETHREADPIC_SIZE);
+	CreateRemoteThread64(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)remote_buf, NULL, 0, 0, &threadId);
+	if (!threadId)
 	{
-		return status;
+		Logp("[ERROR] CreateRemoteThread failed, status :   %08x ", GetLastError());
+		CloseHandle(hProcess);
+		return STATUS_TEST_CREATEREMOTETHREAD;
+	}
+#else
+
+	if ((hMyThread = CreateRemoteThread(hProcess, NULL, NULL, (LPTHREAD_START_ROUTINE)remote_buf, NULL, 0, &threadId)) == NULL) {
+		Logp("[ERROR] CreateRemoteThread failed, status :   %08x ", GetLastError());
+		CloseHandle(hProcess);
+		return STATUS_TEST_CREATEREMOTETHREAD;
 	}
 
-	return STATUS_TEST_COMM_DRIVER_STARTED;
+#endif // _X86
+
+
+
+
+
+	Logp("Injected, created Thread, id =   :   %d    imageBase: %llx", threadId, remote_buf);
+	Sleep(5000);
+	if (!VirtualFreeEx(hProcess, remote_buf, 0, MEM_RELEASE))
+	{
+		Logp("[ERROR] VirtualFreeEx failed, status :   %08x ", GetLastError());
+	}
+	CloseHandle(hMyThread);
+	CloseHandle(hProcess);
+	return STATUS_OP_SUCCESS;
 }
+ 
 //字符串转字节
 int StringToBuff2(char* str, unsigned char* OutputBuff)
 {
@@ -136,7 +123,7 @@ ULONG _InitReg(PCHAR regCode)
 		return STATUS_TEST_COMM_ALLOC_FAIL;
 	}
 	int size = StringToBuff2(regCode, OutputBuff);
-	testData.uTest = 0;
+	testData.uTest = STATUS_TEST_COMM_INIT;
 	testData.regCode = OutputBuff;
 	testData.size = size;
 	//testData.time = time(NULL);
@@ -150,14 +137,28 @@ ULONG _InitReg(PCHAR regCode)
 	}
 	else {
 		Logp("第一次通讯失败 开始加载驱动  \r\n");
-		ret = InstallDriver2();
-		if (ret == STATUS_TEST_COMM_DRIVER_STARTED || ret == 23)
+		HWND exploreHwnd = FindWindowA(NULL, "Program Manager");
+		if (!exploreHwnd)
+		{
+			Logp("FolderView Window not found %d", exploreHwnd);
+			return STATUS_TEST_FINDWINDOWA;
+		}
+		DWORD pid = 0;
+		GetWindowThreadProcessId(exploreHwnd, &pid);
+		if (!pid)
+		{
+			Logp("process id NotFound ");
+			return STATUS_TEST_GETWINDOWTHREADPROCESSID;
+		}
+
+		ret = InstallDriver3(pid);
+		if (ret ==  0)
 		{
 			for (size_t i = 2; i < 40; i++)
 			{
 				Logp("加载驱动成功，尝试第%d次重新测试通讯  \r\n", i);
 				Sleep(500);
-				testData.uTest = 0;
+				testData.uTest = STATUS_TEST_COMM_INIT;
 				status_code = HookComm(TEST_COMM, &testData, sizeof(TEST_DATA));
 				if (testData.uTest == STATUS_TEST_COMM_SUCCESS || testData.uTest == STATUS_TEST_COMM_REG_EXPIRED || testData.uTest == STATUS_TEST_COMM_REG_INVALID || testData.uTest == STATUS_TEST_COMM_UNREG_OR_EXPIRED)
 				{
