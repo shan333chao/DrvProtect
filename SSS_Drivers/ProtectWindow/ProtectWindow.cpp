@@ -268,7 +268,7 @@ namespace ProtectWindow {
 			InstallHook(mpFnidPfnAddr);
 		}
 
-
+ 
 	}
 	ULONGLONG GetSendMessageGetText() {
 		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
@@ -325,23 +325,65 @@ namespace ProtectWindow {
 		}
 		return funcCall;
 	}
+	////SetMessageExtraInfo  Number
+	static UCHAR GetCallIndex() {
+		switch (Utils::InitOsVersion().dwBuildNumber)
+		{
+		case 19041:
+		case 19042:
+		case 19043:
+		case 19044:
+		case 19045:
+			return 69;
+		case 18362:
+		case 18363:
+			return 70;
+		case 17763:
+			return 71;
+		case 16299:
+		case 17134:
+			return 73;
+		case 15063:
+			return 77;
+		case 14393:
+			return 72; 
+		default:
+			return 0;
+			break;
+		}
 
-#define UNKNOWCALLINDEX 70  //SetMessageExtraInfo
+	
+	}
+ 
+
 	NTSTATUS GetHookComm() {
 
+
+ 
+		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
+		ULONG64 NtUserCallOneParamExport=(ULONG64)	Utils::GetFuncExportName((PVOID)win32kfull_address, skCrypt("NtUserCallOneParam"));
+		Logf("NtUserCallOneParamExport  %llx", NtUserCallOneParamExport);
+ 
 		//fffffc64`f50ebe85 488d1d949a1e00  lea     rbx, [win32kfull!apfnSimpleCall(fffffc64`f52d5920)]
 		//fffffc64`f50ebe8c 488b04fb        mov     rax, qword ptr[rbx + rdi * 8]
 		//fffffc64`f50ebe90 488bce          mov     rcx, rsi
 		//fffffc64`f50ebe93 ff158fa32600    call    qword ptr[win32kfull!_guard_dispatch_icall_fptr(fffffc64`f5356228)]
-		//fffffc64`f50ebe99 488bd8          mov     rbx, rax
-		//fffffc64`f50ebe9c 83ff2e          cmp     edi, 2Eh
-		//fffffc64`f50ebe9f 7248            jb      win32kfull!NtUserCallOneParam + 0xa9 (fffffc64`f50ebee9)
-		ULONGLONG win32kfull_address = Utils::GetWin32kFull();
-		ULONG64 address = Utils::find_pattern_image(win32kfull_address,
-			skCrypt("\x48\x00\x00\x00\x00\x00\x00\x48\x8B\x04\xFB\x48\x8B\xCE\xFF\x00\x00\x00\x00\x00"),
-			skCrypt("x??????xxxxxxxx?????"), skCrypt(".text"));
+		ULONG64 address =  Utils::find_pattern(NtUserCallOneParamExport, 0x100,
+			skCrypt("\x48\x00\x00\x00\x00\x00\x00\x48\x00\x00\x00\x48\x00\x00\xFF\x00\x00\x00\x00\x00"),
+			skCrypt("x??????x???x??x?????"), 20);
+		
+
 		if (!address)
 		{
+		//  ffff880e`aff07626 4c8d35a37f2b00  lea     r14, [win32kfull!apfnSimpleCall(ffff880e`b01bf5d0)]
+		//	ffff880e`aff0762d 83ff53          cmp     edi, 53h
+		//	ffff880e`aff07630 746f            je      win32kfull!NtUserCallOneParam + 0xa1 (ffff880e`aff076a1)
+			address = Utils::find_pattern(NtUserCallOneParamExport, 0x100, skCrypt("\x4C\x00\x00\x00\x00\x00\x00\x83\x00\x00\x74\x00"), skCrypt("x??????x??x?"), 12);
+		}
+
+		if (!address)
+		{
+			Logf(" apfnSimpleCall not found");
 			return STATUS_TEST_COMM_MISS_FUNC_1;
 		}
 		Logf("address %p   fffffc64`f50ebe85", address);
@@ -351,7 +393,7 @@ namespace ProtectWindow {
 			return STATUS_TEST_COMM_MISS_FUNC_2;
 		}
 		Logf("apfnSimpleCall %p  fffffc64`f52d5920", apfnSimpleCall);
-		ULONG offset = (UNKNOWCALLINDEX * 8);
+		ULONG offset = (GetCallIndex() * 8);
 		ULONG64 data_ptr = apfnSimpleCall + offset;
 		Logf("data_ptr %p fffffc64`f52d5be8", data_ptr);
 		g_Origin_apfnSimpleCall = (HookComm)(*(PULONG64)data_ptr);
@@ -1097,7 +1139,9 @@ namespace ProtectWindow {
 		KAPC_STATE kApc = { 0 };
 
 		Utils::AttachProcess(pEprocess);
+
 		status=GetHookComm();
+		Log("GetHookComm  %llx \r\n ", status);
 		Utils::DetachProcess();
 		return status;
 	}
