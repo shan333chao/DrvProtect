@@ -5,6 +5,7 @@
 #include <time.h>
 #include <Windows.h>
 #include "aes.h"
+#include "Config.h"
 //#include  "../ProxyDrv/MyDriver.h"
 //#include "../ProxyDrv/MyDriver2.h"
 void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
@@ -124,7 +125,7 @@ void encryptData() {
 	pfile = NULL;
 
 	//写出文件
-	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\NewLoader\\MyDriver.h", "w");
+	fopen_s(&pfile, ENCRYPT_DRIVER, "w");
 	if (!pfile)
 	{
 		printf("写出文件失败");

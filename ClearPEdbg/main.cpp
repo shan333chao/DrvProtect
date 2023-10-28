@@ -7,6 +7,7 @@
 #include "aes.h"
 #include <time.h>
 #include <random>
+#include "../AutoBuild/Config.h"
 #pragma warning(disable:4996)
 void GetCurrentTimeStr(char* timestrBuffer) {
 	time_t currentTime;
@@ -76,7 +77,7 @@ void write_header_file(unsigned char* pFileData, long lFileSize ) {
  
     FILE*	pfile = NULL;
 	//写出文件
-	fopen_s(&pfile, "C:\\DriverCodes\\HideDriver\\NickolasZhao\\DiviceClient\\driver_shellcode.h", "w");
+	fopen_s(&pfile, ENCRYPT_LOADER, "w");
 	if (!pfile)
 	{
 		printf("写出文件失败");
