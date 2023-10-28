@@ -7,7 +7,38 @@
 #include "aes.h"
 //#include  "../ProxyDrv/MyDriver.h"
 //#include "../ProxyDrv/MyDriver2.h"
+void writeFile(char* filename, unsigned char* content, size_t bufferSize) {
+	HANDLE hFile;
+	DWORD dwBytesWritten = 0;
+	BOOL bErrorFlag = FALSE;
 
+	hFile = CreateFileA((LPCSTR)filename, // name of the file
+		GENERIC_WRITE,                    // open for writing
+		0,                                // do not share
+		NULL,                             // default security
+		CREATE_ALWAYS,                    // always override file
+		FILE_ATTRIBUTE_NORMAL,            // normal file
+		NULL);                            // no attr. template
+
+	if (hFile == INVALID_HANDLE_VALUE) {
+		printf("[-] Failed to access: %s\n", (char*)filename);
+		return;
+	}
+
+	bErrorFlag = WriteFile(
+		hFile,           // open file handle
+		content,         // start of data to write
+		(DWORD)bufferSize,      // number of bytes to write
+		&dwBytesWritten, // number of bytes that were written
+		NULL);           // no overlapped structure
+
+	if (FALSE == bErrorFlag) {
+		printf("[-] Unable to write into file.\n");
+	}
+
+	CloseHandle(hFile);
+	printf("[*] %s file created.\n", filename);
+}
 void GetCurrentTimeStr(char* timestrBuffer) {
 	time_t currentTime;
 	struct tm localTime;
@@ -157,7 +188,26 @@ void encryptData() {
 	AES_init_ctx_iv(&ctx, key, iv);
 	AES_CTR_xcrypt_buffer(&ctx, (uint8_t*)pFileData, lFileSize);
 
+
+	unsigned char magic[] = "\x89\x50\x4e\x47";
+	unsigned char prebuff[17 + 17 + 4] = { 0 };
+	memcpy(prebuff, magic, 4);
+	memcpy(prebuff + 4, key, 17);
+	memcpy(prebuff + 4 + 17, iv, 17);
+	int encryptSize = lFileSize + sizeof(prebuff);
+	PCHAR encryptData = (PCHAR)malloc(encryptSize);
+	memset(encryptData, 0, encryptSize);
+	memcpy(encryptData, prebuff, sizeof(prebuff));
+	memcpy(encryptData + sizeof(prebuff), pFileData, lFileSize);
+
+	char nencryptfileName[20] = "banner.png";
+	writeFile(nencryptfileName, (PUCHAR)encryptData, encryptSize);
+
  
+
+
+
+
 	for (size_t i = 0; i < lFileSize; i++)
 	{
 		//»»ÐÐÊä³ö
